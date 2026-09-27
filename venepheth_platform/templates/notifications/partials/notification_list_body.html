@@ -1,0 +1,13 @@
+{% load i18n %}
+<div id="notifications-body" class="space-y-3">
+    {% for notification in notifications %}
+        {% include "notifications/partials/notification_item.html" with notification=notification %}
+    {% empty %}
+        <div class="text-center py-12 bg-gray-50 rounded-2xl border border-gray-100">
+            <div class="w-12 h-12 rounded-full bg-navy-50 text-navy-600 flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="bell-off" class="w-6 h-6"></i>
+            </div>
+            <p class="text-gray-500 text-sm font-medium">{% trans "No notifications yet." %}</p>
+        </div>
+    {% endfor %}
+</div>

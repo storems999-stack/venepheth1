@@ -1,0 +1,97 @@
+{% extends "admin/index.html" %}
+{% load i18n static %}
+
+{% block content %}
+<div class="dashboard-header flex justify-between items-center mb-6 mt-4">
+    <h1 class="text-3xl font-serif font-bold text-primary-900">Dashboard Overview</h1>
+</div>
+
+<!-- Stats Widgets -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Total Courses</div>
+        <div class="text-3xl font-bold text-primary-900">{{ dashboard_stats.courses|default:"0" }}</div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Publications</div>
+        <div class="text-3xl font-bold text-primary-900">{{ dashboard_stats.publications|default:"0" }}</div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Active Students</div>
+        <div class="text-3xl font-bold text-primary-900">{{ dashboard_stats.students|default:"0" }}</div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-sm border-red-200 bg-red-50">
+        <div class="text-red-700 text-sm font-bold uppercase tracking-wider mb-2">Security Events</div>
+        <div class="text-3xl font-bold text-red-700">{{ dashboard_stats.security_events|default:"0" }}</div>
+        <div class="text-xs text-red-600 mt-1">Requires attention</div>
+    </div>
+</div>
+
+<div class="flex gap-8">
+    <!-- Original App List -->
+    <div class="w-2/3">
+        {{ block.super }}
+    </div>
+    
+    <!-- Sidebar / Recent Activity -->
+    <div class="w-1/3 space-y-6">
+        
+        <!-- Recent Audit Log -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-primary-900 text-white px-4 py-3 font-bold text-sm uppercase tracking-wide">
+                Recent Activity
+            </div>
+            <div class="p-4 space-y-4">
+                <div class="text-sm text-gray-600 italic text-center py-4">
+                    Activity stream integrated via AuditLog
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-2 border-t border-gray-200 text-right">
+                <a href="{% url 'admin:audit_auditlog_changelist' %}" class="text-accent-500 hover:text-accent-600 text-sm font-medium">View Full Audit Log &rarr;</a>
+            </div>
+        </div>
+
+        <!-- Security Alerts -->
+        <div class="bg-white rounded-lg shadow-sm border border-red-200 overflow-hidden">
+            <div class="bg-red-700 text-white px-4 py-3 font-bold text-sm uppercase tracking-wide">
+                Security Alerts
+            </div>
+            <div class="p-4 space-y-4">
+                <div class="text-sm text-gray-600 italic text-center py-4">
+                    System secure. No recent critical alerts.
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-2 border-t border-gray-200 text-right">
+                <a href="{% url 'admin:security_securityevent_changelist' %}" class="text-red-700 hover:text-red-800 text-sm font-medium">Review Security Events &rarr;</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Ensure Tailwind classes apply in the admin -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: {
+                        900: '#0F1923',
+                        800: '#1E3A5F',
+                    },
+                    accent: {
+                        500: '#D4A017',
+                    }
+                }
+            }
+        }
+    }
+</script>
+<style>
+    /* Prevent Tailwind from completely breaking django admin */
+    #content { padding: 0 !important; }
+    #content-main { width: 100% !important; }
+    #content-related { display: none; } /* Hide default sidebar */
+</style>
+{% endblock %}

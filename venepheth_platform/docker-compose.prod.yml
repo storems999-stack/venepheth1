@@ -1,0 +1,140 @@
+version: "3.9"
+
+# ─── Shared Configuration ─────────────────────────────────────────────────────
+x-django-common: &django-common
+  image: venepheth_platform:prod
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: production
+  env_file:
+    - .env.prod
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  volumes:
+    - media_vol:/app/media
+    - static_vol:/app/staticfiles
+    - logs_vol:/app/logs
+
+# ─── Services ────────────────────────────────────────────────────────────────
+services:
+  # ── Django (Gunicorn) ───────────────────────────────────────────────────────
+  web:
+    <<: *django-common
+    command: >
+      gunicorn config.wsgi:application
+        --bind 0.0.0.0:8000
+        --workers 4
+        --worker-class gthread
+        --threads 2
+        --timeout 120
+        --access-logfile -
+        --error-logfile -
+        --log-level warning
+    ports: []  # No direct port exposure; Nginx is the entry point
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ── Nginx (Reverse Proxy & SSL) ──────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_vol:/app/staticfiles:ro
+      - media_vol:/app/media:ro
+      - certbot_www:/var/www/certbot:ro
+      - certbot_conf:/etc/letsencrypt:ro
+    depends_on:
+      - web
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          memory: 128M
+
+  # ── Certbot (Let's Encrypt SSL) ──────────────────────────────────────────────
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done"
+    restart: unless-stopped
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - .env.prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ── Redis ────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Celery Worker ────────────────────────────────────────────────────────────
+  celery:
+    <<: *django-common
+    command: celery -A config worker --loglevel=warning --concurrency=2
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  # ── Celery Beat (Scheduler) ──────────────────────────────────────────────────
+  celery-beat:
+    <<: *django-common
+    command: celery -A config beat --loglevel=warning --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+# ─── Volumes ──────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+  redis_data:
+  media_vol:
+  static_vol:
+  logs_vol:
+  certbot_www:
+  certbot_conf:

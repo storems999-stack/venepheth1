@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{{ pub.title }}{% endblock %}
+
+{% block content %}
+<section class="bg-navy-950 border-b border-white/5 py-20 relative overflow-hidden">
+    <div class="absolute inset-0 bg-grid"></div>
+    <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center space-x-2 text-gray-500 text-sm mb-8">
+            <a href="{% url 'core:home' %}" class="hover:text-gold-400">{% trans "Home" %}</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <a href="{% url 'publications:list' %}" class="hover:text-gold-400">{% trans "Publications" %}</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-gold-400">{{ pub.title|truncatewords:5 }}</span>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-2 mb-6">
+            <span class="bg-gold-500/10 border border-gold-500/30 text-gold-400 text-sm px-3 py-1 rounded-full font-medium">
+                {{ pub.get_publication_type_display }}
+            </span>
+            {% if pub.year %}
+            <span class="text-gray-400 text-sm font-medium">{{ pub.year }}</span>
+            {% endif %}
+        </div>
+        
+        <h1 class="text-3xl lg:text-4xl font-serif font-bold text-white leading-tight mb-6">{{ pub.title }}</h1>
+        <p class="text-gray-300 text-lg">{{ pub.authors }}</p>
+        {% if pub.journal_name %}
+        <p class="text-gold-400/80 mt-2 italic">
+            {{ pub.journal_name }}{% if pub.volume %}, vol. {{ pub.volume }}{% endif %}{% if pub.pages %}, pp. {{ pub.pages }}{% endif %}
+        </p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="bg-navy-950 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-3 gap-12">
+            <div class="lg:col-span-2 space-y-6">
+                {% if pub.abstract %}
+                <div class="bg-navy-900 border border-white/5 rounded-2xl p-8">
+                    <h2 class="text-lg font-bold text-white mb-4">{% trans "Abstract" %}</h2>
+                    <p class="text-gray-300 leading-relaxed">{{ pub.abstract }}</p>
+                </div>
+                {% endif %}
+                
+                <!-- APA Citation -->
+                <div class="bg-navy-900 border border-white/5 rounded-2xl p-8">
+                    <h2 class="text-sm font-bold text-white mb-3 uppercase tracking-wider">{% trans "Cite this Work (APA)" %}</h2>
+                    <p class="text-gray-400 font-mono text-sm leading-relaxed bg-navy-800 p-4 rounded-xl">{{ pub.citation_apa }}</p>
+                    <button 
+                        onclick="navigator.clipboard.writeText('{{ pub.citation_apa }}')"
+                        class="mt-3 text-xs text-gold-400 hover:text-gold-300 flex items-center space-x-1 transition-colors"
+                    >
+                        <i data-lucide="copy" class="w-3 h-3"></i>
+                        <span>{% trans "Copy citation" %}</span>
+                    </button>
+                </div>
+            </div>
+            
+            <aside class="space-y-6">
+                <!-- Publication details -->
+                <div class="glass rounded-2xl p-6">
+                    <h3 class="text-white font-bold text-sm mb-5 uppercase tracking-wider">{% trans "Details" %}</h3>
+                    <div class="space-y-4">
+                        {% if pub.doi %}
+                        <div>
+                            <span class="text-gray-500 text-xs uppercase tracking-wider">DOI</span>
+                            <a href="https://doi.org/{{ pub.doi }}" class="text-gold-400 hover:text-gold-300 text-sm block mt-1 break-all" target="_blank">
+                                {{ pub.doi }}
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% if pub.isbn %}
+                        <div>
+                            <span class="text-gray-500 text-xs uppercase tracking-wider">ISBN</span>
+                            <p class="text-gray-300 text-sm mt-1">{{ pub.isbn }}</p>
+                        </div>
+                        {% endif %}
+                        {% if pub.keywords %}
+                        <div>
+                            <span class="text-gray-500 text-xs uppercase tracking-wider">{% trans "Keywords" %}</span>
+                            <p class="text-gray-300 text-sm mt-1">{{ pub.keywords }}</p>
+                        </div>
+                        {% endif %}
+                        {% if pub.cited_by %}
+                        <div>
+                            <span class="text-gray-500 text-xs uppercase tracking-wider">{% trans "Times Cited" %}</span>
+                            <p class="text-white font-bold text-lg mt-1">{{ pub.cited_by }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="space-y-3">
+                    {% if pub.pdf_file %}
+                    <a href="{{ pub.pdf_file.url }}" target="_blank"
+                       class="flex items-center space-x-2 w-full bg-gold-500 hover:bg-gold-400 text-navy-950 font-semibold px-4 py-3 rounded-xl text-sm justify-center transition-all">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>{% trans "Download PDF" %}</span>
+                    </a>
+                    {% endif %}
+                    {% if pub.external_url %}
+                    <a href="{{ pub.external_url }}" target="_blank"
+                       class="flex items-center space-x-2 w-full border border-white/10 hover:border-white/30 text-gray-300 hover:text-white px-4 py-3 rounded-xl text-sm justify-center transition-all">
+                        <i data-lucide="external-link" class="w-4 h-4"></i>
+                        <span>{% trans "View Online" %}</span>
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <a href="{% url 'publications:list' %}" class="flex items-center space-x-2 text-gray-400 hover:text-gold-400 transition-colors text-sm">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span>{% trans "Back to Publications" %}</span>
+                </a>
+            </aside>
+        </div>
+    </div>
+</section>
+{% endblock %}

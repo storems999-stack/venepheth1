@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}Topic: {{ topic }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-navy-950 py-12">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6">
+
+    <!-- Breadcrumb -->
+    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-8">
+      <a href="/" class="hover:text-gold-400 transition-colors">Home</a>
+      <i data-lucide="chevron-right" class="w-4 h-4"></i>
+      <a href="{% url 'search:knowledge_graph' %}" class="hover:text-gold-400 transition-colors">Knowledge Graph</a>
+      <i data-lucide="chevron-right" class="w-4 h-4"></i>
+      <span class="text-white">{{ topic }}</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-10">
+      <h1 class="text-4xl font-serif font-bold text-white mb-3">
+        <span class="gradient-text">{{ topic }}</span>
+      </h1>
+      <p class="text-gray-400">All academic content related to this topic.</p>
+    </div>
+
+    <div class="grid gap-6">
+
+      <!-- Blog Articles -->
+      {% if data.articles %}
+      <div class="glass rounded-xl border border-white/10 overflow-hidden">
+        <div class="flex items-center space-x-2 px-6 py-4 border-b border-white/5">
+          <i data-lucide="file-text" class="w-4 h-4 text-green-400"></i>
+          <h2 class="text-white font-semibold">Blog Articles</h2>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400">{{ data.articles|length }}</span>
+        </div>
+        <div class="divide-y divide-white/5">
+          {% for article in data.articles %}
+          <a href="/blog/{{ article.slug }}/" class="flex items-center justify-between px-6 py-3 hover:bg-white/5 transition-colors group">
+            <span class="text-gray-300 text-sm group-hover:text-white transition-colors">{{ article.title }}</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-gray-600 group-hover:text-gold-400 transition-colors"></i>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Research Projects -->
+      {% if data.research %}
+      <div class="glass rounded-xl border border-white/10 overflow-hidden">
+        <div class="flex items-center space-x-2 px-6 py-4 border-b border-white/5">
+          <i data-lucide="flask-conical" class="w-4 h-4 text-blue-400"></i>
+          <h2 class="text-white font-semibold">Research Projects</h2>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400">{{ data.research|length }}</span>
+        </div>
+        <div class="divide-y divide-white/5">
+          {% for project in data.research %}
+          <a href="/research/{{ project.slug }}/" class="flex items-center justify-between px-6 py-3 hover:bg-white/5 transition-colors group">
+            <span class="text-gray-300 text-sm group-hover:text-white transition-colors">{{ project.title }}</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-gray-600 group-hover:text-gold-400 transition-colors"></i>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Courses -->
+      {% if data.courses %}
+      <div class="glass rounded-xl border border-white/10 overflow-hidden">
+        <div class="flex items-center space-x-2 px-6 py-4 border-b border-white/5">
+          <i data-lucide="book-open" class="w-4 h-4 text-purple-400"></i>
+          <h2 class="text-white font-semibold">Courses</h2>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-400">{{ data.courses|length }}</span>
+        </div>
+        <div class="divide-y divide-white/5">
+          {% for course in data.courses %}
+          <a href="/courses/{{ course.slug }}/" class="flex items-center justify-between px-6 py-3 hover:bg-white/5 transition-colors group">
+            <span class="text-gray-300 text-sm group-hover:text-white transition-colors">{{ course.title }}</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-gray-600 group-hover:text-gold-400 transition-colors"></i>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Publications -->
+      {% if data.publications %}
+      <div class="glass rounded-xl border border-white/10 overflow-hidden">
+        <div class="flex items-center space-x-2 px-6 py-4 border-b border-white/5">
+          <i data-lucide="book-marked" class="w-4 h-4 text-orange-400"></i>
+          <h2 class="text-white font-semibold">Publications</h2>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-400">{{ data.publications|length }}</span>
+        </div>
+        <div class="divide-y divide-white/5">
+          {% for pub in data.publications %}
+          <a href="/publications/{{ pub.slug }}/" class="flex items-center justify-between px-6 py-3 hover:bg-white/5 transition-colors group">
+            <span class="text-gray-300 text-sm group-hover:text-white transition-colors">{{ pub.title }}</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-gray-600 group-hover:text-gold-400 transition-colors"></i>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      {% if not data.articles and not data.research and not data.courses and not data.publications %}
+      <div class="text-center py-16">
+        <i data-lucide="search-x" class="w-10 h-10 text-gray-600 mx-auto mb-4"></i>
+        <p class="text-gray-500">No content found for topic "{{ topic }}".</p>
+        <a href="{% url 'search:knowledge_graph' %}" class="mt-4 inline-block text-gold-400 hover:text-gold-300 text-sm">← Back to Topic Map</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,583 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}" class="antialiased scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>{% block title %}{{ SITE_NAME }}{% endblock %} | V. SAYAVONG</title>
+    <meta name="description" content="{% block meta_description %}{{ SITE_TAGLINE }}{% endblock %}">
+    <meta name="author" content="Venepheth Sayavong">
+    
+    <!-- Open Graph / SEO -->
+    <meta property="og:title" content="{% block og_title %}{{ SITE_NAME }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ SITE_TAGLINE }}{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    {% if meta_image %}
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ meta_image }}">
+    {% elif global_profile and global_profile.photo %}
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ global_profile.photo.url }}">
+    {% endif %}
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        navy: {
+                            50:  '#eef2f7',
+                            100: '#d5e0ee',
+                            200: '#abbfdd',
+                            300: '#7d9ec9',
+                            400: '#5580b6',
+                            500: '#3a65a0',
+                            600: '#2d4f80',
+                            700: '#1e3a5f',
+                            800: '#162d4a',
+                            900: '#0d1f35',
+                            950: '#07111e',
+                        },
+                        gold: {
+                            300: '#f5d87a',
+                            400: '#f0c842',
+                            500: '#D4A017',
+                            600: '#b08010',
+                            700: '#8a6010',
+                        },
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.6s ease-out forwards',
+                        'fade-in': 'fadeIn 0.4s ease-out forwards',
+                        'slide-in-left': 'slideInLeft 0.5s ease-out forwards',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(24px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideInLeft: {
+                            '0%': { opacity: '0', transform: 'translateX(-24px)' },
+                            '100%': { opacity: '1', transform: 'translateX(0)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-8px)' },
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom global styles */
+        [x-cloak] { display: none !important; }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #D4A017 0%, #f5d87a 50%, #D4A017 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        .glass-dark {
+            background: rgba(13, 31, 53, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .card-hover {
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(13, 31, 53, 0.15);
+        }
+        
+        .link-underline {
+            position: relative;
+            text-decoration: none;
+        }
+        .link-underline::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #D4A017;
+            transition: width 0.3s ease;
+        }
+        .link-underline:hover::after { width: 100%; }
+        
+        .section-divider {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #D4A017, #f5d87a);
+            border-radius: 2px;
+            margin: 1rem 0;
+        }
+        
+        /* Animated background grid */
+        .bg-grid {
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Smooth scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0d1f35; }
+        ::-webkit-scrollbar-thumb { background: #D4A017; border-radius: 3px; }
+        
+        /* Focus styles */
+        *:focus-visible {
+            outline: 2px solid #D4A017;
+            outline-offset: 3px;
+            border-radius: 4px;
+        }
+    </style>
+    
+    <!-- HTMX & Alpine -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body 
+    class="bg-white text-gray-900 min-h-screen flex flex-col font-sans"
+    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+    x-data="{ mobileOpen: false, searchOpen: false, scrolled: false }"
+    @scroll.window="scrolled = window.scrollY > 20"
+>
+    <!-- Accessibility Skip Link -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-gold-500 focus:text-navy-950 focus:font-semibold focus:rounded-lg focus:shadow-xl focus:outline-none">
+        {% trans "Skip to main content" %}
+    </a>
+
+    <!-- ══════════════════════════════════════════════ NAVBAR ══════ -->
+    <header 
+        class="sticky top-0 z-50 transition-all duration-300"
+        :class="scrolled 
+            ? 'bg-navy-950/95 backdrop-blur-lg border-b border-white/5 shadow-2xl shadow-navy-950/50' 
+            : 'bg-transparent'"
+    >
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16 lg:h-18">
+                
+                <!-- Logo -->
+                <a href="{% url 'core:home' %}" class="flex items-center space-x-3 group">
+                    <div class="w-9 h-9 bg-gold-500 rounded-lg flex items-center justify-center shadow-lg shadow-gold-500/30 group-hover:scale-110 transition-transform duration-300">
+                        <span class="font-serif font-bold text-navy-950 text-sm">VS</span>
+                    </div>
+                    <span class="font-serif font-bold text-white text-xl tracking-tight hidden sm:block">
+                        V. <span class="gradient-text">SAYAVONG</span>
+                    </span>
+                </a>
+
+                <!-- Desktop Nav -->
+                <nav class="hidden lg:flex items-center space-x-1" role="navigation">
+                    {% url 'core:home' as home_url %}
+                    {% url 'profiles:detail' as profile_url %}
+                    {% url 'courses:list' as courses_url %}
+                    {% url 'teaching:overview' as teaching_url %}
+                    {% url 'research:list' as research_url %}
+                    {% url 'publications:list' as publications_url %}
+                    {% url 'blog:list' as blog_url %}
+                    {% url 'contact:form' as contact_url %}
+
+                    <a href="{{ home_url }}" 
+                       class="nav-link px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                              {% if request.path == home_url %}text-gold-400 bg-white/5{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        {% trans "Home" %}
+                    </a>
+                    <a href="{{ profile_url }}" 
+                       class="nav-link px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                              {% if request.path|slice:':9' == '/profile/' %}text-gold-400 bg-white/5{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        {% trans "About & CV" %}
+                    </a>
+                    <a href="{{ courses_url }}" 
+                       class="nav-link px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                              {% if request.path|slice:':9' == '/courses/' %}text-gold-400 bg-white/5{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        {% trans "Courses" %}
+                    </a>
+                    <a href="{{ teaching_url }}" 
+                       class="nav-link px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                              {% if request.path|slice:':10' == '/teaching/' %}text-gold-400 bg-white/5{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        {% trans "Teaching" %}
+                    </a>
+                    <a href="{{ research_url }}" 
+                       class="nav-link px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                              {% if request.path|slice:':10' == '/research/' %}text-gold-400 bg-white/5{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        {% trans "Research" %}
+                    </a>
+                    <a href="{{ publications_url }}" 
+                       class="nav-link px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                              {% if request.path|slice:':14' == '/publications/' %}text-gold-400 bg-white/5{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        {% trans "Publications" %}
+                    </a>
+                    <a href="{{ blog_url }}" 
+                       class="nav-link px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                              {% if request.path|slice:':6' == '/blog/' %}text-gold-400 bg-white/5{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        {% trans "Blog" %}
+                    </a>
+                    <a href="{{ contact_url }}" 
+                       class="nav-link px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                              {% if request.path|slice:':9' == '/contact/' %}text-gold-400 bg-white/5{% else %}text-gray-300 hover:text-white hover:bg-white/5{% endif %}">
+                        {% trans "Contact" %}
+                    </a>
+                </nav>
+
+                <!-- Right Actions -->
+                <div class="flex items-center space-x-2">
+                    {% get_current_language as CURRENT_LANGUAGE %}
+                    <!-- Language Switcher (Desktop) -->
+                    <div x-data="{ langOpen: false }" class="relative">
+                        <button 
+                            @click="langOpen = !langOpen" 
+                            @click.outside="langOpen = false"
+                            type="button"
+                            class="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-300 hover:text-white hover:bg-white/5 border border-white/10 transition-colors"
+                            aria-label="Change language"
+                        >
+                            <span class="text-sm">{% if CURRENT_LANGUAGE == 'lo' %}🇱🇦{% else %}🇬🇧{% endif %}</span>
+                            <span class="font-semibold uppercase tracking-wider">{% if CURRENT_LANGUAGE == 'lo' %}LO{% else %}EN{% endif %}</span>
+                            <i data-lucide="chevron-down" class="w-3 h-3 text-gray-400"></i>
+                        </button>
+                        <div 
+                            x-show="langOpen" 
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            class="absolute right-0 mt-2 w-36 rounded-xl glass-dark border border-white/10 shadow-2xl py-1 z-50 text-xs"
+                        >
+                            <form action="{% url 'set_language' %}" method="post" class="m-0 p-0">
+                                {% csrf_token %}
+                                <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                                <button type="submit" name="language" value="en" 
+                                        class="w-full text-left flex items-center space-x-2 px-3 py-2 hover:bg-white/10 transition-colors {% if CURRENT_LANGUAGE != 'lo' %}text-gold-400 font-bold{% else %}text-gray-300{% endif %}">
+                                    <span>🇬🇧</span>
+                                    <span>English</span>
+                                    {% if CURRENT_LANGUAGE != 'lo' %}
+                                    <span class="ml-auto text-gold-400 font-bold">✓</span>
+                                    {% endif %}
+                                </button>
+                                <button type="submit" name="language" value="lo" 
+                                        class="w-full text-left flex items-center space-x-2 px-3 py-2 hover:bg-white/10 transition-colors {% if CURRENT_LANGUAGE == 'lo' %}text-gold-400 font-bold{% else %}text-gray-300{% endif %}">
+                                    <span>🇱🇦</span>
+                                    <span>ພາສາລາວ</span>
+                                    {% if CURRENT_LANGUAGE == 'lo' %}
+                                    <span class="ml-auto text-gold-400 font-bold">✓</span>
+                                    {% endif %}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Search Toggle -->
+                    <button 
+                        @click="searchOpen = !searchOpen"
+                        class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                        aria-label="Search"
+                    >
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                    </button>
+
+                    {% if user.is_authenticated %}
+                        <!-- Notifications Icon with HTMX Badge -->
+                        <a href="{% url 'notifications:list' %}" 
+                           class="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                           aria-label="{% trans 'Notifications' %}">
+                            <i data-lucide="bell" class="w-5 h-5"></i>
+                            <span id="nav-notification-badge"
+                                  hx-get="{% url 'notifications:unread_badge' %}"
+                                  hx-trigger="load, every 60s"
+                                  hx-swap="innerHTML"
+                                  class="absolute top-1 right-1 flex items-center justify-center">
+                            </span>
+                        </a>
+
+                        <a href="{% url 'core:dashboard' %}" 
+                           class="hidden sm:flex items-center space-x-2 bg-gold-500 hover:bg-gold-400 text-navy-950 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 shadow-lg shadow-gold-500/20">
+                            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                            <span>{% trans "Dashboard" %}</span>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'account_login' %}" 
+                           class="hidden sm:flex items-center space-x-1 border border-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/5 transition-all duration-200">
+                            <i data-lucide="log-in" class="w-4 h-4"></i>
+                            <span>{% trans "Login" %}</span>
+                        </a>
+                    {% endif %}
+                    
+                    <!-- Mobile menu button -->
+                    <button 
+                        @click="mobileOpen = !mobileOpen"
+                        class="lg:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                        aria-label="Menu"
+                    >
+                        <i data-lucide="menu" class="w-5 h-5" x-show="!mobileOpen"></i>
+                        <i data-lucide="x" class="w-5 h-5" x-show="mobileOpen" x-cloak></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Bar (dropdown) -->
+            <div 
+                x-show="searchOpen" 
+                x-cloak
+                x-transition:enter="transition ease-out duration-200"
+                x-transition:enter-start="opacity-0 -translate-y-2"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                class="pb-4"
+            >
+                <form action="{% url 'search:results' %}" method="get" role="search">
+                    <div class="relative">
+                        <i data-lucide="search" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                        <input 
+                            type="search" name="q" 
+                            placeholder="{% trans 'Search courses, research, publications...' %}"
+                            class="w-full bg-white/10 border border-white/20 text-white placeholder-gray-400 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-gold-500 focus:bg-white/15 transition-all"
+                            autofocus
+                        >
+                        <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 bg-gold-500 text-navy-950 px-3 py-1 rounded-lg text-xs font-semibold hover:bg-gold-400 transition-colors">
+                            {% trans "Search" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Mobile Nav -->
+        <div 
+            x-show="mobileOpen"
+            x-cloak
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 -translate-y-4"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            class="lg:hidden glass-dark border-t border-white/10"
+        >
+            <div class="px-4 py-4 space-y-1">
+                <a href="{% url 'core:home' %}" class="mobile-nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
+                    <i data-lucide="home" class="w-4 h-4"></i><span>{% trans "Home" %}</span>
+                </a>
+                <a href="{% url 'profiles:detail' %}" class="mobile-nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
+                    <i data-lucide="user" class="w-4 h-4"></i><span>{% trans "About & CV" %}</span>
+                </a>
+                <a href="{% url 'courses:list' %}" class="mobile-nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
+                    <i data-lucide="book-open" class="w-4 h-4"></i><span>{% trans "Courses" %}</span>
+                </a>
+                <a href="{% url 'teaching:overview' %}" class="mobile-nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
+                    <i data-lucide="graduation-cap" class="w-4 h-4"></i><span>{% trans "Teaching" %}</span>
+                </a>
+                <a href="{% url 'research:list' %}" class="mobile-nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
+                    <i data-lucide="flask-conical" class="w-4 h-4"></i><span>{% trans "Research" %}</span>
+                </a>
+                <a href="{% url 'publications:list' %}" class="mobile-nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
+                    <i data-lucide="file-text" class="w-4 h-4"></i><span>{% trans "Publications" %}</span>
+                </a>
+                <a href="{% url 'blog:list' %}" class="mobile-nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
+                    <i data-lucide="pen-line" class="w-4 h-4"></i><span>{% trans "Blog" %}</span>
+                </a>
+                <a href="{% url 'contact:form' %}" class="mobile-nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
+                    <i data-lucide="mail" class="w-4 h-4"></i><span>{% trans "Contact" %}</span>
+                </a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'notifications:list' %}" class="mobile-nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
+                    <i data-lucide="bell" class="w-4 h-4"></i><span>{% trans "Notifications" %}</span>
+                </a>
+                <a href="{% url 'core:dashboard' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-gold-500/10 text-gold-400 border border-gold-500/20">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span>{% trans "Dashboard" %}</span>
+                </a>
+                {% else %}
+                <a href="{% url 'account_login' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg border border-white/20 text-white">
+                    <i data-lucide="log-in" class="w-4 h-4"></i><span>{% trans "Login" %}</span>
+                </a>
+                {% endif %}
+
+                <!-- Mobile Language Selector -->
+                <div class="pt-3 mt-2 border-t border-white/10 px-4 flex items-center justify-between text-xs text-gray-400">
+                    <span>{% trans "Language" %}</span>
+                    <form action="{% url 'set_language' %}" method="post" class="flex items-center space-x-2">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                        <button type="submit" name="language" value="en" 
+                                class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors {% if CURRENT_LANGUAGE != 'lo' %}bg-gold-500 text-navy-950 border-gold-500{% else %}border-white/20 text-gray-300 hover:bg-white/5{% endif %}">
+                            🇬🇧 English
+                        </button>
+                        <button type="submit" name="language" value="lo" 
+                                class="px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors {% if CURRENT_LANGUAGE == 'lo' %}bg-gold-500 text-navy-950 border-gold-500{% else %}border-white/20 text-gray-300 hover:bg-white/5{% endif %}">
+                            🇱🇦 ພາສາລາວ
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Flash messages -->
+    {% if messages %}
+    <div class="fixed top-20 right-4 z-50 space-y-2" id="toast-container">
+        {% for message in messages %}
+        <div 
+            x-data="{ show: true }"
+            x-init="setTimeout(() => show = false, 4000)"
+            x-show="show"
+            x-transition:leave="transition ease-in duration-300"
+            x-transition:leave-start="opacity-100 translate-x-0"
+            x-transition:leave-end="opacity-0 translate-x-8"
+            class="flex items-center space-x-3 px-5 py-4 rounded-xl shadow-2xl border max-w-sm
+                {% if message.tags == 'error' %}bg-red-900/90 border-red-700 text-red-100
+                {% elif message.tags == 'success' %}bg-green-900/90 border-green-700 text-green-100
+                {% elif message.tags == 'warning' %}bg-amber-900/90 border-amber-700 text-amber-100
+                {% else %}bg-navy-800/90 border-navy-600 text-white{% endif %}"
+        >
+            <i data-lucide="{% if message.tags == 'error' %}alert-circle{% elif message.tags == 'success' %}check-circle{% else %}info{% endif %}" class="w-5 h-5 shrink-0"></i>
+            <p class="text-sm font-medium">{{ message }}</p>
+            <button @click="show = false" class="ml-auto opacity-60 hover:opacity-100">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ══════════════════════════════════════ MAIN CONTENT ══════ -->
+    <main id="main-content" class="flex-grow bg-navy-950" tabindex="-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ══════════════════════════════════════════════ FOOTER ══════ -->
+    <footer class="bg-navy-950 border-t border-white/5">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Footer Top -->
+            <div class="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                <!-- Brand -->
+                <div class="lg:col-span-2">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-gold-500 rounded-lg flex items-center justify-center">
+                            <span class="font-serif font-bold text-navy-950">VS</span>
+                        </div>
+                        <span class="font-serif font-bold text-white text-xl">V. SAYAVONG</span>
+                    </div>
+                    <p class="text-gray-400 text-sm leading-relaxed max-w-sm mb-6">
+                        {% blocktrans with tagline=SITE_TAGLINE %}{{ tagline }} — dedicated to advancing academic knowledge and nurturing future leaders.{% endblocktrans %}
+                    </p>
+                    <div class="flex space-x-3">
+                        {% if global_profile.google_scholar_url %}
+                        <a href="{{ global_profile.google_scholar_url }}" class="w-9 h-9 bg-white/5 hover:bg-gold-500/20 border border-white/10 hover:border-gold-500/40 rounded-lg flex items-center justify-center text-gray-400 hover:text-gold-400 transition-all duration-200" aria-label="Google Scholar" target="_blank" rel="noopener noreferrer">
+                            <i data-lucide="graduation-cap" class="w-4 h-4"></i>
+                        </a>
+                        {% endif %}
+                        {% if global_profile.researchgate_url %}
+                        <a href="{{ global_profile.researchgate_url }}" class="w-9 h-9 bg-white/5 hover:bg-gold-500/20 border border-white/10 hover:border-gold-500/40 rounded-lg flex items-center justify-center text-gray-400 hover:text-gold-400 transition-all duration-200" aria-label="ResearchGate" target="_blank" rel="noopener noreferrer">
+                            <i data-lucide="atom" class="w-4 h-4"></i>
+                        </a>
+                        {% endif %}
+                        {% if global_profile.linkedin_url %}
+                        <a href="{{ global_profile.linkedin_url }}" class="w-9 h-9 bg-white/5 hover:bg-gold-500/20 border border-white/10 hover:border-gold-500/40 rounded-lg flex items-center justify-center text-gray-400 hover:text-gold-400 transition-all duration-200" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
+                            <i data-lucide="linkedin" class="w-4 h-4"></i>
+                        </a>
+                        {% endif %}
+                        <a href="mailto:{{ global_profile.user.email|default:'contact@venepheth.edu.la' }}" class="w-9 h-9 bg-white/5 hover:bg-gold-500/20 border border-white/10 hover:border-gold-500/40 rounded-lg flex items-center justify-center text-gray-400 hover:text-gold-400 transition-all duration-200" aria-label="Email">
+                            <i data-lucide="mail" class="w-4 h-4"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="text-white font-semibold mb-4 text-sm uppercase tracking-widest">{% trans "Academic" %}</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="{% url 'courses:list' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline">{% trans "Courses" %}</a></li>
+                        <li><a href="{% url 'research:list' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline">{% trans "Research" %}</a></li>
+                        <li><a href="{% url 'publications:list' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline">{% trans "Publications" %}</a></li>
+                        <li><a href="{% url 'blog:list' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline">{% trans "Blog" %}</a></li>
+                        <li><a href="{% url 'search:knowledge_graph' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline">{% trans "Knowledge Graph" %}</a></li>
+                    </ul>
+                </div>
+
+                <!-- Info Links -->
+                <div>
+                    <h3 class="text-white font-semibold mb-4 text-sm uppercase tracking-widest">{% trans "Info" %}</h3>
+                    <ul class="space-y-3 text-sm">
+                        <li><a href="{% url 'profiles:detail' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline">{% trans "About Professor" %}</a></li>
+                        <li><a href="{% url 'profiles:cv_print' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline flex items-center space-x-1.5" target="_blank"><span>{% trans "Curriculum Vitae (PDF)" %}</span><i data-lucide="external-link" class="w-3 h-3"></i></a></li>
+                        <li><a href="{% url 'contact:form' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline">{% trans "Contact" %}</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Footer Bottom -->
+            <div class="py-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+                <p class="text-gray-500 text-sm">
+                    &copy; {{ CURRENT_YEAR }} Venepheth SAYAVONG. {% trans "All rights reserved." %}
+                </p>
+                <p class="text-gray-600 text-xs flex items-center space-x-1">
+                    <span>Built with</span>
+                    <i data-lucide="heart" class="w-3 h-3 text-gold-500 fill-current"></i>
+                    <span>in Laos PDR</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Initialize Lucide Icons + scroll animations -->
+    <script>
+        lucide.createIcons();
+        
+        // Intersection Observer for scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fade-in-up');
+                    entry.target.classList.remove('opacity-0');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+        
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        
+        // Re-run after HTMX swaps
+        document.addEventListener('htmx:afterSwap', () => {
+            lucide.createIcons();
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+
+    {# AI Academic Assistant Floating Widget #}
+    {% include "assistant/widget.html" %}
+</body>
+</html>

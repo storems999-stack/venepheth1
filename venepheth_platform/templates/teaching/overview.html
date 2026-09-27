@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Teaching" %}{% endblock %}
+{% block meta_description %}{% trans "Office hours, teaching philosophy, and current courses by Venepheth Sayavong." %}{% endblock %}
+
+{% block content %}
+
+{# ── Skip to content for accessibility ── #}
+<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-gold-500 text-navy-950 px-4 py-2 rounded-lg font-semibold z-[9999]">
+    {% trans "Skip to main content" %}
+</a>
+
+{# ── Page Hero ── #}
+<section class="bg-navy-950 border-b border-white/5 py-20 relative overflow-hidden" aria-label="{% trans 'Page header' %}">
+    <div class="absolute inset-0 bg-grid"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav aria-label="{% trans 'Breadcrumb' %}" class="flex items-center space-x-2 text-gray-500 text-sm mb-6">
+            <a href="{% url 'core:home' %}" class="hover:text-gold-400">{% trans "Home" %}</a>
+            <i data-lucide="chevron-right" class="w-3 h-3" aria-hidden="true"></i>
+            <span class="text-gold-400" aria-current="page">{% trans "Teaching" %}</span>
+        </nav>
+        <span class="text-gold-500 text-sm font-bold uppercase tracking-widest">{% trans "Academia" %}</span>
+        <div class="section-divider"></div>
+        <h1 class="text-4xl lg:text-5xl font-serif font-bold text-white mt-3">{% trans "Teaching" %}</h1>
+        <p class="text-gray-400 text-lg mt-4 max-w-xl">
+            {% trans "Office hours, philosophy of education, student announcements, and active courses." %}
+        </p>
+    </div>
+</section>
+
+<main id="main-content" class="bg-navy-950 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+
+        {# ── Student Announcements ── #}
+        {% if announcements %}
+        <section aria-labelledby="announcements-heading">
+            <h2 id="announcements-heading" class="text-2xl font-serif font-bold text-white mb-6 flex items-center gap-3">
+                <i data-lucide="megaphone" class="w-6 h-6 text-gold-400" aria-hidden="true"></i>
+                {% trans "Student Announcements" %}
+            </h2>
+            <div class="space-y-4">
+                {% for ann in announcements %}
+                <div class="glass rounded-2xl p-5 border {% if ann.is_urgent %}border-red-500/40 bg-red-950/20{% else %}border-white/5{% endif %}">
+                    {% if ann.is_urgent %}
+                    <span class="inline-flex items-center gap-1 text-xs font-semibold text-red-400 bg-red-950/40 px-2 py-0.5 rounded-full mb-2">
+                        <i data-lucide="alert-triangle" class="w-3 h-3" aria-hidden="true"></i>
+                        {% trans "URGENT" %}
+                    </span>
+                    {% endif %}
+                    <h3 class="font-semibold text-white">{{ ann.title }}</h3>
+                    <p class="text-gray-400 text-sm mt-1">{{ ann.body }}</p>
+                    <p class="text-gray-600 text-xs mt-2">{{ ann.created_at|date:"d M Y" }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            {# ── Office Hours ── #}
+            <section class="lg:col-span-1" aria-labelledby="office-hours-heading">
+                <h2 id="office-hours-heading" class="text-2xl font-serif font-bold text-white mb-6 flex items-center gap-3">
+                    <i data-lucide="clock" class="w-6 h-6 text-gold-400" aria-hidden="true"></i>
+                    {% trans "Office Hours" %}
+                </h2>
+                {% if office_hours %}
+                <div class="glass rounded-2xl p-6 border border-white/5 space-y-4">
+                    {% for oh in office_hours %}
+                    <div class="flex items-start gap-4 pb-4 {% if not forloop.last %}border-b border-white/5{% endif %}">
+                        <div class="bg-gold-500/10 text-gold-400 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide min-w-fit">
+                            {{ oh.get_day_display|slice:":3"|upper }}
+                        </div>
+                        <div>
+                            <p class="text-white font-medium text-sm">
+                                <time>{{ oh.start_time|time:"H:i" }}–{{ oh.end_time|time:"H:i" }}</time>
+                            </p>
+                            {% if oh.is_virtual %}
+                            <p class="text-blue-400 text-xs flex items-center gap-1 mt-0.5">
+                                <i data-lucide="video" class="w-3 h-3" aria-hidden="true"></i>
+                                {% trans "Virtual" %}
+                                {% if oh.meeting_link %}
+                                — <a href="{{ oh.meeting_link }}" target="_blank" rel="noopener" class="underline hover:text-blue-300">{% trans "Join" %}</a>
+                                {% endif %}
+                            </p>
+                            {% else %}
+                            <p class="text-gray-400 text-xs mt-0.5">
+                                <i data-lucide="map-pin" class="w-3 h-3 inline mr-1" aria-hidden="true"></i>
+                                {{ oh.location|default:_("Room TBD") }}
+                            </p>
+                            {% endif %}
+                            {% if oh.notes %}
+                            <p class="text-gray-500 text-xs mt-0.5 italic">{{ oh.notes }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="glass rounded-2xl p-6 border border-white/5 text-gray-500 text-sm text-center">
+                    {% trans "Office hours will be announced at the start of each semester." %}
+                </div>
+                {% endif %}
+                <p class="text-gray-600 text-xs mt-3 text-center">
+                    {% trans "Need to meet outside hours?" %}
+                    <a href="{% url 'contact:form' %}" class="text-gold-500 hover:underline">{% trans "Send a message" %}</a>
+                </p>
+            </section>
+
+            {# ── Teaching Philosophy ── #}
+            <section class="lg:col-span-2" aria-labelledby="philosophy-heading">
+                <h2 id="philosophy-heading" class="text-2xl font-serif font-bold text-white mb-6 flex items-center gap-3">
+                    <i data-lucide="lightbulb" class="w-6 h-6 text-gold-400" aria-hidden="true"></i>
+                    {% trans "Teaching Philosophy" %}
+                </h2>
+                {% if philosophy %}
+                <div class="glass rounded-2xl p-8 border border-white/5">
+                    <h3 class="text-xl font-semibold text-gold-400 mb-4 italic">"{{ philosophy.headline }}"</h3>
+                    <div class="text-gray-300 leading-relaxed prose prose-invert prose-sm max-w-none">
+                        {{ philosophy.body|linebreaks }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="glass rounded-2xl p-8 border border-white/5 text-gray-500 text-sm">
+                    {% trans "Teaching philosophy statement coming soon." %}
+                </div>
+                {% endif %}
+            </section>
+
+        </div>
+
+        {# ── Current Courses ── #}
+        {% if current_courses %}
+        <section aria-labelledby="current-courses-heading">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="current-courses-heading" class="text-2xl font-serif font-bold text-white flex items-center gap-3">
+                    <i data-lucide="graduation-cap" class="w-6 h-6 text-gold-400" aria-hidden="true"></i>
+                    {% trans "Current Courses" %}
+                </h2>
+                <a href="{% url 'courses:list' %}" class="text-gold-400 hover:text-gold-300 text-sm flex items-center gap-1">
+                    {% trans "All courses" %}
+                    <i data-lucide="arrow-right" class="w-4 h-4" aria-hidden="true"></i>
+                </a>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for course in current_courses %}
+                <a href="{{ course.get_absolute_url }}" 
+                   class="glass rounded-2xl p-5 border border-white/5 hover:border-gold-500/30 transition-all duration-300 group block">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            {% if course.code %}
+                            <span class="text-gold-500 font-mono text-xs font-bold">{{ course.code }}</span>
+                            {% endif %}
+                            <h3 class="text-white font-semibold mt-1 group-hover:text-gold-400 transition-colors leading-snug">
+                                {{ course.name }}
+                            </h3>
+                        </div>
+                        <i data-lucide="arrow-up-right" class="w-4 h-4 text-gray-600 group-hover:text-gold-400 transition-colors flex-shrink-0 mt-1" aria-hidden="true"></i>
+                    </div>
+                    <p class="text-gray-500 text-xs mt-2">{{ course.level }}{% if course.credits %} · {{ course.credits }} {% trans "credits" %}{% endif %}</p>
+                    {% if course.short_description %}
+                    <p class="text-gray-400 text-sm mt-2 line-clamp-2">{{ course.short_description }}</p>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+    </div>
+</main>
+{% endblock %}

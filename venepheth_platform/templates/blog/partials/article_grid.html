@@ -1,0 +1,125 @@
+{% load static i18n core_tags %}
+
+<div id="articles-container" class="space-y-6" hx-target="#articles-container" hx-swap="innerHTML">
+    {% if selected_tag %}
+    <div class="flex items-center space-x-2 p-3 glass rounded-xl">
+        <i data-lucide="tag" class="w-4 h-4 text-gold-400"></i>
+        <span class="text-gray-300 text-sm">{% trans "Tag:" %} <span class="text-gold-400 font-semibold">#{{ selected_tag }}</span></span>
+        <a href="{% url 'blog:list' %}" 
+           hx-get="{% url 'blog:list' %}" 
+           hx-push-url="true"
+           class="ml-auto text-gray-500 hover:text-white transition-colors">
+            <i data-lucide="x" class="w-4 h-4"></i>
+        </a>
+    </div>
+    {% endif %}
+    
+    {% if articles %}
+    <div class="space-y-6">
+        {% for article in articles %}
+        <article class="card-hover bg-navy-900 border border-white/5 rounded-2xl overflow-hidden group flex flex-col md:flex-row">
+            <div class="md:w-56 shrink-0 h-48 md:h-auto bg-navy-800 overflow-hidden">
+                {% if article.thumbnail %}
+                    <img src="{{ article.thumbnail.url }}" alt="{{ article.title }}" 
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center">
+                        <i data-lucide="pen-line" class="w-12 h-12 text-navy-600"></i>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="p-6 flex flex-col flex-grow">
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                    <span class="text-xs bg-gold-500/10 border border-gold-500/20 text-gold-400 px-2 py-0.5 rounded font-medium">
+                        {{ article.get_category_display }}
+                    </span>
+                    {% if article.reading_time %}
+                    <span class="text-xs text-gray-500 flex items-center space-x-1">
+                        <i data-lucide="clock" class="w-3 h-3"></i>
+                        <span>{{ article.reading_time }} min</span>
+                    </span>
+                    {% endif %}
+                </div>
+                <h2 class="text-lg font-bold text-white mb-2 group-hover:text-gold-400 transition-colors line-clamp-2">
+                    <a href="{{ article.get_absolute_url }}">{{ article.title }}</a>
+                </h2>
+                {% if article.excerpt %}
+                <p class="text-gray-400 text-sm leading-relaxed line-clamp-2 flex-grow mb-4">{{ article.excerpt }}</p>
+                {% endif %}
+                <div class="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+                    <div class="flex flex-wrap gap-1">
+                        {% for tag in article.tags.all|slice:":3" %}
+                        <a href="?tag={{ tag.slug }}" 
+                           hx-get="?tag={{ tag.slug }}" 
+                           hx-push-url="true"
+                           class="text-xs text-gray-500 hover:text-gold-400 transition-colors">#{{ tag.name }}</a>
+                        {% endfor %}
+                    </div>
+                    <a href="{{ article.get_absolute_url }}" 
+                       class="text-sm font-semibold text-gold-400 hover:text-gold-300 flex items-center space-x-1 transition-colors">
+                        <span>{% trans "Read" %}</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </a>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    
+    {% if page_obj.has_other_pages %}
+    <div class="flex items-center justify-center space-x-2 mt-12 mb-8">
+        {% if page_obj.has_previous %}
+            <a href="{% url_replace page=page_obj.previous_page_number %}" 
+               hx-get="{% url_replace page=page_obj.previous_page_number %}" 
+               hx-push-url="true"
+               class="w-10 h-10 flex items-center justify-center rounded-lg border border-white/10 text-gray-300 hover:bg-gold-500 hover:text-navy-950 hover:border-gold-500 transition-colors">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </a>
+        {% else %}
+            <span class="w-10 h-10 flex items-center justify-center rounded-lg border border-white/5 text-gray-600 cursor-not-allowed">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i>
+            </span>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="w-10 h-10 flex items-center justify-center rounded-lg bg-gold-500 text-navy-950 font-bold border border-gold-500 shadow-sm shadow-gold-500/20">
+                    {{ num }}
+                </span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="{% url_replace page=num %}" 
+                   hx-get="{% url_replace page=num %}" 
+                   hx-push-url="true"
+                   class="w-10 h-10 flex items-center justify-center rounded-lg border border-white/10 text-gray-300 hover:bg-white/10 transition-colors font-medium">
+                    {{ num }}
+                </a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="{% url_replace page=page_obj.next_page_number %}" 
+               hx-get="{% url_replace page=page_obj.next_page_number %}" 
+               hx-push-url="true"
+               class="w-10 h-10 flex items-center justify-center rounded-lg border border-white/10 text-gray-300 hover:bg-gold-500 hover:text-navy-950 hover:border-gold-500 transition-colors">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </a>
+        {% else %}
+            <span class="w-10 h-10 flex items-center justify-center rounded-lg border border-white/5 text-gray-600 cursor-not-allowed">
+                <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </span>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-24 glass rounded-2xl">
+        <i data-lucide="pen-line" class="w-12 h-12 text-gray-600 mx-auto mb-4"></i>
+        <h3 class="text-white font-bold mb-2">{% trans "No articles found" %}</h3>
+        <p class="text-gray-400 mb-4">{% trans "Try different filters or check back soon." %}</p>
+        <a href="{% url 'blog:list' %}" 
+           hx-get="{% url 'blog:list' %}" 
+           hx-push-url="true"
+           class="text-gold-400 hover:text-gold-300 font-medium">{% trans "Clear filters" %}</a>
+    </div>
+    {% endif %}
+</div>

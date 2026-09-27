@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% if q %}{% trans "Search:" %} {{ q }}{% else %}{% trans "Search" %}{% endif %}{% endblock %}
+
+{% block content %}
+<section class="bg-navy-950 border-b border-white/5 py-20 relative overflow-hidden">
+    <div class="absolute inset-0 bg-grid"></div>
+    <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-4xl font-serif font-bold text-white mb-6">{% trans "Search" %}</h1>
+        <form action="{% url 'search:results' %}" method="get">
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"></i>
+                <input 
+                    type="search" name="q" value="{{ q }}"
+                    placeholder="{% trans 'Search courses, research, publications, blog...' %}"
+                    class="w-full bg-navy-900 border border-white/10 focus:border-gold-500 text-white placeholder-gray-600 rounded-2xl pl-14 pr-6 py-4 text-base outline-none transition-all"
+                    autofocus
+                >
+                <button type="submit" 
+                        class="absolute right-3 top-1/2 -translate-y-1/2 bg-gold-500 hover:bg-gold-400 text-navy-950 font-semibold px-5 py-2 rounded-xl text-sm transition-colors">
+                    {% trans "Search" %}
+                </button>
+            </div>
+        </form>
+        
+        {% if q %}
+        <p class="text-gray-400 text-sm mt-4">
+            {% blocktrans count count=total with query=q %}{{ count }} result for "{{ query }}"{% plural %}{{ count }} results for "{{ query }}"{% endblocktrans %}
+        </p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="bg-navy-950 py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        
+        {% if q %}
+            {% if results.courses %}
+            <div>
+                <h2 class="text-white font-bold text-lg mb-4 flex items-center space-x-2">
+                    <i data-lucide="book-open" class="w-5 h-5 text-gold-400"></i>
+                    <span>{% trans "Courses" %}</span>
+                    <span class="text-gray-500 text-sm font-normal">({{ results.courses|length }})</span>
+                </h2>
+                <div class="space-y-3">
+                    {% for course in results.courses %}
+                    <a href="{{ course.get_absolute_url }}" class="block glass rounded-xl p-4 hover:bg-white/5 transition-colors group">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                {% if course.code %}<span class="text-gold-400 text-xs font-bold">{{ course.code }}</span>{% endif %}
+                                <h3 class="text-white font-semibold group-hover:text-gold-400 transition-colors">{{ course.name }}</h3>
+                                <p class="text-gray-400 text-sm mt-1 line-clamp-1">{{ course.short_description|default:course.description }}</p>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-gray-500 group-hover:text-gold-400 transition-colors shrink-0 mt-1"></i>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if results.publications %}
+            <div>
+                <h2 class="text-white font-bold text-lg mb-4 flex items-center space-x-2">
+                    <i data-lucide="file-text" class="w-5 h-5 text-gold-400"></i>
+                    <span>{% trans "Publications" %}</span>
+                    <span class="text-gray-500 text-sm font-normal">({{ results.publications|length }})</span>
+                </h2>
+                <div class="space-y-3">
+                    {% for pub in results.publications %}
+                    <a href="{{ pub.get_absolute_url }}" class="block glass rounded-xl p-4 hover:bg-white/5 transition-colors group">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <span class="text-xs text-gray-500">{{ pub.get_publication_type_display }} • {{ pub.year }}</span>
+                                <h3 class="text-white font-semibold group-hover:text-gold-400 transition-colors">{{ pub.title }}</h3>
+                                <p class="text-gray-400 text-sm mt-1">{{ pub.authors }}</p>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-gray-500 group-hover:text-gold-400 transition-colors shrink-0 mt-1"></i>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if results.research %}
+            <div>
+                <h2 class="text-white font-bold text-lg mb-4 flex items-center space-x-2">
+                    <i data-lucide="flask-conical" class="w-5 h-5 text-gold-400"></i>
+                    <span>{% trans "Research" %}</span>
+                    <span class="text-gray-500 text-sm font-normal">({{ results.research|length }})</span>
+                </h2>
+                <div class="space-y-3">
+                    {% for project in results.research %}
+                    <a href="{{ project.get_absolute_url }}" class="block glass rounded-xl p-4 hover:bg-white/5 transition-colors group">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-white font-semibold group-hover:text-gold-400 transition-colors">{{ project.title }}</h3>
+                                <p class="text-gray-400 text-sm mt-1 line-clamp-1">{{ project.abstract }}</p>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-gray-500 group-hover:text-gold-400 transition-colors shrink-0 mt-1"></i>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if results.articles %}
+            <div>
+                <h2 class="text-white font-bold text-lg mb-4 flex items-center space-x-2">
+                    <i data-lucide="pen-line" class="w-5 h-5 text-gold-400"></i>
+                    <span>{% trans "Blog Articles" %}</span>
+                    <span class="text-gray-500 text-sm font-normal">({{ results.articles|length }})</span>
+                </h2>
+                <div class="space-y-3">
+                    {% for article in results.articles %}
+                    <a href="{{ article.get_absolute_url }}" class="block glass rounded-xl p-4 hover:bg-white/5 transition-colors group">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="text-white font-semibold group-hover:text-gold-400 transition-colors">{{ article.title }}</h3>
+                                <p class="text-gray-400 text-sm mt-1 line-clamp-1">{{ article.excerpt }}</p>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-gray-500 group-hover:text-gold-400 transition-colors shrink-0 mt-1"></i>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if total == 0 %}
+            <div class="text-center py-20">
+                <i data-lucide="search-x" class="w-16 h-16 text-gray-600 mx-auto mb-6"></i>
+                <h2 class="text-white text-2xl font-bold mb-3">{% trans "No results found" %}</h2>
+                <p class="text-gray-400 mb-8">{% blocktrans with query=q %}No matches for "{{ query }}". Try different keywords.{% endblocktrans %}</p>
+            </div>
+            {% endif %}
+        {% else %}
+        <div class="text-center py-20">
+            <i data-lucide="search" class="w-16 h-16 text-gray-600 mx-auto mb-6"></i>
+            <p class="text-gray-400 text-lg">{% trans "Enter a keyword above to search across all content." %}</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

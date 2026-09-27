@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Notifications" %}{% endblock %}
+
+{% block content %}
+<section class="py-12 bg-slate-50 min-h-[70vh]">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold font-serif text-navy-950 flex items-center gap-3">
+                    <span>{% trans "Notifications" %}</span>
+                    {% if unread_count > 0 %}
+                    <span class="px-2.5 py-0.5 text-xs font-semibold bg-gold-500/20 text-gold-700 rounded-full border border-gold-400/30">
+                        {{ unread_count }} {% trans "unread" %}
+                    </span>
+                    {% endif %}
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">{% trans "Updates regarding your account, course updates, and announcements." %}</p>
+            </div>
+
+            {% if notifications %}
+            <form hx-post="{% url 'notifications:mark_all_read' %}"
+                  hx-target="#notifications-body"
+                  hx-swap="outerHTML">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl text-navy-900 bg-white border border-gray-200 hover:bg-gray-50 shadow-xs transition-colors">
+                    <i data-lucide="check-check" class="w-4 h-4 text-gray-500"></i>
+                    <span>{% trans "Mark All as Read" %}</span>
+                </button>
+            </form>
+            {% endif %}
+        </div>
+
+        <!-- Notification List -->
+        {% include "notifications/partials/notification_list_body.html" with notifications=notifications %}
+    </div>
+</section>
+{% endblock %}

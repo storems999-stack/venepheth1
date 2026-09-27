@@ -1,0 +1,59 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ title }} | Venepheth SAYAVONG Platform Admin{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">Venepheth Platform Administration</a></h1>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* Custom academic theme overrides for Django Admin */
+    :root {
+        --primary: #0F1923;
+        --secondary: #1E3A5F;
+        --accent: #D4A017;
+        --primary-fg: #fff;
+        --body-bg: #f8fafc;
+        --body-quiet-color: #64748b;
+        --body-loud-color: #0f172a;
+        --header-color: #0F1923;
+        --header-branding-color: #D4A017;
+        --header-bg: #0F1923;
+        --header-link-color: #fff;
+        --breadcrumbs-fg: #cbd5e1;
+        --breadcrumbs-link-fg: #f8fafc;
+        --breadcrumbs-bg: #1E3A5F;
+        --link-fg: #1E3A5F;
+        --link-hover-color: #D4A017;
+        --link-selected-fg: #D4A017;
+        --hairline-color: #e2e8f0;
+        --border-color: #cbd5e1;
+        --error-fg: #dc2626;
+        --message-success-bg: #dcfce7;
+        --message-warning-bg: #fef3c7;
+        --message-error-bg: #fee2e2;
+        --button-bg: #1E3A5F;
+        --button-hover-bg: #0F1923;
+        --default-button-bg: #D4A017;
+        --default-button-hover-bg: #b4860b;
+        --selected-bg: #f1f5f9;
+        --selected-row: #f8fafc;
+        --darkened-bg: #f1f5f9;
+    }
+    #header {
+        border-bottom: 3px solid var(--accent);
+    }
+    .module h2, .module caption, .inline-group h2 {
+        background: var(--secondary);
+    }
+    div.breadcrumbs {
+        border-bottom: 1px solid var(--primary);
+    }
+    input[type=submit].default, .submit-row input.default {
+        color: #000;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}

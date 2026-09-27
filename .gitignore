@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+venepheth_platform/venv/
+
+# Environment Variables (Security Sensitive)
+.env
+.env.local
+.env.production
+!.env.example
+!.env.prod.example
+
+# Databases
+*.sqlite3
+db.sqlite3
+venepheth_platform/db.sqlite3
+
+# Static & Media
+staticfiles/
+venepheth_platform/staticfiles/
+media/
+venepheth_platform/media/*
+!venepheth_platform/media/.gitkeep
+
+# Logs
+logs/
+*.log
+venepheth_platform/logs/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Cloudflare & Wrangler
+.cloudflared/
+cert.pem
+.wrangler/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+Thumbs.db
+.DS_Store

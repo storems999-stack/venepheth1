@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{{ resource.title }}{% endblock %}
+
+{% block content %}
+<section class="bg-navy-950 border-b border-white/5 py-20 relative overflow-hidden">
+    <div class="absolute inset-0 bg-grid"></div>
+    <div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center space-x-2 text-gray-500 text-sm mb-8">
+            <a href="{% url 'core:home' %}" class="hover:text-gold-400">{% trans "Home" %}</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <a href="{% url 'resources:list' %}" class="hover:text-gold-400">{% trans "Library" %}</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-gold-400">{{ resource.title|truncatewords:4 }}</span>
+        </div>
+        
+        <div class="flex items-center space-x-4 mb-6">
+            <div class="w-16 h-16 bg-gold-500/10 rounded-2xl flex items-center justify-center text-gold-400 border border-gold-500/20">
+                {% if resource.resource_type == 'pdf' %}<i data-lucide="file-text" class="w-8 h-8"></i>
+                {% elif resource.resource_type == 'video' %}<i data-lucide="video" class="w-8 h-8"></i>
+                {% elif resource.resource_type == 'dataset' %}<i data-lucide="database" class="w-8 h-8"></i>
+                {% elif resource.resource_type == 'slides' %}<i data-lucide="monitor-play" class="w-8 h-8"></i>
+                {% elif resource.resource_type == 'external' %}<i data-lucide="link" class="w-8 h-8"></i>
+                {% else %}<i data-lucide="file" class="w-8 h-8"></i>{% endif %}
+            </div>
+            <div>
+                <span class="text-gold-400 text-sm font-medium">{{ resource.get_resource_type_display }}</span>
+                {% if resource.category %}
+                <span class="text-gray-500 text-sm"> • {{ resource.category.name }}</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <h1 class="text-3xl lg:text-4xl font-serif font-bold text-white mb-6">{{ resource.title }}</h1>
+        <p class="text-gray-300 text-lg leading-relaxed">{{ resource.description }}</p>
+    </div>
+</section>
+
+<section class="bg-navy-950 py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-3 gap-8">
+            
+            <div class="md:col-span-2 space-y-8">
+                <!-- Metadata -->
+                <div class="bg-navy-900 border border-white/5 rounded-2xl p-8">
+                    <h2 class="text-lg font-bold text-white mb-6 border-b border-white/10 pb-4">{% trans "Resource Details" %}</h2>
+                    <dl class="space-y-4 text-sm">
+                        {% if resource.author %}
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500">{% trans "Author" %}</dt>
+                            <dd class="text-white font-medium">{{ resource.author }}</dd>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500">{% trans "Version" %}</dt>
+                            <dd class="text-white font-medium">{{ resource.version }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500">{% trans "Language" %}</dt>
+                            <dd class="text-white font-medium">{{ resource.language }}</dd>
+                        </div>
+                        {% if resource.year %}
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500">{% trans "Year" %}</dt>
+                            <dd class="text-white font-medium">{{ resource.year }}</dd>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between">
+                            <dt class="text-gray-500">{% trans "Added on" %}</dt>
+                            <dd class="text-white font-medium">{{ resource.created_at|date:"M d, Y" }}</dd>
+                        </div>
+                    </dl>
+                    
+                    {% if resource.get_tags_list %}
+                    <div class="mt-6 pt-6 border-t border-white/10">
+                        <div class="flex flex-wrap gap-2">
+                            {% for tag in resource.get_tags_list %}
+                            <span class="bg-white/5 border border-white/10 text-gray-400 px-3 py-1 rounded-lg text-xs">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div>
+                <div class="glass rounded-2xl p-6 sticky top-24">
+                    {% if resource.file %}
+                    <div class="mb-6 text-center">
+                        <div class="text-gray-400 text-xs uppercase tracking-wider mb-2">{% trans "File Size" %}</div>
+                        <div class="text-white font-mono">{{ resource.file_size|filesizeformat }}</div>
+                    </div>
+                    <a href="{{ resource.file.url }}" target="_blank"
+                       class="flex items-center justify-center space-x-2 w-full bg-gold-500 hover:bg-gold-400 text-navy-950 font-semibold px-4 py-4 rounded-xl transition-all shadow-lg shadow-gold-500/20">
+                        <i data-lucide="download" class="w-5 h-5"></i>
+                        <span>{% trans "Download File" %}</span>
+                    </a>
+                    {% endif %}
+                    
+                    {% if resource.external_url %}
+                    <a href="{{ resource.external_url }}" target="_blank"
+                       class="flex items-center justify-center space-x-2 w-full border border-gold-500/30 text-gold-400 hover:bg-gold-500/10 font-medium px-4 py-4 rounded-xl transition-all mt-4">
+                        <i data-lucide="external-link" class="w-5 h-5"></i>
+                        <span>{% trans "Access Link" %}</span>
+                    </a>
+                    {% endif %}
+                    
+                    <div class="mt-6 flex items-center justify-center space-x-4 text-xs text-gray-500">
+                        <span class="flex items-center space-x-1">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                            <span>{{ resource.view_count }} {% trans "views" %}</span>
+                        </span>
+                        {% if resource.download_count %}
+                        <span class="flex items-center space-x-1">
+                            <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                            <span>{{ resource.download_count }} {% trans "downloads" %}</span>
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</section>
+{% endblock %}

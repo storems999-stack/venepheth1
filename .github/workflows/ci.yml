@@ -1,0 +1,142 @@
+name: 🔬 CI — Test & Lint
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.12"
+  DJANGO_SETTINGS_MODULE: config.settings.testing
+
+jobs:
+  # ── Job 1: Lint & Static Analysis ──────────────────────────────────────────
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install lint dependencies
+        run: pip install ruff mypy django-stubs
+
+      - name: Run Ruff linter
+        run: ruff check . --output-format=github
+
+      - name: Run Ruff formatter check
+        run: ruff format --check .
+
+  # ── Job 2: Unit & Integration Tests ────────────────────────────────────────
+  test:
+    name: Django Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    services:
+      # Use SQLite for CI — no PostgreSQL required (Zero-Cost strategy)
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        working-directory: venepheth_platform
+        run: pip install -r requirements/base.txt -r requirements/testing.txt
+
+      - name: Run Django system checks
+        working-directory: venepheth_platform
+        run: python manage.py check --deploy --settings=config.settings.testing || true
+
+      - name: Run migrations (SQLite)
+        working-directory: venepheth_platform
+        env:
+          DATABASE_URL: sqlite:///./ci_test.db
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          DEBUG: "False"
+        run: python manage.py migrate --run-syncdb
+
+      - name: Run test suite
+        working-directory: venepheth_platform
+        env:
+          DATABASE_URL: sqlite:///./ci_test.db
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          DEBUG: "False"
+          REDIS_URL: redis://localhost:6379/0
+        run: |
+          python -m pytest tests/ \
+            --tb=short \
+            --no-header \
+            -q \
+            --junit-xml=test-results.xml \
+            --cov=apps \
+            --cov-report=xml \
+            --cov-report=term-missing:skip-covered
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./venepheth_platform/coverage.xml
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: venepheth_platform/test-results.xml
+
+  # ── Job 3: Security Scan ────────────────────────────────────────────────────
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install bandit & safety
+        run: pip install bandit safety
+      - name: Run Bandit (security linter)
+        run: bandit -r venepheth_platform/apps/ -ll --format github || true
+      - name: Run Safety (dependency vulnerability scan)
+        working-directory: venepheth_platform
+        run: safety check -r requirements/base.txt --short-report || true
+
+  # ── Job 4: Build Check ──────────────────────────────────────────────────────
+  build-check:
+    name: Static Files Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install dependencies
+        working-directory: venepheth_platform
+        run: pip install -r requirements/base.txt
+      - name: Collect static files
+        working-directory: venepheth_platform
+        env:
+          DATABASE_URL: sqlite:///./ci_test.db
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          DEBUG: "False"
+        run: python manage.py collectstatic --noinput --settings=config.settings.testing || true

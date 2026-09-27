@@ -1,0 +1,12 @@
+-r base.txt
+
+# ─── Production Server ─────────────────────────────────────────────────
+gunicorn==23.0.0
+whitenoise==6.8.2                # Efficient static file serving fallback
+
+# ─── Monitoring ────────────────────────────────────────────────────────
+sentry-sdk[django]==2.19.2       # Error tracking (optional free tier)
+django-prometheus==2.3.1         # Prometheus metrics endpoint
+
+# ─── Security ──────────────────────────────────────────────────────────
+cryptography==44.0.0

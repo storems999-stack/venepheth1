@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{{ profile.full_name }} — {% trans "Profile" %}{% endblock %}
+
+{% block content %}
+<div class="bg-primary-900 text-white pt-24 pb-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
+            <div class="w-48 h-48 rounded-full overflow-hidden border-4 border-accent-500 shrink-0 bg-primary-800">
+                {% if profile.photo %}
+                    <img src="{{ profile.photo.url }}" alt="{{ profile.full_name }}" class="w-full h-full object-cover">
+                {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-5xl font-serif text-accent-500">
+                        {{ profile.full_name|make_list|first }}
+                    </div>
+                {% endif %}
+            </div>
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl font-serif font-bold mb-2">{{ profile.full_name }}</h1>
+                <p class="text-xl text-gray-300 mb-4">{{ profile.title }}</p>
+                
+                <div class="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-gray-400 mb-6">
+                    {% if profile.email %}
+                        <a href="mailto:{{ profile.email }}" class="hover:text-white flex items-center">
+                            <i data-lucide="mail" class="w-4 h-4 mr-1"></i> {{ profile.email }}
+                        </a>
+                    {% endif %}
+                    {% if profile.office %}
+                        <span class="flex items-center">
+                            <i data-lucide="map-pin" class="w-4 h-4 mr-1"></i> {{ profile.office }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    {% for interest in profile.interests.all %}
+                        <span class="bg-primary-800 text-gray-300 px-3 py-1 rounded-full text-sm border border-primary-700">
+                            {{ interest.name }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <!-- Main Bio & Experience -->
+        <div class="lg:col-span-2 space-y-12">
+            
+            <section>
+                <h2 class="text-2xl font-serif font-bold text-gray-900 mb-6 flex items-center">
+                    <i data-lucide="user" class="w-6 h-6 mr-2 text-accent-500"></i> {% trans "Biography" %}
+                </h2>
+                <div class="prose prose-lg text-gray-600 max-w-none">
+                    {{ profile.bio|linebreaks }}
+                </div>
+            </section>
+
+            {% if profile.experiences.exists %}
+            <section>
+                <h2 class="text-2xl font-serif font-bold text-gray-900 mb-6 flex items-center">
+                    <i data-lucide="briefcase" class="w-6 h-6 mr-2 text-accent-500"></i> {% trans "Experience" %}
+                </h2>
+                <div class="space-y-8">
+                    {% for exp in profile.experiences.all %}
+                        <div class="relative pl-8 before:absolute before:inset-y-0 before:left-0 before:w-px before:bg-gray-200">
+                            <div class="absolute left-[-4px] top-1.5 w-2 h-2 rounded-full bg-accent-500"></div>
+                            <h3 class="text-xl font-bold text-gray-900">{{ exp.position }}</h3>
+                            <div class="text-primary-800 font-medium mb-1">{{ exp.organization }}</div>
+                            <div class="text-sm text-gray-500 mb-2">
+                                {{ exp.year_start }} - {% if exp.is_current %}{% trans "Present" %}{% else %}{{ exp.year_end }}{% endif %}
+                            </div>
+                            {% if exp.description %}
+                                <p class="text-gray-600">{{ exp.description }}</p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+        </div>
+
+        <!-- Sidebar (Education, Languages) -->
+        <div class="space-y-12">
+            
+            {% if profile.educations.exists %}
+            <section class="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                <h2 class="text-xl font-serif font-bold text-gray-900 mb-6 flex items-center">
+                    <i data-lucide="graduation-cap" class="w-5 h-5 mr-2 text-accent-500"></i> {% trans "Education" %}
+                </h2>
+                <div class="space-y-6">
+                    {% for edu in profile.educations.all %}
+                        <div>
+                            <h4 class="font-bold text-gray-900">{{ edu.degree }}</h4>
+                            <div class="text-sm text-primary-800 mb-1">{{ edu.field }}</div>
+                            <div class="text-sm text-gray-500">{{ edu.institution }}</div>
+                            <div class="text-xs text-gray-400 mt-1">{{ edu.year_end }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {% if profile.languages.exists %}
+            <section class="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                <h2 class="text-xl font-serif font-bold text-gray-900 mb-6 flex items-center">
+                    <i data-lucide="languages" class="w-5 h-5 mr-2 text-accent-500"></i> {% trans "Languages" %}
+                </h2>
+                <ul class="space-y-3 text-gray-600">
+                    {% for lang in profile.languages.all %}
+                        <li class="flex justify-between items-center border-b border-gray-200 pb-2 last:border-0 last:pb-0">
+                            <span class="font-medium">{{ lang.name }}</span>
+                            <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">{{ lang.get_proficiency_display }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+            
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV — {{ profile.full_name }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Georgia", "Times New Roman", serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #1a1a2e;
+            background: #fff;
+            padding: 2cm 2.5cm;
+            max-width: 21cm;
+            margin: 0 auto;
+        }
+
+        /* ── Print button (hidden on print) ── */
+        .print-bar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            background: #0a0a23;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 2rem;
+            z-index: 100;
+            font-family: "Inter", sans-serif;
+            font-size: 13px;
+        }
+        .print-bar a { color: #c9a84c; text-decoration: none; }
+        .print-btn {
+            background: #c9a84c;
+            color: #0a0a23;
+            border: none;
+            padding: 0.4rem 1.2rem;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        @media print {
+            .print-bar { display: none !important; }
+            body { padding: 1.5cm 2cm; }
+        }
+
+        /* ── Header ── */
+        .cv-header {
+            border-bottom: 3px solid #1a1a2e;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .cv-name {
+            font-size: 26pt;
+            font-weight: bold;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #0a0a23;
+        }
+        .cv-title {
+            font-size: 13pt;
+            color: #555;
+            margin-top: 0.2rem;
+            font-style: italic;
+        }
+        .cv-contact {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.6rem;
+            font-size: 9.5pt;
+            color: #444;
+            font-family: "Courier New", monospace;
+        }
+        .cv-contact span::before { content: "▸ "; color: #c9a84c; }
+
+        /* ── Sections ── */
+        .cv-section {
+            margin-bottom: 1.4rem;
+            page-break-inside: avoid;
+        }
+        .cv-section-title {
+            font-size: 11pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #0a0a23;
+            border-bottom: 1px solid #c9a84c;
+            padding-bottom: 2px;
+            margin-bottom: 0.6rem;
+        }
+        .cv-entry {
+            margin-bottom: 0.7rem;
+            page-break-inside: avoid;
+        }
+        .cv-entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .cv-entry-title { font-weight: bold; font-size: 10.5pt; }
+        .cv-entry-date {
+            font-size: 9.5pt;
+            color: #666;
+            white-space: nowrap;
+            font-family: "Courier New", monospace;
+        }
+        .cv-entry-subtitle { color: #555; font-size: 10pt; font-style: italic; }
+        .cv-entry-body {
+            font-size: 10pt;
+            color: #333;
+            margin-top: 0.2rem;
+        }
+
+        /* ── Two-column for skills/languages ── */
+        .cv-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem 2rem;
+        }
+        .cv-tag {
+            display: inline-block;
+            background: #f0ede4;
+            border: 1px solid #d4c9a8;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 9pt;
+            margin: 1px 2px;
+        }
+
+        /* ── Publication entry ── */
+        .pub-authors { color: #666; font-size: 9.5pt; }
+        .pub-venue { font-style: italic; color: #555; font-size: 9.5pt; }
+        .pub-doi { color: #1a3a8f; font-size: 9pt; font-family: "Courier New", monospace; }
+    </style>
+</head>
+<body>
+
+<!-- Print bar -->
+<div class="print-bar">
+    <a href="{% url 'profiles:detail' %}">← Back to Profile</a>
+    <span>Curriculum Vitae (CV) — {{ profile.full_name|default:"Venepheth SAYAVONG" }}</span>
+    <button class="print-btn" onclick="window.print()">⬇ Save / Print PDF</button>
+</div>
+
+<!-- Header -->
+<div class="cv-header" style="margin-top: 3rem;">
+    <div class="cv-name">{{ profile.full_name }}</div>
+    {% if profile.title %}
+    <div class="cv-title">{{ profile.title }}</div>
+    {% endif %}
+    <div class="cv-contact">
+        {% if profile.email %}<span>{{ profile.email }}</span>{% endif %}
+        {% if profile.institution %}<span>{{ profile.institution }}</span>{% endif %}
+        {% if profile.department %}<span>{{ profile.department }}</span>{% endif %}
+        {% if profile.website %}<span>{{ profile.website }}</span>{% endif %}
+        {% if profile.orcid %}<span>ORCID: {{ profile.orcid }}</span>{% endif %}
+    </div>
+</div>
+
+<!-- Bio / Research Interests -->
+{% if profile.bio %}
+<div class="cv-section">
+    <div class="cv-section-title">Profile</div>
+    <div class="cv-entry-body">{{ profile.bio }}</div>
+</div>
+{% endif %}
+
+{% if academic_interests %}
+<div class="cv-section">
+    <div class="cv-section-title">Academic Interests</div>
+    <div>{% for interest in academic_interests %}<span class="cv-tag">{{ interest.name }}</span>{% endfor %}</div>
+</div>
+{% endif %}
+
+<!-- Education -->
+{% if education_list %}
+<div class="cv-section">
+    <div class="cv-section-title">Education</div>
+    {% for edu in education_list %}
+    <div class="cv-entry">
+        <div class="cv-entry-header">
+            <span class="cv-entry-title">{{ edu.degree }}{% if edu.field %} in {{ edu.field }}{% endif %}</span>
+            <span class="cv-entry-date">{{ edu.year_start }}{% if edu.year_end %} – {{ edu.year_end }}{% elif edu.is_current %} – Present{% endif %}</span>
+        </div>
+        <div class="cv-entry-subtitle">{{ edu.institution }}{% if edu.country %}, {{ edu.country }}{% endif %}</div>
+        {% if edu.description %}<div class="cv-entry-body">{{ edu.description }}</div>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Experience -->
+{% if experience_list %}
+<div class="cv-section">
+    <div class="cv-section-title">Professional Experience</div>
+    {% for exp in experience_list %}
+    <div class="cv-entry">
+        <div class="cv-entry-header">
+            <span class="cv-entry-title">{{ exp.position }}</span>
+            <span class="cv-entry-date">{{ exp.year_start }}{% if exp.year_end %} – {{ exp.year_end }}{% elif exp.is_current %} – Present{% endif %}</span>
+        </div>
+        <div class="cv-entry-subtitle">{{ exp.organization }}{% if exp.country %}, {{ exp.country }}{% endif %}</div>
+        {% if exp.description %}<div class="cv-entry-body">{{ exp.description }}</div>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Research Projects -->
+{% if research_projects %}
+<div class="cv-section">
+    <div class="cv-section-title">Research Projects</div>
+    {% for proj in research_projects %}
+    <div class="cv-entry">
+        <div class="cv-entry-header">
+            <span class="cv-entry-title">{{ proj.title }}</span>
+            <span class="cv-entry-date">{{ proj.start_date|date:"Y" }}{% if proj.end_date %} – {{ proj.end_date|date:"Y" }}{% endif %}</span>
+        </div>
+        {% if proj.funding_agency %}<div class="cv-entry-subtitle">Funded by: {{ proj.funding_agency }}</div>{% endif %}
+        {% if proj.abstract %}<div class="cv-entry-body">{{ proj.abstract|truncatewords:40 }}</div>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Publications -->
+{% if publications %}
+<div class="cv-section">
+    <div class="cv-section-title">Publications</div>
+    {% for pub in publications %}
+    <div class="cv-entry">
+        <div class="cv-entry-title">{{ pub.title }}</div>
+        {% if pub.authors %}<div class="pub-authors">{{ pub.authors }}</div>{% endif %}
+        <div class="pub-venue">
+            {% if pub.journal %}{{ pub.journal }}{% endif %}
+            {% if pub.conference %}{{ pub.conference }}{% endif %}
+            {% if pub.year %} ({{ pub.year }}){% endif %}
+            {% if pub.volume %}, Vol. {{ pub.volume }}{% endif %}
+            {% if pub.pages %}, pp. {{ pub.pages }}{% endif %}
+        </div>
+        {% if pub.doi %}<div class="pub-doi">DOI: {{ pub.doi }}</div>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Teaching -->
+{% if courses %}
+<div class="cv-section">
+    <div class="cv-section-title">Teaching</div>
+    {% for course in courses %}
+    <div class="cv-entry">
+        <div class="cv-entry-header">
+            <span class="cv-entry-title">{% if course.code %}{{ course.code }} — {% endif %}{{ course.name }}</span>
+            <span class="cv-entry-date">{{ course.academic_year }}{% if course.semester %}, {{ course.semester }}{% endif %}</span>
+        </div>
+        {% if course.credits %}<div class="cv-entry-subtitle">{{ course.credits }} credit(s)</div>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Awards -->
+{% if awards %}
+<div class="cv-section">
+    <div class="cv-section-title">Awards &amp; Honours</div>
+    {% for award in awards %}
+    <div class="cv-entry">
+        <div class="cv-entry-header">
+            <span class="cv-entry-title">{{ award.name }}</span>
+            <span class="cv-entry-date">{{ award.year }}</span>
+        </div>
+        {% if award.organization %}<div class="cv-entry-subtitle">{{ award.organization }}</div>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Certifications -->
+{% if certifications %}
+<div class="cv-section">
+    <div class="cv-section-title">Certifications</div>
+    {% for cert in certifications %}
+    <div class="cv-entry">
+        <div class="cv-entry-header">
+            <span class="cv-entry-title">{{ cert.name }}</span>
+            <span class="cv-entry-date">{{ cert.year }}{% if cert.expiry_year %} – {{ cert.expiry_year }}{% endif %}</span>
+        </div>
+        {% if cert.issuer %}<div class="cv-entry-subtitle">{{ cert.issuer }}</div>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Memberships -->
+{% if memberships %}
+<div class="cv-section">
+    <div class="cv-section-title">Professional Memberships</div>
+    {% for mem in memberships %}
+    <div class="cv-entry">
+        <div class="cv-entry-header">
+            <span class="cv-entry-title">{{ mem.organization }}</span>
+            <span class="cv-entry-date">{{ mem.year_start }}{% if mem.is_current %} – Present{% endif %}</span>
+        </div>
+        {% if mem.role %}<div class="cv-entry-subtitle">{{ mem.role }}</div>{% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Languages -->
+{% if languages %}
+<div class="cv-section">
+    <div class="cv-section-title">Languages</div>
+    <div class="cv-two-col">
+        {% for lang in languages %}
+        <div class="cv-entry">
+            <span class="cv-entry-title">{{ lang.name }}</span>
+            <span class="cv-entry-date"> — {{ lang.get_proficiency_display }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+</body>
+</html>

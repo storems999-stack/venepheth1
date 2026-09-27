@@ -1,0 +1,1050 @@
+# Lao translation for Venepheth Academic Platform
+# Copyright (C) 2026 Venepheth Sayavong
+# This file is distributed under the same license as the venepheth_platform package.
+# Venepheth Sayavong <venepheth@example.com>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: venepheth_platform 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-22 14:00+0700\n"
+"PO-Revision-Date: 2026-09-22 14:00+0700\n"
+"Last-Translator: Venepheth Sayavong <venepheth@example.com>\n"
+"Language-Team: Lao <lo@example.com>\n"
+"Language: lo\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+# ---------------------------------------------------------------------------
+# Navigation & UI
+# ---------------------------------------------------------------------------
+
+#: templates/base.html
+msgid "Skip to main content"
+msgstr "ຂ້າມໄປເນື້ອຫາຫຼັກ"
+
+#: templates/base.html
+msgid "Home"
+msgstr "ໜ້າຫຼັກ"
+
+#: templates/base.html
+msgid "Courses"
+msgstr "ວິຊາຮຽນ"
+
+#: templates/base.html
+msgid "Teaching"
+msgstr "ການສິດສອນ"
+
+#: templates/base.html
+msgid "Research"
+msgstr "ການຄົ້ນຄ້ວາ"
+
+#: templates/base.html
+msgid "Publications"
+msgstr "ສິ່ງຕີພິມ"
+
+#: templates/base.html
+msgid "Blog"
+msgstr "ບົດຄວາມ"
+
+#: templates/base.html
+msgid "Contact"
+msgstr "ຕິດຕໍ່"
+
+#: templates/base.html
+msgid "Notifications"
+msgstr "ການແຈ້ງເຕືອນ"
+
+#: templates/base.html
+msgid "Dashboard"
+msgstr "ໜ້າຈັດການ"
+
+#: templates/base.html
+msgid "Login"
+msgstr "ເຂົ້າສູ່ລະບົບ"
+
+#: templates/base.html
+msgid "Search"
+msgstr "ຄົ້ນຫາ"
+
+#: templates/base.html
+msgid "Search:"
+msgstr "ຄົ້ນຫາ:"
+
+#: templates/base.html
+msgid "Search courses, research, publications..."
+msgstr "ຄົ້ນຫາວິຊາ, ການຄົ້ນຄ້ວາ, ສິ່ງຕີພິມ..."
+
+#: templates/base.html
+msgid "Search courses, research, publications, blog..."
+msgstr "ຄົ້ນຫາວິຊາ, ການຄົ້ນຄ້ວາ, ສິ່ງຕີພິມ, ບົດຄວາມ..."
+
+#: templates/base.html
+msgid "Academic"
+msgstr "ວິຊາການ"
+
+#: templates/base.html
+msgid "Info"
+msgstr "ຂໍ້ມູນ"
+
+#: templates/base.html
+msgid "About"
+msgstr "ກ່ຽວກັບ"
+
+#: templates/base.html
+msgid "Privacy Policy"
+msgstr "ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ"
+
+#: templates/base.html
+msgid "All rights reserved."
+msgstr "ສະຫງວນລິຂະສິດທັງໝົດ."
+
+# ---------------------------------------------------------------------------
+# Home Page
+# ---------------------------------------------------------------------------
+
+#: templates/core/home.html
+msgid "Academic Lecturer & Researcher"
+msgstr "ອາຈານ ແລະ ນັກຄົ້ນຄ້ວາວິຊາການ"
+
+#: templates/core/home.html
+msgid "Lecturer, Researcher &"
+msgstr "ອາຈານ, ນັກຄົ້ນຄ້ວາ ແລະ"
+
+#: templates/core/home.html
+msgid "Academic Leader"
+msgstr "ຜູ້ນໍາທາງວິຊາການ"
+
+#: templates/core/home.html
+msgid "Advancing"
+msgstr "ສ້າງຄວາມກ້າວໜ້າ"
+
+#: templates/core/home.html
+msgid "Excellence"
+msgstr "ຄວາມດີເລີດ"
+
+#: templates/core/home.html
+msgid "Scholarship"
+msgstr "ວິທະຍາທານ"
+
+#: templates/core/home.html
+msgid "Venepheth Sayavong — Academic Lecturer and Researcher. Explore courses, research projects, publications and academic insights."
+msgstr "ວີນພເຈດ ສາຍາວົງ — ອາຈານ ແລະ ນັກຄົ້ນຄ້ວາວິຊາການ. ສຳຫຼວດວິຊາຮຽນ, ໂຄງການຄົ້ນຄ້ວາ, ສິ່ງຕີພິມ ແລະ ຄວາມຮູ້ທາງວິຊາການ."
+
+#: templates/core/home.html
+msgid "Available for academic collaboration, research partnerships, guest lectures and consulting engagements."
+msgstr "ພ້ອມຮ່ວມມືທາງວິຊາການ, ຮ່ວມໂຄງການຄົ້ນຄ້ວາ, ບັນຍາຍພິເສດ ແລະ ທີ່ປຶກສາ."
+
+#: templates/core/home.html
+msgid "Explore Courses"
+msgstr "ສຳຫຼວດວິຊາຮຽນ"
+
+#: templates/core/home.html
+msgid "Explore Research"
+msgstr "ສຳຫຼວດການຄົ້ນຄ້ວາ"
+
+#: templates/core/home.html
+msgid "Featured Courses"
+msgstr "ວິຊາຮຽນແນະນຳ"
+
+#: templates/core/home.html
+msgid "Comprehensive academic offerings spanning business, management and research methodologies."
+msgstr "ຫຼັກສູດວິຊາການຄອບຄຸມທຸລະກິດ, ການຈັດການ ແລະ ວິທີການຄົ້ນຄ້ວາ."
+
+#: templates/core/home.html
+msgid "No featured courses available yet. Check back soon!"
+msgstr "ຍັງບໍ່ມີວິຊາຮຽນແນະນຳ. ກວດສອບໃໝ່ໃນໄວໆນີ້!"
+
+#: templates/core/home.html
+msgid "Academic Courses"
+msgstr "ວິຊາຮຽນທາງວິຊາການ"
+
+#: templates/core/home.html
+msgid "Recent Publications"
+msgstr "ສິ່ງຕີພິມລ່າສຸດ"
+
+#: templates/core/home.html
+msgid "Peer-reviewed journal articles, conference papers, books and working papers."
+msgstr "ບົດຄວາມໃນວາລະສານ, ບົດຄວາມກອງປະຊຸມ, ໜັງສື ແລະ ເອກະສານວິທະຍາ."
+
+#: templates/core/home.html
+msgid "Latest Articles"
+msgstr "ບົດຄວາມລ່າສຸດ"
+
+#: templates/core/home.html
+msgid "Academic writings, research notes, tutorials and insights from my teaching and research journey."
+msgstr "ການຂຽນວິຊາການ, ບັນທຶກຄົ້ນຄ້ວາ, ບົດສອນ ແລະ ຄວາມຮູ້ຈາກການສອນ ແລະ ຄົ້ນຄ້ວາ."
+
+#: templates/core/home.html
+msgid "Learn More"
+msgstr "ຮຽນຮູ້ເພີ່ມເຕີມ"
+
+#: templates/core/home.html
+msgid "Let's Connect"
+msgstr "ຕິດຕໍ່ຫາຂ້ອຍ"
+
+#: templates/core/home.html
+msgid "Let's Work Together"
+msgstr "ມາຮ່ວມງານກັນ"
+
+#: templates/core/home.html
+msgid "Whether you're interested in academic collaboration, research partnership, or simply want to learn more about my work — I'd love to hear from you."
+msgstr "ບໍ່ວ່າທ່ານຈະສົນໃຈຮ່ວມງານວິຊາການ, ຮ່ວມການຄົ້ນຄ້ວາ, ຫຼືແຄ່ຢາກຮຽນຮູ້ກ່ຽວກັບວຽກຂ້ອຍ — ຂ້ອຍຍິນດີຮັບຟັງ."
+
+#: templates/core/home.html
+msgid "Get in Touch"
+msgstr "ຕິດຕໍ່"
+
+#: templates/core/home.html
+msgid "Send a Message"
+msgstr "ສົ່ງຂໍ້ຄວາມ"
+
+#: templates/core/home.html
+msgid "Vientiane, Laos PDR"
+msgstr "ວຽງຈັນ, ສປປ ລາວ"
+
+#: templates/core/home.html
+msgid "Department of Business Administration"
+msgstr "ພາກວິຊາບໍລິຫານທຸລະກິດ"
+
+#: templates/core/home.html
+msgid "Open for collaboration"
+msgstr "ພ້ອມຮ່ວມງານ"
+
+#: templates/core/home.html
+msgid "Lao, English, Thai"
+msgstr "ລາວ, ອັງກິດ, ໄທ"
+
+#: templates/core/home.html
+msgid "Areas of Expertise"
+msgstr "ສາຂາຊ່ຽວຊານ"
+
+#: templates/core/home.html
+msgid "Active Researcher"
+msgstr "ນັກຄົ້ນຄ້ວາຈິງ"
+
+#: templates/core/home.html
+msgid "Expert Lecturer"
+msgstr "ອາຈານຊ່ຽວຊານ"
+
+#: templates/core/home.html
+msgid "Openly accessible"
+msgstr "ເຂົ້າເຖິງໄດ້ຟຣີ"
+
+#: templates/core/home.html
+msgid "Academic insights, research notes and educational articles by Venepheth Sayavong."
+msgstr "ຄວາມຮູ້ທາງວິຊາການ, ບັນທຶກຄົ້ນຄ້ວາ ແລະ ບົດຄວາມດ້ານການສຶກສາໂດຍ ວີນພເຈດ ສາຍາວົງ."
+
+#: templates/core/home.html
+msgid "Scroll"
+msgstr "ເລື່ອນລົງ"
+
+# ---------------------------------------------------------------------------
+# Profile / CV
+# ---------------------------------------------------------------------------
+
+#: templates/core/profile.html
+msgid "Profile"
+msgstr "ໂປຣໄຟລ໌"
+
+#: templates/core/profile.html
+msgid "Profile Not Found"
+msgstr "ບໍ່ພົບໂປຣໄຟລ໌"
+
+#: templates/core/profile.html
+msgid "The profile has not been set up yet."
+msgstr "ໂປຣໄຟລ໌ຍັງບໍ່ຖືກຕັ້ງຄ່າ."
+
+#: templates/core/profile.html
+msgid "Print CV"
+msgstr "ພິມ CV"
+
+#: templates/core/profile.html
+msgid "Biography"
+msgstr "ຊີວະປະຫວັດ"
+
+#: templates/core/profile.html
+msgid "Education"
+msgstr "ການສຶກສາ"
+
+#: templates/core/profile.html
+msgid "Experience"
+msgstr "ປະສົບການ"
+
+#: templates/core/profile.html
+msgid "Professional Experience"
+msgstr "ປະສົບການວິຊາຊີບ"
+
+#: templates/core/profile.html
+msgid "Present"
+msgstr "ປັດຈຸບັນ"
+
+#: templates/core/profile.html
+msgid "Memberships"
+msgstr "ສະມາຊິກ"
+
+#: templates/core/profile.html
+msgid "Awards & Honors"
+msgstr "ລາງວັນ ແລະ ກຽດຕິຍົດ"
+
+#: templates/core/profile.html
+msgid "Academic Profiles"
+msgstr "ໂປຣໄຟລ໌ທາງວິຊາການ"
+
+#: templates/core/profile.html
+msgid "Languages"
+msgstr "ພາສາ"
+
+#: templates/core/profile.html
+msgid "Courses Taught"
+msgstr "ວິຊາທີ່ສິດສອນ"
+
+#: templates/core/profile.html
+msgid "Students Taught"
+msgstr "ນັກຮຽນທີ່ສິດສອນ"
+
+#: templates/core/profile.html
+msgid "Research Topics"
+msgstr "ຫົວຂໍ້ຄົ້ນຄ້ວາ"
+
+# ---------------------------------------------------------------------------
+# Courses
+# ---------------------------------------------------------------------------
+
+#: templates/courses/list.html
+msgid "Browse all academic courses taught by Venepheth Sayavong — Business, Management, and Research Methodology."
+msgstr "ສຳຫຼວດວິຊາຮຽນທາງວິຊາການທັງໝົດທີ່ສິດສອນໂດຍ ວີນພເຈດ ສາຍາວົງ — ທຸລະກິດ, ການຈັດການ ແລະ ວິທີການຄົ້ນຄ້ວາ."
+
+#: templates/courses/list.html
+msgid "Comprehensive courses spanning business management, economics, research methodology and more."
+msgstr "ຫຼັກສູດຄົບວົງຈອນ ຄອບຄຸມການຈັດການທຸລະກິດ, ເສດຖະສາດ, ວິທີການຄົ້ນຄ້ວາ ແລະ ອື່ນໆ."
+
+#: templates/courses/list.html
+msgid "All courses"
+msgstr "ວິຊາທັງໝົດ"
+
+#: templates/courses/list.html
+msgid "No courses found"
+msgstr "ບໍ່ພົບວິຊາ"
+
+#: templates/courses/list.html
+msgid "Try different filters or check back soon."
+msgstr "ລອງຕົວກອງອື່ນ ຫຼື ກວດສອບໃໝ່ໃນໄວໆນີ້."
+
+#: templates/courses/detail.html
+msgid "Course Description"
+msgstr "ຄຳອະທິບາຍວິຊາ"
+
+#: templates/courses/detail.html
+msgid "Course Info"
+msgstr "ຂໍ້ມູນວິຊາ"
+
+#: templates/courses/detail.html
+msgid "Course Modules"
+msgstr "ໂມດູນວິຊາ"
+
+#: templates/courses/detail.html
+msgid "Learning Outcomes"
+msgstr "ຜົນການຮຽນຮູ້"
+
+#: templates/courses/detail.html
+msgid "Back to Courses"
+msgstr "ກັບຄືນວິຊາຮຽນ"
+
+#: templates/courses/detail.html
+msgid "Academic Year"
+msgstr "ສົກຮຽນ"
+
+#: templates/courses/detail.html
+msgid "Semester"
+msgstr "ພາກຮຽນ"
+
+#: templates/courses/detail.html
+msgid "Credits"
+msgstr "ໜ່ວຍຄະແນນ"
+
+#: templates/courses/detail.html
+msgid "credits"
+msgstr "ສ.ຄ."
+
+#: templates/courses/detail.html
+msgid "cr"
+msgstr "ສ.ຄ."
+
+#: templates/courses/detail.html
+msgid "Language"
+msgstr "ພາສາ"
+
+#: templates/courses/detail.html
+msgid "Featured"
+msgstr "ແນະນຳ"
+
+# ---------------------------------------------------------------------------
+# Research
+# ---------------------------------------------------------------------------
+
+#: templates/research/list.html
+msgid "Ongoing and completed research across business, economics and development."
+msgstr "ການຄົ້ນຄ້ວາທີ່ດຳເນີນຢູ່ ແລະ ສຳເລັດ ດ້ານທຸລະກິດ, ເສດຖະສາດ ແລະ ການພັດທະນາ."
+
+#: templates/research/list.html
+msgid "Ongoing and completed research exploring business, economics and sustainable development in Laos."
+msgstr "ການຄົ້ນຄ້ວາທີ່ດຳເນີນຢູ່ ແລະ ສຳເລັດ ທີ່ສຳຫຼວດທຸລະກິດ, ເສດຖະສາດ ແລະ ການພັດທະນາຍືນຍົງໃນລາວ."
+
+#: templates/research/list.html
+msgid "All Research Projects"
+msgstr "ໂຄງການຄົ້ນຄ້ວາທັງໝົດ"
+
+#: templates/research/list.html
+msgid "Research Projects"
+msgstr "ໂຄງການຄົ້ນຄ້ວາ"
+
+#: templates/research/list.html
+msgid "All Status"
+msgstr "ທຸກສະຖານະ"
+
+#: templates/research/list.html
+msgid "No projects found"
+msgstr "ບໍ່ພົບໂຄງການ"
+
+#: templates/research/list.html
+msgid "Research projects will appear here soon."
+msgstr "ໂຄງການຄົ້ນຄ້ວາຈະປາກົດຢູ່ທີ່ນີ້ໃນໄວໆນີ້."
+
+#: templates/research/detail.html
+msgid "View Research"
+msgstr "ເບິ່ງການຄົ້ນຄ້ວາ"
+
+#: templates/research/detail.html
+msgid "Back to Research"
+msgstr "ກັບຄືນການຄົ້ນຄ້ວາ"
+
+#: templates/research/detail.html
+msgid "Abstract"
+msgstr "ບົດຄັດຫຍໍ້"
+
+#: templates/research/detail.html
+msgid "Funding"
+msgstr "ການສະໜັບສະໜູນ"
+
+#: templates/research/detail.html
+msgid "Collaborators"
+msgstr "ຜູ້ຮ່ວມງານ"
+
+#: templates/research/detail.html
+msgid "Keywords"
+msgstr "ຄຳສຳຄັນ"
+
+#: templates/research/detail.html
+msgid "Project Website"
+msgstr "ເວັບໄຊໂຄງການ"
+
+# ---------------------------------------------------------------------------
+# Publications
+# ---------------------------------------------------------------------------
+
+#: templates/publications/list.html
+msgid "Peer-reviewed journal articles, conference papers, books and working papers."
+msgstr "ບົດຄວາມໃນວາລະສານ, ບົດຄວາມກອງປະຊຸມ, ໜັງສື ແລະ ເອກະສານວິທະຍາ."
+
+#: templates/publications/list.html
+msgid "All Publications"
+msgstr "ສິ່ງຕີພິມທັງໝົດ"
+
+#: templates/publications/list.html
+msgid "All Years"
+msgstr "ທຸກປີ"
+
+#: templates/publications/list.html
+msgid "All Types"
+msgstr "ທຸກປະເພດ"
+
+#: templates/publications/list.html
+msgid "No publications found"
+msgstr "ບໍ່ພົບສິ່ງຕີພິມ"
+
+#: templates/publications/detail.html
+msgid "Back to Publications"
+msgstr "ກັບຄືນສິ່ງຕີພິມ"
+
+#: templates/publications/detail.html
+msgid "Related Publications"
+msgstr "ສິ່ງຕີພິມທີ່ກ່ຽວຂ້ອງ"
+
+#: templates/publications/detail.html
+msgid "Cite this Work (APA)"
+msgstr "ອ້າງອີງວຽກນີ້ (APA)"
+
+#: templates/publications/detail.html
+msgid "Copy citation"
+msgstr "ສຳເນົາການອ້າງອີງ"
+
+#: templates/publications/detail.html
+msgid "Times Cited"
+msgstr "ຄັ້ງທີ່ຖືກອ້າງອີງ"
+
+#: templates/publications/detail.html
+msgid "citations"
+msgstr "ການອ້າງອີງ"
+
+#: templates/publications/detail.html
+msgid "views"
+msgstr "ການເບິ່ງ"
+
+#: templates/publications/detail.html
+msgid "downloads"
+msgstr "ການດາວໂຫຼດ"
+
+#: templates/publications/detail.html
+msgid "Papers"
+msgstr "ບົດຄວາມ"
+
+#: templates/publications/detail.html
+msgid "Download PDF"
+msgstr "ດາວໂຫຼດ PDF"
+
+#: templates/publications/detail.html
+msgid "View Online"
+msgstr "ເບິ່ງອອນລາຍ"
+
+#: templates/publications/detail.html
+msgid "Access Link"
+msgstr "ລິ້ງເຂົ້າເຖິງ"
+
+#: templates/publications/detail.html
+msgid "Author"
+msgstr "ຜູ້ຂຽນ"
+
+#: templates/publications/detail.html
+msgid "Year"
+msgstr "ປີ"
+
+# ---------------------------------------------------------------------------
+# Blog
+# ---------------------------------------------------------------------------
+
+#: templates/blog/list.html
+msgid "Blog & Articles"
+msgstr "ບົດຄວາມ ແລະ ບລ໋ອກ"
+
+#: templates/blog/list.html
+msgid "Blog Articles"
+msgstr "ບົດຄວາມ"
+
+#: templates/blog/list.html
+msgid "All Articles"
+msgstr "ບົດຄວາມທັງໝົດ"
+
+#: templates/blog/list.html
+msgid "All Categories"
+msgstr "ທຸກໝວດໝູ່"
+
+#: templates/blog/list.html
+msgid "No articles found"
+msgstr "ບໍ່ພົບບົດຄວາມ"
+
+#: templates/blog/list.html
+msgid "Filter:"
+msgstr "ຕົວກອງ:"
+
+#: templates/blog/list.html
+msgid "Tag:"
+msgstr "ແທັກ:"
+
+#: templates/blog/list.html
+msgid "Topic:"
+msgstr "ຫົວຂໍ້:"
+
+#: templates/blog/detail.html
+msgid "Back to Blog"
+msgstr "ກັບຄືນບລ໋ອກ"
+
+#: templates/blog/detail.html
+msgid "Related Articles"
+msgstr "ບົດຄວາມທີ່ກ່ຽວຂ້ອງ"
+
+#: templates/blog/detail.html
+msgid "Tags"
+msgstr "ແທັກ"
+
+#: templates/blog/detail.html
+msgid "Tags:"
+msgstr "ແທັກ:"
+
+#: templates/blog/detail.html
+msgid "Writings"
+msgstr "ການຂຽນ"
+
+# ---------------------------------------------------------------------------
+# Contact
+# ---------------------------------------------------------------------------
+
+#: templates/contact/form.html
+msgid "Full Name"
+msgstr "ຊື່ ແລະ ນາມສະກຸນ"
+
+#: templates/contact/form.html
+msgid "Email Address"
+msgstr "ທີ່ຢູ່ອີເມວ"
+
+#: templates/contact/form.html
+msgid "Subject"
+msgstr "ຫົວຂໍ້"
+
+#: templates/contact/form.html
+msgid "Message"
+msgstr "ຂໍ້ຄວາມ"
+
+#: templates/contact/form.html
+msgid "Send Message"
+msgstr "ສົ່ງຂໍ້ຄວາມ"
+
+#: templates/contact/form.html
+msgid "Sending..."
+msgstr "ກຳລັງສົ່ງ..."
+
+#: templates/contact/form.html
+msgid "Message Sent!"
+msgstr "ສົ່ງຂໍ້ຄວາມແລ້ວ!"
+
+#: templates/contact/form.html
+msgid "Message Sent Successfully!"
+msgstr "ສົ່ງຂໍ້ຄວາມສຳເລັດແລ້ວ!"
+
+#: templates/contact/form.html
+msgid "Message Sent"
+msgstr "ສົ່ງຂໍ້ຄວາມແລ້ວ"
+
+#: templates/contact/form.html
+msgid "Thank you for reaching out. I will review your message and get back to you within 2–3 business days."
+msgstr "ຂອບໃຈທີ່ຕິດຕໍ່. ຂ້ອຍຈະທົບທວນຂໍ້ຄວາມ ແລະ ຕອບກັບທ່ານພາຍໃນ 2–3 ວັນເຮັດວຽກ."
+
+#: templates/contact/form.html
+msgid "Thank you for reaching out. Your inquiry has been received and you will receive a response as soon as possible."
+msgstr "ຂອບໃຈທີ່ຕິດຕໍ່. ຄຳຖາມຂອງທ່ານຖືກຮັບແລ້ວ ແລະ ທ່ານຈະໄດ້ຮັບການຕອບໂດຍໄວທີ່ສຸດ."
+
+#: templates/contact/form.html
+msgid "Send another message"
+msgstr "ສົ່ງຂໍ້ຄວາມອີກ"
+
+#: templates/contact/form.html
+msgid "Other Ways to Connect"
+msgstr "ວິທີຕິດຕໍ່ອື່ນ"
+
+#: templates/contact/form.html
+msgid "Response Time"
+msgstr "ເວລາຕອບສະໜອງ"
+
+#: templates/contact/form.html
+msgid "Usually within 2–3 business days"
+msgstr "ປົກກະຕິພາຍໃນ 2–3 ວັນເຮັດວຽກ"
+
+#: templates/contact/form.html
+msgid "Your information is kept private and will not be shared."
+msgstr "ຂໍ້ມູນຂອງທ່ານຈະຖືກເກັບເປັນຄວາມລັບ ແລະ ຈະບໍ່ຖືກແຊກຈ່າຍ."
+
+#: templates/contact/form.html
+msgid "Email"
+msgstr "ອີເມວ"
+
+#: templates/contact/form.html
+msgid "Office"
+msgstr "ສຳນັກງານ"
+
+#: templates/contact/form.html
+msgid "Engagement"
+msgstr "ການພົວພັນ"
+
+#: templates/contact/form.html
+msgid "Email or Username"
+msgstr "ອີເມວ ຫຼື ຊື່ຜູ້ໃຊ້"
+
+# ---------------------------------------------------------------------------
+# Events
+# ---------------------------------------------------------------------------
+
+#: templates/events/list.html
+msgid "Events & Seminars"
+msgstr "ກິດຈະກຳ ແລະ ສໍາມະນາ"
+
+#: templates/events/list.html
+msgid "Events"
+msgstr "ກິດຈະກຳ"
+
+#: templates/events/list.html
+msgid "Upcoming and past academic events, guest lectures, and conferences."
+msgstr "ກິດຈະກຳທາງວິຊາການ, ການບັນຍາຍ ແລະ ກອງປະຊຸມທີ່ຜ່ານມາ ແລະ ກຳລັງຈະມາ."
+
+#: templates/events/list.html
+msgid "Upcoming Events"
+msgstr "ກິດຈະກຳທີ່ກຳລັງຈະມາ"
+
+#: templates/events/list.html
+msgid "No upcoming events scheduled at this time."
+msgstr "ບໍ່ມີກິດຈະກຳທີ່ຈະກຳນົດໄວ້ໃນຂະນະນີ້."
+
+#: templates/events/list.html
+msgid "Past Events"
+msgstr "ກິດຈະກຳທີ່ຜ່ານມາ"
+
+#: templates/events/list.html
+msgid "No past events."
+msgstr "ບໍ່ມີກິດຈະກຳທີ່ຜ່ານມາ."
+
+#: templates/events/list.html
+msgid "Upcoming"
+msgstr "ທີ່ກຳລັງຈະມາ"
+
+#: templates/events/list.html
+msgid "All Event Types"
+msgstr "ທຸກປະເພດກິດຈະກຳ"
+
+#: templates/events/detail.html
+msgid "Event Details"
+msgstr "ລາຍລະອຽດກິດຈະກຳ"
+
+#: templates/events/detail.html
+msgid "Back to Events"
+msgstr "ກັບຄືນກິດຈະກຳ"
+
+#: templates/events/detail.html
+msgid "Location"
+msgstr "ສະຖານທີ່"
+
+#: templates/events/detail.html
+msgid "Organizer"
+msgstr "ຜູ້ຈັດ"
+
+#: templates/events/detail.html
+msgid "Register Now"
+msgstr "ລົງທະບຽນດຽວນີ້"
+
+#: templates/events/detail.html
+msgid "Virtual Event"
+msgstr "ກິດຈະກຳອອນລາຍ"
+
+#: templates/events/detail.html
+msgid "Virtual / Online Event"
+msgstr "ກິດຈະກຳອອນລາຍ"
+
+#: templates/events/detail.html
+msgid "Past Event"
+msgstr "ກິດຈະກຳທີ່ຜ່ານມາ"
+
+#: templates/events/detail.html
+msgid "Organization"
+msgstr "ອົງກອນ"
+
+# ---------------------------------------------------------------------------
+# Teaching
+# ---------------------------------------------------------------------------
+
+#: templates/teaching/overview.html
+msgid "Office hours, teaching philosophy, and current courses by Venepheth Sayavong."
+msgstr "ເວລາຮັບນັກສຶກສາ, ທັດສະນະດ້ານການສອນ ແລະ ວິຊາຮຽນປັດຈຸບັນໂດຍ ວີນພເຈດ ສາຍາວົງ."
+
+#: templates/teaching/overview.html
+msgid "Office hours, philosophy of education, student announcements, and active courses."
+msgstr "ເວລາຮັບນັກສຶກສາ, ທັດສະນະດ້ານການສຶກສາ, ການປະກາດ ແລະ ວິຊາຮຽນທີ່ເປີດ."
+
+#: templates/teaching/overview.html
+msgid "Academia"
+msgstr "ວິຊາການ"
+
+#: templates/teaching/overview.html
+msgid "Breadcrumb"
+msgstr "ທາງນຳທາງ"
+
+#: templates/teaching/overview.html
+msgid "Page header"
+msgstr "ສ່ວນຫົວໜ້າ"
+
+#: templates/teaching/overview.html
+msgid "Student Announcements"
+msgstr "ການປະກາດສຳຫຼັບນັກສຶກສາ"
+
+#: templates/teaching/overview.html
+msgid "URGENT"
+msgstr "ດ່ວນ"
+
+#: templates/teaching/overview.html
+msgid "Office Hours"
+msgstr "ເວລາຮັບນັກສຶກສາ"
+
+#: templates/teaching/overview.html
+msgid "Virtual"
+msgstr "ອອນລາຍ"
+
+#: templates/teaching/overview.html
+msgid "Join"
+msgstr "ເຂົ້າຮ່ວມ"
+
+#: templates/teaching/overview.html
+msgid "Office hours will be announced at the start of each semester."
+msgstr "ເວລາຮັບນັກສຶກສາຈະຖືກປະກາດໃນຕົ້ນພາກຮຽນ."
+
+#: templates/teaching/overview.html
+msgid "Need to meet outside hours?"
+msgstr "ຕ້ອງການພົບນອກເວລາຮັບ?"
+
+#: templates/teaching/overview.html
+msgid "Send a message"
+msgstr "ສົ່ງຂໍ້ຄວາມ"
+
+#: templates/teaching/overview.html
+msgid "Teaching Philosophy"
+msgstr "ທັດສະນະດ້ານການສິດສອນ"
+
+#: templates/teaching/overview.html
+msgid "Teaching philosophy statement coming soon."
+msgstr "ຄຳໃຫ້ການກ່ຽວກັບທັດສະນະດ້ານການສິດສອນຈະມາໃນໄວໆນີ້."
+
+#: templates/teaching/overview.html
+msgid "Current Courses"
+msgstr "ວິຊາຮຽນປັດຈຸບັນ"
+
+#: templates/teaching/overview.html
+msgid "Announcements"
+msgstr "ການປະກາດ"
+
+# ---------------------------------------------------------------------------
+# Resources / Digital Library
+# ---------------------------------------------------------------------------
+
+#: templates/resources/list.html
+msgid "Digital Library"
+msgstr "ຫ້ອງສະໝຸດດີຈີຕອນ"
+
+#: templates/resources/list.html
+msgid "A collection of lecture notes, datasets, presentation slides, and open educational resources."
+msgstr "ຊຸດເອກະສານບັນທຶກການສອນ, ຂໍ້ມູນ, ສະໄລດ໌ ແລະ ຊັບພະຍາກອນການສຶກສາເປີດ."
+
+#: templates/resources/list.html
+msgid "Library"
+msgstr "ຫ້ອງສະໝຸດ"
+
+#: templates/resources/list.html
+msgid "Resources"
+msgstr "ຊັບພະຍາກອນ"
+
+#: templates/resources/list.html
+msgid "View"
+msgstr "ເບິ່ງ"
+
+#: templates/resources/list.html
+msgid "No resources found"
+msgstr "ບໍ່ພົບຊັບພະຍາກອນ"
+
+#: templates/resources/list.html
+msgid "Try adjusting your filters or check back later."
+msgstr "ລອງດັດແປງຕົວກອງ ຫຼື ກວດສອບໃໝ່ໃນຄັ້ງຕໍ່ໄປ."
+
+#: templates/resources/list.html
+msgid "Clear filters"
+msgstr "ລ້າງຕົວກອງ"
+
+#: templates/resources/detail.html
+msgid "Resource Details"
+msgstr "ລາຍລະອຽດຊັບພະຍາກອນ"
+
+#: templates/resources/detail.html
+msgid "Version"
+msgstr "ລຸ້ນ"
+
+#: templates/resources/detail.html
+msgid "Download File"
+msgstr "ດາວໂຫຼດໄຟລ໌"
+
+#: templates/resources/detail.html
+msgid "File Size"
+msgstr "ຂະໜາດໄຟລ໌"
+
+#: templates/resources/detail.html
+msgid "Added on"
+msgstr "ເພີ່ມໃນວັນ"
+
+# ---------------------------------------------------------------------------
+# Search
+# ---------------------------------------------------------------------------
+
+#: templates/search/results.html
+msgid "No results found"
+msgstr "ບໍ່ພົບຜົນ"
+
+#: templates/search/results.html
+msgid "Enter a keyword above to search across all content."
+msgstr "ປ້ອນຄຳສຳຄັນດ້ານເທິງເພື່ອຄົ້ນຫາທົ່ວເນື້ອຫາ."
+
+# ---------------------------------------------------------------------------
+# Authentication
+# ---------------------------------------------------------------------------
+
+#: templates/registration/login.html
+msgid "Sign In"
+msgstr "ເຂົ້າສູ່ລະບົບ"
+
+#: templates/registration/login.html
+msgid "Welcome Back"
+msgstr "ຍິນດີຕ້ອນຮັບຄືນ"
+
+#: templates/registration/login.html
+msgid "Remember Me"
+msgstr "ຈືຊື່ຜູ້ໃຊ້"
+
+#: templates/registration/login.html
+msgid "Forgot Password?"
+msgstr "ລືມລະຫັດຜ່ານ?"
+
+#: templates/registration/login.html
+msgid "Create an Account"
+msgstr "ສ້າງບັນຊີ"
+
+#: templates/registration/login.html
+msgid "Sign Up"
+msgstr "ລົງທະບຽນ"
+
+#: templates/registration/login.html
+msgid "Back to Sign In"
+msgstr "ກັບຄືນການເຂົ້າສູ່ລະບົບ"
+
+#: templates/registration/login.html
+msgid "Password"
+msgstr "ລະຫັດຜ່ານ"
+
+#: templates/registration/password_reset.html
+msgid "Reset Password"
+msgstr "ຕັ້ງລະຫັດຜ່ານໃໝ່"
+
+#: templates/registration/password_reset.html
+msgid "Enter your email address and we'll send you a link to reset your password."
+msgstr "ໃສ່ທີ່ຢູ່ອີເມວ ແລະ ຂ້ອຍຈະສົ່ງລິ້ງຕັ້ງລະຫັດຜ່ານໃໝ່ໃຫ້ທ່ານ."
+
+#: templates/registration/password_reset.html
+msgid "Send Reset Link"
+msgstr "ສົ່ງລິ້ງຕັ້ງໃໝ່"
+
+# ---------------------------------------------------------------------------
+# Notifications
+# ---------------------------------------------------------------------------
+
+#: templates/notifications/list.html
+msgid "Mark All as Read"
+msgstr "ໝາຍທັງໝົດວ່າອ່ານແລ້ວ"
+
+#: templates/notifications/list.html
+msgid "Mark Read"
+msgstr "ໝາຍວ່າອ່ານແລ້ວ"
+
+#: templates/notifications/list.html
+msgid "No notifications yet."
+msgstr "ຍັງບໍ່ມີການແຈ້ງເຕືອນ."
+
+#: templates/notifications/list.html
+msgid "unread"
+msgstr "ຍັງບໍ່ໄດ້ອ່ານ"
+
+#: templates/notifications/list.html
+msgid "Updates regarding your account, course updates, and announcements."
+msgstr "ການອັບເດດກ່ຽວກັບບັນຊີ, ການອັບເດດວິຊາ ແລະ ການປະກາດ."
+
+#: templates/notifications/list.html
+msgid "Read"
+msgstr "ອ່ານແລ້ວ"
+
+#: templates/notifications/list.html
+msgid "ago"
+msgstr "ທີ່ຜ່ານ"
+
+# ---------------------------------------------------------------------------
+# Error Pages
+# ---------------------------------------------------------------------------
+
+#: templates/errors/404.html
+msgid "Page Not Found"
+msgstr "ບໍ່ພົບໜ້ານີ້"
+
+#: templates/errors/404.html
+msgid "The page you are looking for doesn't exist or has been moved."
+msgstr "ໜ້າທີ່ທ່ານຄົ້ນຫາບໍ່ມີ ຫຼື ຖືກຍ້າຍໄປແລ້ວ."
+
+#: templates/errors/404.html
+msgid "Go Home"
+msgstr "ໄປໜ້າຫຼັກ"
+
+#: templates/errors/404.html
+msgid "Back to Home"
+msgstr "ກັບຄືນໜ້າຫຼັກ"
+
+#: templates/errors/403.html
+msgid "Access Denied"
+msgstr "ຖືກປະຕິເສດການເຂົ້າເຖິງ"
+
+#: templates/errors/403.html
+msgid "You don't have permission to view this page."
+msgstr "ທ່ານບໍ່ມີສິດເຂົ້າເບິ່ງໜ້ານີ້."
+
+#: templates/errors/400.html
+msgid "Bad Request"
+msgstr "ຄຳຮ້ອງຂໍ້ຜິດ"
+
+#: templates/errors/400.html
+msgid "The request could not be understood. Please check your input and try again."
+msgstr "ຄຳຮ້ອງຂໍບໍ່ສາມາດເຂົ້າໃຈໄດ້. ກວດສອບຂໍ້ມູນ ແລະ ລອງໃໝ່."
+
+#: templates/errors/429.html
+msgid "Too Many Requests"
+msgstr "ຄຳຮ້ອງຂໍຫຼາຍເກີນໄປ"
+
+#: templates/errors/429.html
+msgid "You've made too many requests. Please wait a moment before trying again."
+msgstr "ທ່ານສົ່ງຄຳຮ້ອງຂໍຫຼາຍເກີນໄປ. ກະລຸນາລໍຖ້າຈັກໜ່ອຍກ່ອນລອງໃໝ່."
+
+#: templates/errors/500.html
+msgid "Server Error"
+msgstr "ຂໍ້ຜິດພາດເຊີບເວີ"
+
+#: templates/errors/500.html
+msgid "Something went wrong on our end. Please try again in a moment."
+msgstr "ມີບາງຢ່າງຜິດພາດຢູ່ຝ່າຍເຊີບເວີ. ກະລຸນາລອງໃໝ່ໃນໄວໆນີ້."
+
+# ---------------------------------------------------------------------------
+# Miscellaneous / Shared
+# ---------------------------------------------------------------------------
+
+#: templates
+msgid "Categories"
+msgstr "ໝວດໝູ່"
+
+#: templates
+msgid "Details"
+msgstr "ລາຍລະອຽດ"
+
+#: templates
+msgid "View Details"
+msgstr "ເບິ່ງລາຍລະອຽດ"
+
+#: templates
+msgid "All"
+msgstr "ທັງໝົດ"
+
+#: templates
+msgid "Try adjusting your filters or check back soon."
+msgstr "ລອງດັດແປງຕົວກອງ ຫຼື ກວດສອບໃໝ່ໃນໄວໆນີ້."
+
+#: templates
+msgid "(optional)"
+msgstr "(ທາງເລືອກ)"
+
+#: templates
+msgid "Tag"
+msgstr "ແທັກ"
+
+#: templates
+msgid "Filter"
+msgstr "ຕົວກອງ"
+
+#: templates
+msgid "All Categories"
+msgstr "ທຸກໝວດໝູ່"

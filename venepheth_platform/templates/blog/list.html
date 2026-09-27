@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Blog" %}{% endblock %}
+{% block meta_description %}{% trans "Academic insights, research notes and educational articles by Venepheth Sayavong." %}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<section class="bg-navy-950 border-b border-white/5 py-20 relative overflow-hidden">
+    <div class="absolute inset-0 bg-grid"></div>
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center space-x-2 text-gray-500 text-sm mb-6">
+            <a href="{% url 'core:home' %}" class="hover:text-gold-400 transition-colors">{% trans "Home" %}</a>
+            <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            <span class="text-gold-400">{% trans "Blog" %}</span>
+        </div>
+        <span class="text-gold-500 text-sm font-bold uppercase tracking-widest">{% trans "Writings" %}</span>
+        <div class="section-divider"></div>
+        <h1 class="text-4xl lg:text-5xl font-serif font-bold text-white mt-3">{% trans "Blog & Articles" %}</h1>
+        <p class="text-gray-400 text-lg mt-4 max-w-xl">
+            {% trans "Academic writings, research notes, tutorials and insights from my teaching and research journey." %}
+        </p>
+    </div>
+</section>
+
+<!-- Content -->
+<section class="bg-navy-950 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-4 gap-10">
+            <!-- Sidebar: Filters -->
+            <aside class="lg:col-span-1 space-y-6">
+                <!-- Categories -->
+                <div class="glass rounded-2xl p-5">
+                    <h3 class="text-white font-bold text-sm mb-4 uppercase tracking-wider">{% trans "Categories" %}</h3>
+                    <div class="space-y-2">
+                        <a href="?" 
+                           hx-get="{% url 'blog:list' %}"
+                           hx-target="#articles-container"
+                           hx-swap="innerHTML"
+                           hx-push-url="true"
+                           class="flex items-center justify-between px-3 py-2 rounded-lg text-sm
+                                  {% if not selected_category %}text-gold-400 bg-gold-500/10{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %} transition-colors">
+                            <span>{% trans "All" %}</span>
+                        </a>
+                        {% for value, label in categories %}
+                        <a href="?category={{ value }}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}" 
+                           hx-get="{% url 'blog:list' %}?category={{ value }}{% if selected_tag %}&tag={{ selected_tag }}{% endif %}"
+                           hx-target="#articles-container"
+                           hx-swap="innerHTML"
+                           hx-push-url="true"
+                           class="flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors
+                                  {% if selected_category == value %}text-gold-400 bg-gold-500/10{% else %}text-gray-400 hover:text-white hover:bg-white/5{% endif %}">
+                            <span>{{ label }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Tags -->
+                {% if tags %}
+                <div class="glass rounded-2xl p-5">
+                    <h3 class="text-white font-bold text-sm mb-4 uppercase tracking-wider">{% trans "Tags" %}</h3>
+                    <div class="flex flex-wrap gap-2">
+                        {% for tag in tags %}
+                        <a href="?tag={{ tag.slug }}{% if selected_category %}&category={{ selected_category }}{% endif %}" 
+                           hx-get="{% url 'blog:list' %}?tag={{ tag.slug }}{% if selected_category %}&category={{ selected_category }}{% endif %}"
+                           hx-target="#articles-container"
+                           hx-swap="innerHTML"
+                           hx-push-url="true"
+                           class="px-3 py-1.5 rounded-full text-xs font-medium transition-all
+                                  {% if selected_tag == tag.slug %}bg-gold-500 text-navy-950{% else %}bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/10{% endif %}">
+                            #{{ tag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </aside>
+            
+            <!-- Articles Grid -->
+            <main class="lg:col-span-3">
+                {% include "blog/partials/article_grid.html" %}
+            </main>
+        </div>
+    </div>
+</section>
+{% endblock %}

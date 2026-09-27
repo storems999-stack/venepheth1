@@ -1,0 +1,50 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Sign Up" %}{% endblock %}
+
+{% block account_content %}
+<div class="text-center mb-8">
+    <h1 class="text-2xl font-bold text-white mb-2">{% trans "Create an Account" %}</h1>
+    <p class="text-gray-400 text-sm">
+        {% blocktrans %}Join the academic platform to access resources.{% endblocktrans %}
+    </p>
+</div>
+
+<form class="space-y-5" method="POST" action="{% url 'account_signup' %}">
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+    <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm mb-4">
+        {{ form.non_field_errors|striptags }}
+    </div>
+    {% endif %}
+
+    {% for field in form %}
+    <div>
+        <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-300 mb-1">
+            {{ field.label }}
+        </label>
+        <input type="{{ field.field.widget.input_type }}" name="{{ field.html_name }}" id="{{ field.id_for_label }}" 
+               class="w-full bg-navy-900 border border-white/10 rounded-xl py-2.5 px-3 text-white focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500 placeholder-gray-600 transition-colors"
+               {% if field.field.required %}required{% endif %}>
+        {% if field.errors %}
+        <p class="text-red-400 text-xs mt-1">{{ field.errors|striptags }}</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <button type="submit" class="w-full bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-gold-500/20 mt-6">
+        {% trans "Sign Up" %}
+    </button>
+</form>
+
+<div class="mt-8 text-center border-t border-white/5 pt-6">
+    <p class="text-sm text-gray-400">
+        {% blocktrans %}Already have an account?{% endblocktrans %}
+        <a href="{% url 'account_login' %}" class="font-medium text-gold-400 hover:text-gold-300 transition-colors">
+            {% trans "Sign in" %}
+        </a>
+    </p>
+</div>
+{% endblock %}

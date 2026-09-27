@@ -1,0 +1,60 @@
+name: 🚀 CD — Deploy to Production
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Server
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+            cd ${{ secrets.APP_DIR || '/var/www/venepheth_platform' }}
+
+            echo "📥 Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            echo "🐍 Installing dependencies..."
+            source venv/bin/activate
+            pip install -r requirements/production.txt -q
+
+            echo "🗄️ Running migrations..."
+            python manage.py migrate --noinput
+
+            echo "📦 Collecting static files..."
+            python manage.py collectstatic --noinput
+
+            echo "🔄 Reloading application..."
+            sudo systemctl reload gunicorn || sudo systemctl restart gunicorn
+            sudo systemctl reload nginx
+
+            echo "🏥 Health check..."
+            sleep 3
+            curl -sf https://${{ secrets.DOMAIN }}/health/ || echo "Health check endpoint not available."
+
+            echo "✅ Deployment complete!"
+
+      - name: Notify deployment
+        if: always()
+        run: |
+          echo "Deploy status: ${{ job.status }}"

@@ -1,0 +1,50 @@
+# ─── Core ──────────────────────────────────────────────────────────────
+Django==5.1.4
+psycopg2-binary>=2.9.9
+django-environ==0.11.2
+
+# ─── REST API ───────────────────────────────────────────────────────────
+djangorestframework==3.15.2
+djangorestframework-simplejwt==5.3.1
+django-filter==24.3
+drf-spectacular==0.27.2          # OpenAPI schema generation
+
+# ─── Async / Background Tasks ──────────────────────────────────────────
+celery[redis]==5.4.0
+redis==5.2.0
+django-celery-beat==2.7.0        # Periodic tasks scheduler
+django-celery-results==2.5.1
+
+# ─── Authentication & Security ─────────────────────────────────────────
+django-allauth==65.3.0           # Auth flows (email login, social future)
+fido2<2.0.0                      # Required by allauth.mfa webauthn
+django-otp==1.5.3                # TOTP-based 2FA
+qrcode[pil]==8.0                 # QR code for 2FA setup
+django-axes==7.0.1               # Brute-force login protection
+django-guardian==2.4.0           # Object-level permissions
+django-ratelimit==4.1.0          # Rate limiting decorator
+
+# ─── Content & File Handling ───────────────────────────────────────────
+Pillow>=11.0.0                   # Image processing (Python 3.14 compatible)
+bleach==6.2.0                    # XSS sanitization
+python-magic==0.4.27             # MIME detection for file upload security
+django-simple-history==3.7.0     # Content version history
+django-storages==1.14.4          # Storage backends (S3/R2 ready)
+# WeasyPrint: install separately via Docker — requires system libs (Pango/Cairo)
+
+# ─── Search ────────────────────────────────────────────────────────────
+django-watson==1.6.3             # Full-text search across models
+
+# ─── UI Helpers ────────────────────────────────────────────────────────
+django-htmx==1.21.0              # HTMX integration helpers
+django-widget-tweaks==1.5.0      # Template form widget customization
+
+# ─── SEO & Meta ────────────────────────────────────────────────────────
+django-meta==2.4.0               # OpenGraph / Twitter / SEO tags
+
+# ─── Utilities ─────────────────────────────────────────────────────────
+django-extensions==3.2.3
+Markdown==3.7
+python-slugify==8.0.4
+django-cleanup==9.0.0            # Auto-delete unused media files
+whitenoise==6.8.2                # Static file serving

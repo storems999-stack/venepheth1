@@ -1,0 +1,125 @@
+version: "3.9"
+
+# ─── Named Volumes ─────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
+  static_data:
+
+# ─── Networks ─────────────────────────────────────────────────────────────────
+networks:
+  backend:
+    driver: bridge
+  frontend:
+    driver: bridge
+
+# ─── Shared Django env (used by web + worker + scheduler) ─────────────────────
+x-django-env: &django-env
+  env_file: .env
+  environment:
+    - DJANGO_SETTINGS_MODULE=config.settings.development
+  volumes:
+    - .:/app
+    - media_data:/app/media
+    - static_data:/app/staticfiles
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+
+  # ─── Database ───────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-venepheth_db}
+      POSTGRES_USER: ${POSTGRES_USER:-venepheth_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_env}
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-venepheth_app} -d ${POSTGRES_DB:-venepheth_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5433:5432"  # Only expose locally in dev
+
+  # ─── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-change_me_in_env}
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-change_me_in_env}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Django Web ─────────────────────────────────────────────────────────────
+  web:
+    <<: *django-env
+    build:
+      context: .   # Use builder stage in dev for faster rebuilds
+    command: >
+      sh -c "
+        python manage.py migrate --noinput &&
+        python manage.py collectstatic --noinput &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    ports:
+      - "127.0.0.1:9080:8000"
+    networks:
+      - backend
+      - frontend
+    restart: unless-stopped
+
+  # ─── Celery Worker ──────────────────────────────────────────────────────────
+  worker:
+    <<: *django-env
+    build:
+      context: .
+    command: celery -A config.celery worker --loglevel=info --concurrency=2
+    networks:
+      - backend
+    restart: unless-stopped
+    depends_on:
+      - web
+
+  # ─── Celery Beat Scheduler ──────────────────────────────────────────────────
+  scheduler:
+    <<: *django-env
+    build:
+      context: .
+    command: celery -A config.celery beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    networks:
+      - backend
+    restart: unless-stopped
+    depends_on:
+      - worker
+
+  # ─── Nginx Reverse Proxy ────────────────────────────────────────────────────
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./docker/nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_data:/app/staticfiles:ro
+      - media_data:/app/media:ro
+    ports:
+      - "8080:80"
+    networks:
+      - frontend
+    depends_on:
+      - web
