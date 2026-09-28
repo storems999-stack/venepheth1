@@ -23,13 +23,22 @@ def publication_list(request):
     if pub_type:
         qs = qs.filter(publication_type=pub_type)
     if year:
-        qs = qs.filter(year=year)
+        try:
+            qs = qs.filter(year=int(year))
+        except (TypeError, ValueError):
+            logger.warning("Invalid year filter ignored: %r", year)
     if topic_slug:
         qs = qs.filter(topics__slug=topic_slug)
 
     # Available filter options
     pub_types = Publication.PublicationType.choices
-    years = Publication.objects.filter(status="published").values_list("year", flat=True).distinct().order_by("-year")
+    years = (
+        Publication.objects.filter(status="published")
+        .exclude(year__isnull=True)
+        .values_list("year", flat=True)
+        .distinct()
+        .order_by("-year")
+    )
     topics = ResearchTopic.objects.all()
 
     paginator = Paginator(qs, 9)

@@ -4,8 +4,9 @@ import logging
 
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_GET
+
+from apps.core.decorators import cache_page_unless_htmx
 
 from .models import ResearchProject, ResearchTopic
 
@@ -13,7 +14,7 @@ logger = logging.getLogger("apps.research")
 
 
 @require_GET
-@cache_page(60 * 15)  # Cache for 15 minutes
+@cache_page_unless_htmx(60 * 15)  # Cache for 15 minutes (HTMX partials bypass)
 def research_list(request):
     """Public research projects listing."""
     status_filter = request.GET.get("status", "")
@@ -63,7 +64,7 @@ def project_detail(request, slug):
             "related_publications": related_publications,
             "meta_title": project.seo_title or project.title,
             "meta_description": project.seo_description or project.abstract[:200],
-            "meta_image": project.cover_image.url if getattr(project, "cover_image", None) else None,
+            "meta_image": project.og_image.url if getattr(project.og_image, "name", None) else None,
         },
     )
 

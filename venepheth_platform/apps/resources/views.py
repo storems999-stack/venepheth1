@@ -56,9 +56,10 @@ def resource_detail(request, slug):
     # Increment view count (atomic — avoids lost-update races)
     Resource.objects.filter(pk=resource.pk).update(view_count=F("view_count") + 1)
 
-    related = Resource.objects.filter(visibility=Resource.Visibility.PUBLIC, category=resource.category).exclude(
-        pk=resource.pk
-    )[:4]
+    related = Resource.objects.filter(visibility=Resource.Visibility.PUBLIC).exclude(pk=resource.pk)
+    if resource.category_id:
+        related = related.filter(category=resource.category)
+    related = related.select_related("category")[:4]
 
     return render(
         request,

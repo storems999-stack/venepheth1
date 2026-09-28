@@ -194,7 +194,7 @@ def toggle_user_active(request, pk):
     user.is_active = not user.is_active
     user.save(update_fields=["is_active"])
 
-    action = AuditLog.Action.USER_CREATED if user.is_active else AuditLog.Action.USER_DEACTIVATED
+    action = AuditLog.Action.USER_ACTIVATED if user.is_active else AuditLog.Action.USER_DEACTIVATED
     AuditLog.log(
         who=request.user,
         action=action,

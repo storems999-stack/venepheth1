@@ -2,6 +2,8 @@
 Digital Resource Library models.
 """
 
+import logging
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -12,6 +14,8 @@ from apps.core.file_security import (
     validate_file_size,
 )
 from apps.core.models import SlugModel, TimeStampedModel
+
+logger = logging.getLogger("apps.resources")
 
 
 class ResourceCategory(TimeStampedModel):
@@ -125,7 +129,7 @@ class Resource(TimeStampedModel, SlugModel):
                 if not self.file_hash:
                     self.file_hash = compute_file_hash(self.file)
             except Exception:
-                pass
+                logger.warning("Failed to compute file size/hash for resource %r", self.slug)
         super().save(*args, **kwargs)
 
     def get_tags_list(self):

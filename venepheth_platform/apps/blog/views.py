@@ -3,9 +3,11 @@
 import logging
 
 from django.core.paginator import Paginator
+from django.db.models import F
 from django.shortcuts import get_object_or_404, render
-from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_GET
+
+from apps.core.decorators import cache_page_unless_htmx
 
 from .models import Article, ArticleTag
 
@@ -13,7 +15,7 @@ logger = logging.getLogger("apps.blog")
 
 
 @require_GET
-@cache_page(60 * 15)  # Cache for 15 minutes
+@cache_page_unless_htmx(60 * 15)  # Cache for 15 minutes (HTMX partials bypass)
 def article_list(request):
     """Public blog listing."""
     category = request.GET.get("category", "")
@@ -54,8 +56,8 @@ def article_detail(request, slug):
     """Blog article detail."""
     article = get_object_or_404(Article, slug=slug, status=Article.Status.PUBLISHED)
 
-    # Increment view count
-    Article.objects.filter(pk=article.pk).update(view_count=article.view_count + 1)
+    # Increment view count (atomic — avoids lost-update races)
+    Article.objects.filter(pk=article.pk).update(view_count=F("view_count") + 1)
 
     # Related articles
     related = (
@@ -76,7 +78,7 @@ def article_detail(request, slug):
             "related": related,
             "meta_title": article.seo_title or article.title,
             "meta_description": article.seo_description or article.excerpt,
-            "meta_image": article.thumbnail.url if getattr(article, "thumbnail", None) else None,
+            "meta_image": article.thumbnail.url if getattr(article.thumbnail, "name", None) else None,
         },
     )
 

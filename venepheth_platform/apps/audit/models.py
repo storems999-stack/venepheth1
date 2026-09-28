@@ -40,6 +40,7 @@ class AuditLog(models.Model):
 
         # Admin
         USER_CREATED = "user_created", _("User Created")
+        USER_ACTIVATED = "user_activated", _("User Activated")
         USER_DEACTIVATED = "user_deactivated", _("User Deactivated")
         ROLE_CHANGED = "role_changed", _("Role Changed")
         PERMISSION_CHANGED = "permission_changed", _("Permission Changed")

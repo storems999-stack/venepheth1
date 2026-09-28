@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from apps.blog.models import Article, ArticleTag
 from apps.courses.models import Course, CourseCategory
+from apps.profiles.models import Profile
 from apps.research.models import ResearchProject, ResearchTopic
 
 
@@ -13,6 +14,13 @@ class ViewTests(TestCase):
 
     def setUp(self):
         self.client = Client()
+
+        # Active profile (public pages 404 without one)
+        self.profile = Profile.objects.create(
+            full_name="Venepheth SAYAVONG",
+            title="Lecturer",
+            is_active=True,
+        )
 
         # Blog data
         self.tag = ArticleTag.objects.create(name="Economics", slug="economics")
@@ -243,6 +251,12 @@ class ViewTests(TestCase):
         response = self.client.get(reverse("profiles:cv_print"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Curriculum Vitae")
+
+    def test_profile_detail_no_active_profile_404(self):
+        """No active profile → 404 (not an empty 200 page)."""
+        Profile.objects.all().delete()
+        self.assertEqual(self.client.get(reverse("profiles:detail")).status_code, 404)
+        self.assertEqual(self.client.get(reverse("profiles:cv_print")).status_code, 404)
 
     def test_error_503_view(self):
         """503 Service Unavailable view returns 503 status code."""

@@ -4,6 +4,7 @@ Notifications views with HTMX support.
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
 
 from .models import Notification
@@ -57,7 +58,7 @@ def mark_as_read(request, pk):
 @require_POST
 def mark_all_as_read(request):
     """Mark all notifications for the user as read."""
-    request.user.notifications.filter(is_read=False).update(is_read=True)
+    request.user.notifications.filter(is_read=False).update(is_read=True, updated_at=timezone.now())
 
     if request.headers.get("HX-Request"):
         notifications = request.user.notifications.all()

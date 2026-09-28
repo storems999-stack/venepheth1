@@ -2,6 +2,7 @@
 
 import logging
 
+from django.http import Http404
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
@@ -35,14 +36,16 @@ def profile_detail(request):
         .filter(is_active=True)
         .first()
     )
+    if profile is None:
+        raise Http404()
 
     return render(
         request,
         "profiles/detail.html",
         {
             "profile": profile,
-            "meta_title": f"Academic Profile — {profile.full_name}" if profile else "Profile Not Found",
-            "meta_description": profile.short_bio if profile else "",
+            "meta_title": f"Academic Profile — {profile.full_name}",
+            "meta_description": profile.short_bio,
         },
     )
 
@@ -63,6 +66,8 @@ def cv_print(request):
         .filter(is_active=True)
         .first()
     )
+    if profile is None:
+        raise Http404()
 
     context = {
         "profile": profile,
@@ -77,12 +82,15 @@ def cv_print(request):
 
     if _HAS_RESEARCH:
         context["research_projects"] = ResearchProject.objects.filter(
-            research_status__in=["ongoing", "completed", "published"]
+            status="published",
+            research_status__in=["ongoing", "completed", "published"],
         ).order_by("-start_date")[:20]
         context["publications"] = Publication.objects.filter(status="published").order_by("-year", "-created_at")[:30]
 
     if _HAS_COURSES:
-        context["courses"] = Course.objects.filter(status="published").order_by("-academic_year", "name")[:20]
+        context["courses"] = Course.objects.filter(status="published", visibility="public").order_by(
+            "-academic_year", "name"
+        )[:20]
 
     logger.info("CV print page accessed from %s", request.META.get("REMOTE_ADDR", "unknown"))
     return render(request, "profiles/cv_print.html", context)

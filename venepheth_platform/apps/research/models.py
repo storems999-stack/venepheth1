@@ -138,5 +138,11 @@ class Publication(PublishableModel, SlugModel, SEOModel):
         if self.pages:
             parts.append(f", {self.pages}.")
         if self.doi:
-            parts.append(f" https://doi.org/{self.doi}")
+            doi = self.doi.strip()
+            if doi.startswith(("http://", "https://")):
+                parts.append(f" {doi}")
+            else:
+                if doi.lower().startswith("doi:"):
+                    doi = doi[4:]
+                parts.append(f" https://doi.org/{doi}")
         return " ".join(parts)

@@ -21,15 +21,17 @@ def homepage(request):
     from apps.profiles.models import Profile
     from apps.research.models import Publication, ResearchProject
 
-    profile = Profile.objects.first()
+    profile = Profile.objects.filter(is_active=True).first()
 
-    courses_count = Course.objects.filter(status="published").count()
+    courses_count = Course.objects.filter(status="published", visibility="public").count()
     publications_count = Publication.objects.filter(status="published").count()
     research_count = ResearchProject.objects.filter(status="published").count()
 
     context = {
         "profile": profile,
-        "featured_courses": Course.objects.filter(status="published", featured=True).select_related("category")[:6],
+        "featured_courses": Course.objects.filter(
+            status="published", visibility="public", featured=True
+        ).select_related("category")[:6],
         "recent_research": ResearchProject.objects.filter(status="published").order_by("-updated_at")[:4],
         "recent_articles": Article.objects.filter(status=Article.Status.PUBLISHED).prefetch_related("tags")[:3],
         "recent_publications": Publication.objects.filter(status="published").order_by("-year")[:4],
@@ -169,8 +171,9 @@ def health_check(request):
     try:
         connection.ensure_connection()
         checks["database"] = "ok"
-    except Exception as e:
-        checks["database"] = f"error: {e}"
+    except Exception:
+        logger.warning("Health check: database unreachable", exc_info=True)
+        checks["database"] = "error"
         status = 503
 
     # Cache check
@@ -180,8 +183,9 @@ def health_check(request):
         cache.set("health_check", "ok", 5)
         val = cache.get("health_check")
         checks["cache"] = "ok" if val == "ok" else "error"
-    except Exception as e:
-        checks["cache"] = f"error: {e}"
+    except Exception:
+        logger.warning("Health check: cache unreachable", exc_info=True)
+        checks["cache"] = "error"
         status = 503
 
     return JsonResponse({"status": "ok" if status == 200 else "error", "checks": checks}, status=status)
@@ -189,7 +193,11 @@ def health_check(request):
 
 @require_GET
 def readiness_check(request):
-    """Kubernetes readiness probe."""
+    """Kubernetes readiness probe (verifies the database is reachable)."""
+    try:
+        connection.ensure_connection()
+    except Exception:
+        return JsonResponse({"status": "not ready"}, status=503)
     return JsonResponse({"status": "ready"})
 
 

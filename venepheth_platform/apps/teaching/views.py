@@ -8,7 +8,7 @@ from django.views.decorators.http import require_GET
 
 from apps.courses.models import Course
 
-from .models import OfficeHours, StudentAnnouncement, TeachingPhilosophy
+from .models import OfficeHours, StudentAnnouncement, TeachingPhilosophy, weekday_ordering
 
 logger = logging.getLogger("apps.teaching")
 
@@ -17,7 +17,11 @@ logger = logging.getLogger("apps.teaching")
 @cache_page(60 * 30)  # 30-minute cache — office hours don't change frequently
 def teaching_overview(request):
     """Teaching overview: office hours, philosophy, recent announcements."""
-    office_hours = OfficeHours.objects.filter(is_active=True).order_by("day", "start_time")
+    office_hours = (
+        OfficeHours.objects.filter(is_active=True)
+        .annotate(_day_order=weekday_ordering())
+        .order_by("_day_order", "start_time")
+    )
     philosophy = TeachingPhilosophy.objects.filter(is_active=True).first()
     announcements = StudentAnnouncement.objects.filter(status="published").order_by("-created_at")[:5]
     current_courses = (

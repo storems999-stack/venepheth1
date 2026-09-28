@@ -4,8 +4,9 @@ import logging
 
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render
-from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_GET
+
+from apps.core.decorators import cache_page_unless_htmx
 
 from .models import Course, CourseCategory
 
@@ -13,7 +14,7 @@ logger = logging.getLogger("apps.courses")
 
 
 @require_GET
-@cache_page(60 * 15)  # Cache for 15 minutes
+@cache_page_unless_htmx(60 * 15)  # Cache for 15 minutes (HTMX partials bypass)
 def course_list(request):
     """Public list of all published courses."""
     category_slug = request.GET.get("category", "")
@@ -68,6 +69,6 @@ def course_detail(request, slug):
             "announcements": announcements,
             "meta_title": course.seo_title or course.name,
             "meta_description": course.seo_description or course.short_description,
-            "meta_image": course.thumbnail.url if getattr(course, "thumbnail", None) else None,
+            "meta_image": course.thumbnail.url if getattr(course.thumbnail, "name", None) else None,
         },
     )
