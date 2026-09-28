@@ -522,9 +522,11 @@
                             <i data-lucide="linkedin" class="w-4 h-4"></i>
                         </a>
                         {% endif %}
-                        <a href="mailto:{{ global_profile.user.email|default:'contact@venepheth.edu.la' }}" class="w-9 h-9 bg-white/5 hover:bg-gold-500/20 border border-white/10 hover:border-gold-500/40 rounded-lg flex items-center justify-center text-gray-400 hover:text-gold-400 transition-all duration-200" aria-label="Email">
+                        {% if global_profile.email %}
+                        <a href="mailto:{{ global_profile.email }}" class="w-9 h-9 bg-white/5 hover:bg-gold-500/20 border border-white/10 hover:border-gold-500/40 rounded-lg flex items-center justify-center text-gray-400 hover:text-gold-400 transition-all duration-200" aria-label="Email">
                             <i data-lucide="mail" class="w-4 h-4"></i>
                         </a>
+                        {% endif %}
                     </div>
                 </div>
 

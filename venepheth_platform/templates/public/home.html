@@ -103,10 +103,10 @@
                         <p class="text-gold-400 text-sm mb-4 font-medium">
                             {{ profile.title|default:"Academic Lecturer & Researcher" }}
                         </p>
-                        {% if profile.institution %}
+                        {% if profile.office %}
                         <p class="text-gray-400 text-xs flex items-center justify-center space-x-1">
                             <i data-lucide="map-pin" class="w-3 h-3"></i>
-                            <span>{{ profile.institution }}</span>
+                            <span>{{ profile.office }}</span>
                         </p>
                         {% endif %}
                         <div class="mt-6 pt-6 border-t border-white/10 flex justify-around">
@@ -233,36 +233,38 @@
                     {{ profile.bio|default:"Dedicated to the highest standards of academic excellence, combining rigorous research methodology with innovative teaching approaches to shape future business leaders in Laos and beyond." }}
                 </p>
                 <div class="space-y-4 mb-8">
-                    {% if profile.institution %}
+                    {% if profile.office %}
                     <div class="flex items-center space-x-3 text-gray-300">
                         <div class="w-8 h-8 bg-gold-500/10 rounded-lg flex items-center justify-center">
                             <i data-lucide="building-2" class="w-4 h-4 text-gold-400"></i>
                         </div>
-                        <span>{{ profile.institution }}</span>
+                        <span>{{ profile.office }}</span>
                     </div>
                     {% endif %}
-                    {% if profile.department %}
+                    {% if profile.website %}
                     <div class="flex items-center space-x-3 text-gray-300">
                         <div class="w-8 h-8 bg-gold-500/10 rounded-lg flex items-center justify-center">
-                            <i data-lucide="layers" class="w-4 h-4 text-gold-400"></i>
+                            <i data-lucide="globe" class="w-4 h-4 text-gold-400"></i>
                         </div>
-                        <span>{{ profile.department }}</span>
+                        <a href="{{ profile.website }}" target="_blank" rel="noopener" class="hover:text-gold-400 transition-colors">{{ profile.website }}</a>
                     </div>
                     {% endif %}
-                    {% if profile.location %}
+                    {% if profile.phone %}
                     <div class="flex items-center space-x-3 text-gray-300">
                         <div class="w-8 h-8 bg-gold-500/10 rounded-lg flex items-center justify-center">
-                            <i data-lucide="map-pin" class="w-4 h-4 text-gold-400"></i>
+                            <i data-lucide="phone" class="w-4 h-4 text-gold-400"></i>
                         </div>
-                        <span>{{ profile.location }}</span>
+                        <span>{{ profile.phone }}</span>
                     </div>
                     {% endif %}
+                    {% if profile_languages %}
                     <div class="flex items-center space-x-3 text-gray-300">
                         <div class="w-8 h-8 bg-gold-500/10 rounded-lg flex items-center justify-center">
                             <i data-lucide="languages" class="w-4 h-4 text-gold-400"></i>
                         </div>
-                        <span>{% trans "Lao, English, Thai" %}</span>
+                        <span>{% for lang in profile_languages %}{{ lang.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
                     </div>
+                    {% endif %}
                 </div>
                 <a href="{% url 'contact:form' %}" 
                    class="inline-flex items-center space-x-2 bg-gold-500 hover:bg-gold-400 text-navy-950 font-semibold px-6 py-3 rounded-xl transition-all hover:scale-105 shadow-lg shadow-gold-500/20">
@@ -305,10 +307,10 @@
                 </div>
                 <div class="glass rounded-2xl p-6 text-center card-hover">
                     <div class="w-12 h-12 bg-gold-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <i data-lucide="users" class="w-6 h-6 text-gold-400"></i>
+                        <i data-lucide="library" class="w-6 h-6 text-gold-400"></i>
                     </div>
-                    <div class="text-3xl font-bold text-white mb-1">500+</div>
-                    <div class="text-gray-400 text-sm">{% trans "Students Taught" %}</div>
+                    <div class="text-3xl font-bold text-white mb-1">{{ stats.resources_count|default:"0" }}+</div>
+                    <div class="text-gray-400 text-sm">{% trans "Digital Resources" %}</div>
                 </div>
                 {% endfor %}
             </div>

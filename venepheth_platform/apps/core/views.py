@@ -20,15 +20,18 @@ def homepage(request):
     from apps.courses.models import Course
     from apps.profiles.models import Profile
     from apps.research.models import Publication, ResearchProject
+    from apps.resources.models import Resource
 
-    profile = Profile.objects.filter(is_active=True).first()
+    profile = Profile.objects.filter(is_active=True).prefetch_related("languages").first()
 
     courses_count = Course.objects.filter(status="published", visibility="public").count()
     publications_count = Publication.objects.filter(status="published").count()
     research_count = ResearchProject.objects.filter(status="published").count()
+    resources_count = Resource.objects.filter(visibility="public").count()
 
     context = {
         "profile": profile,
+        "profile_languages": profile.languages.all() if profile else [],
         "featured_courses": Course.objects.filter(
             status="published", visibility="public", featured=True
         ).select_related("category")[:6],
@@ -39,12 +42,13 @@ def homepage(request):
             "courses_count": courses_count,
             "publications_count": publications_count,
             "research_count": research_count,
+            "resources_count": resources_count,
         },
         "about_highlights": [
             {"icon": "book-open", "value": f"{courses_count}+", "label": "Courses Taught"},
             {"icon": "file-text", "value": f"{publications_count}+", "label": "Publications"},
             {"icon": "flask-conical", "value": f"{research_count}+", "label": "Research Projects"},
-            {"icon": "users", "value": "500+", "label": "Students Taught"},
+            {"icon": "library", "value": f"{resources_count}+", "label": "Digital Resources"},
         ],
         "meta_title": settings.SITE_NAME,
         "meta_description": f"{settings.SITE_TAGLINE} — {settings.SITE_NAME}",
