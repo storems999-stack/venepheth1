@@ -44,7 +44,8 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
             "subtitle",
             "slug",
             "excerpt",
-            "content_raw",
+            # NOTE: serve the sanitized `content`, never `content_raw` (stored XSS).
+            "content",
             "category",
             "category_display",
             "is_featured",

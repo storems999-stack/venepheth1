@@ -88,13 +88,16 @@ def security_overview(request):
     """
     from django_otp import devices_for_user
 
+    from .middleware import user_has_mfa
+
     totp_devices = list(devices_for_user(request.user, confirmed=True))
     backup_devices = list(devices_for_user(request.user, confirmed=None))
 
     context = {
         "totp_devices": totp_devices,
         "backup_devices": backup_devices,
-        "mfa_enabled": len(totp_devices) > 0,
+        # django-otp devices OR allauth MFA authenticators (TOTP/WebAuthn).
+        "mfa_enabled": len(totp_devices) > 0 or user_has_mfa(request.user),
         "meta_title": _("Account Security") + f" — {settings.SITE_NAME}",
     }
     return render(request, "account/security.html", context)

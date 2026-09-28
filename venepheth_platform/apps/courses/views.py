@@ -50,8 +50,8 @@ def course_list(request):
 
 @require_GET
 def course_detail(request, slug):
-    """Course detail page."""
-    course = get_object_or_404(Course, slug=slug, status="published")
+    """Course detail page (public courses only)."""
+    course = get_object_or_404(Course, slug=slug, status="published", visibility=Course.Visibility.PUBLIC)
     modules = course.modules.filter(is_visible=True).prefetch_related("resources")
     outcomes = course.outcomes.all()
     resources = course.resources.filter(visibility="public")

@@ -2,7 +2,10 @@
 
 import logging
 
-from django.shortcuts import get_object_or_404, render
+from django.conf import settings
+from django.db.models import F
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET
 
 from .models import Resource, ResourceCategory
@@ -43,11 +46,15 @@ def resource_list(request):
 @require_GET
 def resource_detail(request, slug):
     """Resource detail and download page."""
-    # Allow students to see student-only resources if we had auth (for now just check if not private)
-    resource = get_object_or_404(Resource.objects.exclude(visibility=Resource.Visibility.PRIVATE), slug=slug)
+    resource = get_object_or_404(Resource, slug=slug)
 
-    # Increment view count
-    Resource.objects.filter(pk=resource.pk).update(view_count=resource.view_count + 1)
+    if resource.visibility == Resource.Visibility.PRIVATE:
+        raise Http404()
+    if resource.visibility == Resource.Visibility.STUDENTS and not request.user.is_authenticated:
+        return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+
+    # Increment view count (atomic — avoids lost-update races)
+    Resource.objects.filter(pk=resource.pk).update(view_count=F("view_count") + 1)
 
     related = Resource.objects.filter(visibility=Resource.Visibility.PUBLIC, category=resource.category).exclude(
         pk=resource.pk

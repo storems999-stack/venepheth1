@@ -89,19 +89,3 @@ class SecurityEvent(models.Model):
         event.save()
         logger.warning("SECURITY_EVENT %s | %s | %s", event_type, event.severity, event.ip_address)
         return event
-
-
-def lockout_response(request, credentials, *args, **kwargs):
-    """Called by django-axes when an account is locked out."""
-    from django.http import HttpResponse
-
-    SecurityEvent.record(
-        event_type=SecurityEvent.EventType.ACCOUNT_LOCKED,
-        description=f"Account locked for: {credentials.get('username', 'unknown')}",
-        request=request,
-        severity=SecurityEvent.Severity.HIGH,
-    )
-    return HttpResponse(
-        "<h1>Too many failed attempts. Your access has been temporarily blocked.</h1>",
-        status=403,
-    )

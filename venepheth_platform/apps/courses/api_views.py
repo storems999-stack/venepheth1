@@ -1,10 +1,11 @@
+from django.db.models import Prefetch
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, viewsets
 from rest_framework.permissions import AllowAny
 
 from apps.core.decorators import api_rate_limit
 
-from .models import Course, CourseCategory
+from .models import Course, CourseCategory, CourseModule
 from .serializers import (
     CourseCategorySerializer,
     CourseDetailSerializer,
@@ -15,10 +16,10 @@ from .serializers import (
 @api_rate_limit
 class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    API endpoint that allows courses to be viewed.
+    API endpoint that allows courses to be viewed (public courses only).
     """
 
-    queryset = Course.objects.filter(status="published").select_related("category")
+    queryset = Course.objects.filter(status="published", visibility=Course.Visibility.PUBLIC).select_related("category")
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ["category__slug", "level", "semester", "featured"]
@@ -35,7 +36,10 @@ class CourseViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         qs = super().get_queryset()
         if self.action == "retrieve":
-            qs = qs.prefetch_related("modules", "outcomes")
+            qs = qs.prefetch_related(
+                Prefetch("modules", queryset=CourseModule.objects.filter(is_visible=True)),
+                "outcomes",
+            )
         return qs
 
 

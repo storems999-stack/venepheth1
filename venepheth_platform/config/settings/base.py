@@ -94,6 +94,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django_otp.middleware.OTPMiddleware",
+    "apps.accounts.middleware.SecurityEnforcementMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
@@ -270,6 +271,11 @@ RATELIMIT_VIEW = "apps.core.views.rate_limited"
 RATELIMIT_USE_CACHE = "default"
 RATELIMIT_FAIL_OPEN = True
 RATELIMIT_IP_META_KEY = "apps.core.utils.get_client_ip"
+
+# ─── Metrics ─────────────────────────────────────────────────────────
+# Shared secret for /metrics/ (sent as X-Metrics-Token header by Prometheus).
+# Empty = open endpoint (dev only). Production MUST set this.
+METRICS_TOKEN = env("METRICS_TOKEN", default="")
 
 # ─── Simple History ─────────────────────────────────────────────────
 SIMPLE_HISTORY_REVERT_DISABLED = False

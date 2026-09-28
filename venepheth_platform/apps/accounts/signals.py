@@ -13,6 +13,7 @@ from django.contrib.auth.signals import (
 )
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from apps.accounts.models import CustomUser
 
@@ -88,6 +89,21 @@ def on_user_login_failed(sender, credentials, request, **kwargs):
 
 @receiver(post_save, sender=CustomUser)
 def enforce_mfa_for_admins(sender, instance, created, **kwargs):
-    """Auto-set require_mfa=True for ADMIN/SUPERADMIN roles."""
-    if created and instance.role in (CustomUser.Role.SUPERADMIN, CustomUser.Role.ADMIN) and not instance.require_mfa:
-        CustomUser.objects.filter(pk=instance.pk).update(require_mfa=True)
+    """Auto-set require_mfa=True for ADMIN/SUPERADMIN roles (including promotions)."""
+    if instance.role in (CustomUser.Role.SUPERADMIN, CustomUser.Role.ADMIN) and not instance.require_mfa:
+        # Queryset update: no signal recursion.
+        CustomUser.objects.filter(pk=instance.pk, require_mfa=False).update(require_mfa=True)
+
+
+try:
+    from allauth.account.signals import password_changed as allauth_password_changed
+except ImportError:  # pragma: no cover — allauth always installed here
+    allauth_password_changed = None
+
+
+if allauth_password_changed is not None:
+
+    @receiver(allauth_password_changed)
+    def clear_forced_password_change(sender, request, user, **kwargs):
+        """A successful password change satisfies must_change_password."""
+        CustomUser.objects.filter(pk=user.pk).update(must_change_password=False, password_changed_at=timezone.now())

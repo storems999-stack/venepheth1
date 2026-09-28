@@ -18,10 +18,11 @@ class LatestArticlesFeed(Feed):
         return item.title
 
     def item_description(self, item):
-        return item.excerpt or item.content_raw[:200]
+        # NOTE: `content` is bleach-sanitized on save; never expose `content_raw`.
+        return item.excerpt or item.content[:200]
 
     def item_pubdate(self, item):
-        return item.published_at
+        return item.published_at or item.created_at
 
 
 class AtomLatestArticlesFeed(LatestArticlesFeed):

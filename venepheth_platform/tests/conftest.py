@@ -31,8 +31,12 @@ def user(db):
 
 @pytest.fixture
 def admin_user(db):
-    """Staff/superuser admin."""
-    return AdminUserFactory.create()
+    """Staff/superuser admin with MFA configured (passes security enforcement)."""
+    from allauth.mfa.models import Authenticator
+
+    admin = AdminUserFactory.create()
+    Authenticator.objects.create(user=admin, type=Authenticator.Type.TOTP, data={"secret": "TESTSECRET"})
+    return admin
 
 
 @pytest.fixture

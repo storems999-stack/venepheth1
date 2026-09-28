@@ -97,3 +97,57 @@ class TestAccountViews:
         assert response.status_code == 302
         user.refresh_from_db()
         assert user.is_active is False
+
+
+@pytest.mark.django_db
+class TestSecurityEnforcement:
+    """require_mfa / must_change_password must be fail-closed (middleware)."""
+
+    def _login(self, user):
+        from django.test import Client
+
+        c = Client()
+        c.force_login(user)
+        return c
+
+    def test_require_mfa_without_authenticator_redirects(self, user):
+        user.require_mfa = True
+        user.save(update_fields=["require_mfa"])
+        response = self._login(user).get(reverse("accounts:overview"))
+        assert response.status_code == 302
+        assert response.url == reverse("mfa_index")
+
+    def test_require_mfa_with_authenticator_passes(self, user):
+        from allauth.mfa.models import Authenticator
+
+        user.require_mfa = True
+        user.save(update_fields=["require_mfa"])
+        Authenticator.objects.create(user=user, type=Authenticator.Type.TOTP, data={"secret": "TEST"})
+        assert self._login(user).get(reverse("accounts:overview")).status_code == 200
+
+    def test_must_change_password_redirects(self, user):
+        user.must_change_password = True
+        user.save(update_fields=["must_change_password"])
+        response = self._login(user).get(reverse("accounts:overview"))
+        assert response.status_code == 302
+        assert response.url == reverse("account_change_password")
+
+    def test_password_change_page_reachable_while_enforced(self, user):
+        user.must_change_password = True
+        user.save(update_fields=["must_change_password"])
+        assert self._login(user).get(reverse("account_change_password")).status_code == 200
+
+    def test_enforcement_api_returns_403(self, user):
+        # Session-authenticated API request still passes through middleware.
+        user.must_change_password = True
+        user.save(update_fields=["must_change_password"])
+        response = self._login(user).get(reverse("api:article-list"), HTTP_ACCEPT="application/json")
+        assert response.status_code == 403
+
+    def test_promotion_to_admin_enables_require_mfa(self, user):
+        from django.contrib.auth import get_user_model
+
+        user.role = get_user_model().Role.ADMIN
+        user.save()
+        user.refresh_from_db()
+        assert user.require_mfa is True
