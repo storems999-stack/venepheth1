@@ -5,17 +5,24 @@ Analytics middleware.
 import logging
 
 from apps.analytics.models import PageView
+from apps.core.utils import get_client_ip
 
 logger = logging.getLogger("apps.analytics")
 
-SKIP_PATHS = ["/health/", "/ready/", "/static/", "/media/", "/__debug__/", "/admin/", "/secure-admin/", "/api/"]
-
-
-def get_client_ip(request):
-    x_forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-    if x_forwarded:
-        return x_forwarded.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR")
+SKIP_PATHS = [
+    "/health",
+    "/ready/",
+    "/live/",
+    "/metrics/",
+    "/sitemap.xml",
+    "/robots.txt",
+    "/static/",
+    "/media/",
+    "/__debug__/",
+    "/admin/",
+    "/secure-admin/",
+    "/api/",
+]
 
 
 class PageViewMiddleware:
@@ -34,7 +41,7 @@ class PageViewMiddleware:
             return
 
         path = request.path
-        if any(path.startswith(skip) for skip in SKIP_PATHS):
+        if any(path == skip.rstrip("/") or path.startswith(skip) for skip in SKIP_PATHS):
             return
 
         try:

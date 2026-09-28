@@ -34,12 +34,11 @@ ALLOWED_MIME_TYPES = {
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "text/plain",
     "text/markdown",
-    # Images
+    # Images (no SVG — served inline from /media/, executes JavaScript)
     "image/jpeg",
     "image/png",
     "image/gif",
     "image/webp",
-    "image/svg+xml",
     # Video
     "video/mp4",
     "video/webm",

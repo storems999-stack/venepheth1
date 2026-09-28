@@ -30,7 +30,6 @@ CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
 X_FRAME_OPTIONS = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_BROWSER_XSS_FILTER = True
 
 # ─── Django Axes — production lockout ─────────────────────────
 AXES_ENABLED = True
@@ -72,7 +71,7 @@ CACHES = {
         "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
     }
 }
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 SESSION_CACHE_ALIAS = "default"
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
@@ -97,6 +96,13 @@ LOGGING = {
             "backupCount": 5,
             "formatter": "json",
         },
+        "security_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": "/app/logs/security.log",
+            "maxBytes": 10 * 1024 * 1024,
+            "backupCount": 10,
+            "formatter": "json",
+        },
     },
     "root": {
         "handlers": ["console", "file"],
@@ -105,5 +111,8 @@ LOGGING = {
     "loggers": {
         "django": {"handlers": ["console", "file"], "level": "WARNING", "propagate": False},
         "django.security": {"handlers": ["console", "file"], "level": "ERROR", "propagate": False},
+        "apps.security": {"handlers": ["console", "security_file"], "level": "WARNING", "propagate": False},
+        "apps.audit": {"handlers": ["console", "security_file"], "level": "INFO", "propagate": False},
+        "axes": {"handlers": ["security_file"], "level": "WARNING", "propagate": False},
     },
 }

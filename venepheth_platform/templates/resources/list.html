@@ -83,6 +83,17 @@
             </article>
             {% endfor %}
         </div>
+        {% if page_obj.has_other_pages %}
+        <div class="flex items-center justify-center gap-4 mt-10">
+            {% if page_obj.has_previous %}
+            <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}" class="text-gold-400 hover:text-gold-300 text-sm font-medium">← {% trans "Previous" %}</a>
+            {% endif %}
+            <span class="text-gray-500 text-sm">{% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+            <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}" class="text-gold-400 hover:text-gold-300 text-sm font-medium">{% trans "Next" %} →</a>
+            {% endif %}
+        </div>
+        {% endif %}
         {% else %}
         <div class="text-center py-24">
             <i data-lucide="library" class="w-12 h-12 text-gray-600 mx-auto mb-4"></i>

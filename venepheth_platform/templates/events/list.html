@@ -124,6 +124,17 @@
                 </article>
                 {% endfor %}
             </div>
+            {% if past_events.has_other_pages %}
+            <div class="flex items-center justify-center gap-4 mt-8">
+                {% if past_events.has_previous %}
+                <a href="?{% if selected_type %}type={{ selected_type }}&{% endif %}past_page={{ past_events.previous_page_number }}" class="text-gold-400 hover:text-gold-300 text-sm font-medium">← {% trans "Newer" %}</a>
+                {% endif %}
+                <span class="text-gray-500 text-sm">{% trans "Page" %} {{ past_events.number }} {% trans "of" %} {{ past_events.paginator.num_pages }}</span>
+                {% if past_events.has_next %}
+                <a href="?{% if selected_type %}type={{ selected_type }}&{% endif %}past_page={{ past_events.next_page_number }}" class="text-gold-400 hover:text-gold-300 text-sm font-medium">{% trans "Older" %} →</a>
+                {% endif %}
+            </div>
+            {% endif %}
             {% else %}
             <p class="text-gray-500 text-sm">{% trans "No past events." %}</p>
             {% endif %}

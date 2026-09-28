@@ -2,6 +2,7 @@
 
 import logging
 
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.views.decorators.http import require_GET
@@ -13,7 +14,7 @@ logger = logging.getLogger("apps.events")
 
 @require_GET
 def event_list(request):
-    """Public events listing."""
+    """Public events listing (past events paginated)."""
     now = timezone.now()
     event_type = request.GET.get("type", "")
 
@@ -22,7 +23,10 @@ def event_list(request):
         qs = qs.filter(event_type=event_type)
 
     upcoming_events = qs.filter(start_time__gte=now).order_by("start_time")
-    past_events = qs.filter(start_time__lt=now).order_by("-start_time")
+    past_qs = qs.filter(start_time__lt=now).order_by("-start_time")
+
+    past_paginator = Paginator(past_qs, 9)
+    past_events = past_paginator.get_page(request.GET.get("past_page"))
 
     types = Event.EventType.choices
 

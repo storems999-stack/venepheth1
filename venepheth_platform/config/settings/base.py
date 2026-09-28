@@ -86,6 +86,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 # ─── Middleware ────────────────────────────────────────────────────────────────
 MIDDLEWARE = [
+    "apps.core.middleware.TrustedProxyMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -237,9 +238,6 @@ AXES_RESET_ON_SUCCESS = True
 AXES_NEVER_LOCKOUT_WHITELIST = False
 
 # ─── Django Allauth ───────────────────────────────────────────────────────────
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*"]
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
@@ -259,18 +257,24 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50 MB total
 
 ALLOWED_UPLOAD_EXTENSIONS = {
     "document": [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt", ".md"],
-    "image": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"],
+    # NOTE: ".svg" deliberately excluded — SVGs served from /media/ execute
+    # inline JavaScript (stored XSS). Use PNG/WebP for vector-like graphics.
+    "image": [".jpg", ".jpeg", ".png", ".gif", ".webp"],
     "video": [".mp4", ".webm", ".mov"],
     "archive": [".zip"],
 }
 MAX_UPLOAD_SIZE = 100 * 1024 * 1024  # 100 MB
+
+# ─── Trusted Proxies ─────────────────────────────────────────────────────────
+# IPs/CIDRs allowed to set X-Forwarded-For (nginx, load balancer).
+# Empty = never trust proxy headers. REMOTE_ADDR is used directly then.
+TRUSTED_PROXY_IPS = env.list("TRUSTED_PROXY_IPS", default=[])
 
 # ─── Rate Limiting ─────────────────────────────────────────────────
 RATELIMIT_ENABLE = True
 RATELIMIT_VIEW = "apps.core.views.rate_limited"
 RATELIMIT_USE_CACHE = "default"
 RATELIMIT_FAIL_OPEN = True
-RATELIMIT_IP_META_KEY = "apps.core.utils.get_client_ip"
 
 # ─── Metrics ─────────────────────────────────────────────────────────
 # Shared secret for /metrics/ (sent as X-Metrics-Token header by Prometheus).

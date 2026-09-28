@@ -3,6 +3,7 @@
 import logging
 
 from django.conf import settings
+from django.core.paginator import Paginator
 from django.db.models import F
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -30,11 +31,18 @@ def resource_list(request):
     categories = ResourceCategory.objects.all()
     types = Resource.ResourceType.choices
 
+    paginator = Paginator(qs, 9)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    params = request.GET.copy()
+    params.pop("page", None)
+
     return render(
         request,
         "resources/list.html",
         {
-            "resources": qs,
+            "resources": page_obj,
+            "page_obj": page_obj,
+            "querystring": params.urlencode(),
             "categories": categories,
             "types": types,
             "selected_category": category_slug,
