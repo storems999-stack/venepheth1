@@ -113,13 +113,14 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-      - name: Install bandit & safety
-        run: pip install bandit safety
+      - name: Install bandit & pip-audit
+        run: pip install bandit pip-audit
       - name: Run Bandit (security linter)
         run: bandit -r venepheth_platform/apps/ -ll --format github || true
-      - name: Run Safety (dependency vulnerability scan)
+      - name: Run pip-audit (dependency vulnerability scan)
+        # PYSEC-2024-60 is a withdrawn/disputed setuptools advisory; ignored deliberately.
         working-directory: venepheth_platform
-        run: safety check -r requirements/base.txt --short-report || true
+        run: pip-audit -r requirements/base.txt -r requirements/production.txt -r requirements/testing.txt --ignore-vuln PYSEC-2024-60 || true
 
   # ── Job 4: Build Check ──────────────────────────────────────────────────────
   build-check:
