@@ -8,6 +8,7 @@ app_name = "search"
 
 urlpatterns = [
     path("", views.search_results, name="results"),
-    path("topics/", views.knowledge_graph_view, name="knowledge_graph"),
-    path("topics/<str:topic_name>/", views.topic_detail_view, name="topic_detail"),
+    # PARKED (re-enable with apps/search knowledge-graph views):
+    # path("topics/", views.knowledge_graph_view, name="knowledge_graph"),
+    # path("topics/<str:topic_name>/", views.topic_detail_view, name="topic_detail"),
 ]

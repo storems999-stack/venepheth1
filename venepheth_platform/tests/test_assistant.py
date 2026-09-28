@@ -1,9 +1,10 @@
 """
 Unit tests for AI Academic Assistant.
-Tests the adapter pattern, RAG retriever, and chat API endpoint.
+Tests the adapter pattern and RAG retriever.
+NOTE: public chat/page endpoints are PARKED (see config/urls.py) — endpoint
+tests live in git history and return with the feature.
 """
 
-import json
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -70,55 +71,6 @@ class TestGetLLMAdapter(TestCase):
         """get_llm_adapter() always returns a BaseLLMAdapter subclass."""
         adapter = get_llm_adapter()
         self.assertIsInstance(adapter, BaseLLMAdapter)
-
-
-class TestAssistantChatEndpoint(TestCase):
-    """Test the /assistant/chat/ POST endpoint."""
-
-    def setUp(self):
-        self.url = "/assistant/chat/"
-        self.client.enforce_csrf_checks = False  # CSRF tested separately
-
-    def test_post_with_valid_query_returns_200(self):
-        """Valid POST to /assistant/chat/ should return 200 with answer."""
-        resp = self.client.post(
-            self.url,
-            data=json.dumps({"query": "What courses are offered?", "language": "en"}),
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, 200)
-        data = resp.json()
-        self.assertIn("answer", data)
-        self.assertIn("sources", data)
-
-    def test_post_empty_query_returns_400(self):
-        """Empty query should return 400."""
-        resp = self.client.post(
-            self.url,
-            data=json.dumps({"query": "", "language": "en"}),
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, 400)
-        self.assertIn("error", resp.json())
-
-    def test_post_query_too_long_returns_400(self):
-        """Query exceeding 500 chars should return 400."""
-        resp = self.client.post(
-            self.url,
-            data=json.dumps({"query": "x" * 501, "language": "en"}),
-            content_type="application/json",
-        )
-        self.assertEqual(resp.status_code, 400)
-
-    def test_get_request_returns_405(self):
-        """GET request to chat endpoint should return 405."""
-        resp = self.client.get(self.url)
-        self.assertEqual(resp.status_code, 405)
-
-    def test_assistant_page_loads(self):
-        """GET /assistant/ should return 200."""
-        resp = self.client.get("/assistant/")
-        self.assertEqual(resp.status_code, 200)
 
 
 class TestAcademicRetriever(TestCase):

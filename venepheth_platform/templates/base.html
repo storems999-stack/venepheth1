@@ -327,19 +327,6 @@
                     </button>
 
                     {% if user.is_authenticated %}
-                        <!-- Notifications Icon with HTMX Badge -->
-                        <a href="{% url 'notifications:list' %}" 
-                           class="relative p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
-                           aria-label="{% trans 'Notifications' %}">
-                            <i data-lucide="bell" class="w-5 h-5"></i>
-                            <span id="nav-notification-badge"
-                                  hx-get="{% url 'notifications:unread_badge' %}"
-                                  hx-trigger="load, every 60s"
-                                  hx-swap="innerHTML"
-                                  class="absolute top-1 right-1 flex items-center justify-center">
-                            </span>
-                        </a>
-
                         <a href="{% url 'core:dashboard' %}" 
                            class="hidden sm:flex items-center space-x-2 bg-gold-500 hover:bg-gold-400 text-navy-950 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 shadow-lg shadow-gold-500/20">
                             <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
@@ -426,9 +413,6 @@
                     <i data-lucide="mail" class="w-4 h-4"></i><span>{% trans "Contact" %}</span>
                 </a>
                 {% if user.is_authenticated %}
-                <a href="{% url 'notifications:list' %}" class="mobile-nav-link flex items-center space-x-3 px-4 py-3 rounded-lg text-gray-300 hover:text-white hover:bg-white/5">
-                    <i data-lucide="bell" class="w-4 h-4"></i><span>{% trans "Notifications" %}</span>
-                </a>
                 <a href="{% url 'core:dashboard' %}" class="flex items-center space-x-3 px-4 py-3 rounded-lg bg-gold-500/10 text-gold-400 border border-gold-500/20">
                     <i data-lucide="layout-dashboard" class="w-4 h-4"></i><span>{% trans "Dashboard" %}</span>
                 </a>
@@ -538,7 +522,6 @@
                         <li><a href="{% url 'research:list' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline">{% trans "Research" %}</a></li>
                         <li><a href="{% url 'publications:list' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline">{% trans "Publications" %}</a></li>
                         <li><a href="{% url 'blog:list' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline">{% trans "Blog" %}</a></li>
-                        <li><a href="{% url 'search:knowledge_graph' %}" class="text-gray-400 hover:text-gold-400 transition-colors link-underline">{% trans "Knowledge Graph" %}</a></li>
                     </ul>
                 </div>
 
@@ -593,7 +576,7 @@
     
     {% block extra_js %}{% endblock %}
 
-    {# AI Academic Assistant Floating Widget #}
-    {% include "assistant/widget.html" %}
+    {# PARKED: AI Academic Assistant Floating Widget — re-enable with assistant/ URLs #}
+    {# {% include "assistant/widget.html" %} #}
 </body>
 </html>

@@ -33,15 +33,6 @@ class RateLimitTests(TestCase):
         response = self.client.get(url, {"q": "Economics"})
         self.assertEqual(response.status_code, 429)
 
-    def test_assistant_chat_blocks_after_ten_posts_per_minute(self):
-        """Assistant chat should return 429 on the 11th POST request."""
-        url = reverse("assistant:api_chat")
-        for _ in range(10):
-            response = self.client.post(url, {"query": "hello"}, content_type="application/json")
-            self.assertEqual(response.status_code, 200)
-        response = self.client.post(url, {"query": "hello"}, content_type="application/json")
-        self.assertEqual(response.status_code, 429)
-
     def test_rate_limited_view_returns_json_429(self):
         """The ratelimited view should return JSON with 429."""
         url = reverse("contact:form")

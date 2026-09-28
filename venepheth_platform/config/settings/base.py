@@ -72,9 +72,7 @@ LOCAL_APPS = [
     "apps.publications.apps.PublicationsConfig",
     "apps.resources.apps.ResourcesConfig",
     "apps.blog.apps.BlogConfig",
-    "apps.events.apps.EventsConfig",
     "apps.contact.apps.ContactConfig",
-    "apps.notifications.apps.NotificationsConfig",
     "apps.search.apps.SearchConfig",
     "apps.analytics.apps.AnalyticsConfig",
     "apps.audit.apps.AuditConfig",
@@ -238,6 +236,8 @@ AXES_RESET_ON_SUCCESS = True
 AXES_NEVER_LOCKOUT_WHITELIST = False
 
 # ─── Django Allauth ───────────────────────────────────────────────────────────
+# Public registration CLOSED — admins create accounts (see apps/accounts/adapter.py).
+ACCOUNT_ADAPTER = "apps.accounts.adapter.ClosedSignupAdapter"
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*"]
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None

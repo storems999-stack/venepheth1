@@ -84,10 +84,6 @@ def metrics_view(request):
         "# HELP platform_courses_total Active courses.",
         "# TYPE platform_courses_total gauge",
         f"platform_courses_total {_safe_import_count('courses', 'Course', status='published')}",
-        # ── Events ──────────────────────────────────────────────────────────────
-        "# HELP platform_events_total Total events.",
-        "# TYPE platform_events_total gauge",
-        f"platform_events_total {_safe_import_count('events', 'Event')}",
         # ── Timestamp ──────────────────────────────────────────────────────────
         "# HELP platform_scrape_timestamp_seconds Unix timestamp of last metric scrape.",
         "# TYPE platform_scrape_timestamp_seconds gauge",

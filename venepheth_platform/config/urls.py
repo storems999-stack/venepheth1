@@ -7,7 +7,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
 from django.urls import include, path
-from django.views.generic import TemplateView
+from django.views.generic import RedirectView, TemplateView
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -51,6 +51,8 @@ urlpatterns = [
     ),
     # ── Auth & i18n ───────────────────────────────────────────────────────────
     path("i18n/", include("django.conf.urls.i18n")),
+    # Public registration CLOSED (apps/accounts/adapter.py) — send signup traffic to login.
+    path("accounts/signup/", RedirectView.as_view(url="/accounts/login/", permanent=False)),
     path("accounts/", include("allauth.urls")),
     path("my/", include("apps.accounts.urls", namespace="accounts")),
     # ── Health Checks (vision §43) ────────────────────────────────────────────
@@ -65,10 +67,12 @@ urlpatterns = [
     path("search/", include("apps.search.urls", namespace="search")),
     path("profile/", include("apps.profiles.urls", namespace="profiles")),
     path("resources/", include("apps.resources.urls", namespace="resources")),
-    path("events/", include("apps.events.urls", namespace="events")),
     path("teaching/", include("apps.teaching.urls", namespace="teaching")),
-    path("notifications/", include("apps.notifications.urls", namespace="notifications")),
-    path("assistant/", include("apps.assistant.urls", namespace="assistant")),
+    # PARKED (re-enable when needed):
+    # path("events/", include("apps.events.urls", namespace="events")),
+    # path("notifications/", include("apps.notifications.urls", namespace="notifications")),
+    # path("assistant/", include("apps.assistant.urls", namespace="assistant")),
+    # path("search/topics/...") — see apps/search/urls.py
     # ── API ────────────────────────────────────────────────────────────────────
     path("api/v1/", include("config.api_router", namespace="api")),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),

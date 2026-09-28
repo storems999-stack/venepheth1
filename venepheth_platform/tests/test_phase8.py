@@ -2,17 +2,12 @@
 Phase 8 test suite: Teaching, Events, Resources, Notifications, HTML emails, and Bulk Actions.
 """
 
-from datetime import timedelta
-
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
-from django.utils import timezone
 
-from apps.events.models import Event
-from apps.notifications.models import Notification
 from apps.resources.models import Resource, ResourceCategory
 from apps.teaching.models import OfficeHours, StudentAnnouncement, TeachingPhilosophy
 
@@ -59,32 +54,6 @@ class Phase8Tests(TestCase):
         self.assertContains(response, "Student-Centered Inquiry")
         self.assertContains(response, "Midterm Exam Schedule")
 
-    # ── Events ───────────────────────────────────────────────────────────────
-
-    def test_events_list_and_detail(self):
-        """Events list and detail return 200."""
-        now = timezone.now()
-        event = Event.objects.create(
-            title="Macroeconomics Symposium 2026",
-            slug="macroeconomics-symposium-2026",
-            event_type=Event.EventType.CONFERENCE,
-            description="Annual academic conference on regional macroeconomic developments.",
-            location="Vientiane National Convention Hall",
-            start_time=now + timedelta(days=5),
-            status="published",
-        )
-
-        list_url = reverse("events:list")
-        response = self.client.get(list_url)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, event.title)
-
-        detail_url = reverse("events:detail", kwargs={"slug": event.slug})
-        detail_response = self.client.get(detail_url)
-        self.assertEqual(detail_response.status_code, 200)
-        self.assertContains(detail_response, event.title)
-        self.assertContains(detail_response, "Vientiane National Convention Hall")
-
     # ── Resources ────────────────────────────────────────────────────────────
 
     def test_resources_list_and_detail(self):
@@ -109,62 +78,6 @@ class Phase8Tests(TestCase):
         detail_response = self.client.get(detail_url)
         self.assertEqual(detail_response.status_code, 200)
         self.assertContains(detail_response, res.title)
-
-    # ── Notifications ────────────────────────────────────────────────────────
-
-    def test_notifications_views_and_htmx(self):
-        """Notifications listing, unread badge, and mark-as-read HTMX."""
-        # Unauthenticated redirects to login
-        unread_url = reverse("notifications:unread_badge")
-        resp = self.client.get(unread_url)
-        self.assertEqual(resp.status_code, 302)
-
-        # Authenticate
-        self.client.force_login(self.user)
-
-        # Create notifications
-        notif1 = Notification.objects.create(
-            user=self.user,
-            message="New course enrollment approved",
-            level=Notification.Level.SUCCESS,
-            is_read=False,
-        )
-        notif2 = Notification.objects.create(
-            user=self.user,
-            message="Assignment deadline approaching",
-            level=Notification.Level.WARNING,
-            is_read=False,
-        )
-
-        # Check badge
-        resp = self.client.get(unread_url)
-        self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, "2")
-
-        # Check list page
-        list_url = reverse("notifications:list")
-        resp = self.client.get(list_url)
-        self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, notif1.message)
-        self.assertContains(resp, notif2.message)
-
-        # Mark single notification as read via HTMX
-        mark_url = reverse("notifications:mark_read", kwargs={"pk": notif1.pk})
-        resp = self.client.post(mark_url, HTTP_HX_REQUEST="true")
-        self.assertEqual(resp.status_code, 200)
-        notif1.refresh_from_db()
-        self.assertTrue(notif1.is_read)
-
-        # Badge count should now be 1
-        resp = self.client.get(unread_url)
-        self.assertContains(resp, "1")
-
-        # Mark all as read via HTMX
-        mark_all_url = reverse("notifications:mark_all_read")
-        resp = self.client.post(mark_all_url, HTTP_HX_REQUEST="true")
-        self.assertEqual(resp.status_code, 200)
-        notif2.refresh_from_db()
-        self.assertTrue(notif2.is_read)
 
     # ── Contact Email & Honeypot ─────────────────────────────────────────────
 

@@ -27,7 +27,6 @@ class TestPrometheusMetrics(TestCase):
             "platform_research_projects_total",
             "platform_publications_total",
             "platform_courses_total",
-            "platform_events_total",
             "platform_scrape_timestamp_seconds",
         ]
 

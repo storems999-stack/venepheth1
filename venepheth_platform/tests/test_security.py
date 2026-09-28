@@ -7,7 +7,6 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
 
 from apps.audit.models import AuditLog
 from apps.security.models import SecurityEvent
@@ -190,37 +189,6 @@ class FileUploadSecurityTests(TestCase):
         pub.pdf_file = self._make_exe("malware.exe")
         with self.assertRaises(ValidationError):
             pub.full_clean()
-
-    # ── Event.cover_image ────────────────────────────────────────
-
-    def test_event_cover_accepts_image(self):
-        from apps.events.models import Event
-
-        event = Event.objects.create(
-            title="Test Event",
-            slug="test-event",
-            description="desc",
-            event_type="seminar",
-            start_time=timezone.now(),
-        )
-        event.cover_image = SimpleUploadedFile("banner.png", b"fake png", content_type="image/png")
-        event.save()
-        event.refresh_from_db()
-        self.assertIsNotNone(event.cover_image)
-
-    def test_event_cover_rejects_exe(self):
-        from apps.events.models import Event
-
-        event = Event.objects.create(
-            title="Test Event",
-            slug="test-event",
-            description="desc",
-            event_type="seminar",
-            start_time=timezone.now(),
-        )
-        event.cover_image = self._make_exe("malware.exe")
-        with self.assertRaises(ValidationError):
-            event.full_clean()
 
     # ── Article.thumbnail ────────────────────────────────────────
 

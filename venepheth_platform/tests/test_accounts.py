@@ -100,6 +100,26 @@ class TestAccountViews:
 
 
 @pytest.mark.django_db
+class TestSignupClosed:
+    """Public registration is disabled — admins create accounts."""
+
+    def test_signup_page_redirects_away(self, client):
+        response = client.get(reverse("account_signup"))
+        assert response.status_code == 302
+        assert response.url == "/accounts/login/"
+
+    def test_signup_post_creates_no_user(self, client):
+        from django.contrib.auth import get_user_model
+
+        before = get_user_model().objects.count()
+        client.post(
+            reverse("account_signup"),
+            {"email": "new@test.com", "password1": "TestPass123456!", "password2": "TestPass123456!"},
+        )
+        assert get_user_model().objects.count() == before
+
+
+@pytest.mark.django_db
 class TestSecurityEnforcement:
     """require_mfa / must_change_password must be fail-closed (middleware)."""
 

@@ -1,5 +1,7 @@
 """
-Unit tests for Knowledge Graph service and views.
+Unit tests for Knowledge Graph aggregation helpers.
+NOTE: topics/ views are PARKED (see apps/search/urls.py) — view tests live
+in git history and return with the feature.
 """
 
 from django.test import TestCase
@@ -67,23 +69,3 @@ class TestGetTopicDetail(TestCase):
             self.assertIsInstance(result, dict)
         except Exception as e:
             self.fail(f"get_topic_detail raised an exception: {e}")
-
-
-class TestKnowledgeGraphView(TestCase):
-    """Test the /search/topics/ view."""
-
-    def test_knowledge_graph_view_returns_200(self):
-        """GET /search/topics/ should return 200."""
-        resp = self.client.get("/search/topics/")
-        self.assertEqual(resp.status_code, 200)
-
-    def test_knowledge_graph_view_has_topics_in_context(self):
-        """GET /search/topics/ context should include topics list."""
-        resp = self.client.get("/search/topics/")
-        self.assertIn("topics", resp.context)
-        self.assertIsInstance(resp.context["topics"], list)
-
-    def test_topic_detail_view_returns_200(self):
-        """GET /search/topics/<name>/ should return 200 even for unknown topics."""
-        resp = self.client.get("/search/topics/nonexistent/")
-        self.assertEqual(resp.status_code, 200)

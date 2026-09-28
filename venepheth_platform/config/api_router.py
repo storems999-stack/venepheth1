@@ -7,7 +7,6 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from apps.blog.api_views import ArticleViewSet
 from apps.courses.api_views import CourseCategoryViewSet, CourseViewSet
-from apps.events.api_views import EventViewSet
 from apps.profiles.api_views import ProfileViewSet
 from apps.research.api_views import PublicationViewSet, ResearchProjectViewSet
 from apps.resources.api_views import ResourceCategoryViewSet, ResourceViewSet
@@ -23,7 +22,6 @@ router.register("course-categories", CourseCategoryViewSet, basename="course-cat
 router.register("articles", ArticleViewSet, basename="article")
 router.register("research", ResearchProjectViewSet, basename="research")
 router.register("publications", PublicationViewSet, basename="publication")
-router.register("events", EventViewSet, basename="event")
 router.register("resources", ResourceViewSet, basename="resource")
 router.register("resource-categories", ResourceCategoryViewSet, basename="resource-category")
 

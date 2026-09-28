@@ -29,7 +29,6 @@ class Command(BaseCommand):
         self._seed_courses()
         self._seed_research()
         self._seed_articles()
-        self._seed_events()
         self._seed_resources()
         self.stdout.write(self.style.SUCCESS("✅  Database seeded successfully!"))
 
@@ -37,14 +36,12 @@ class Command(BaseCommand):
     def _clear_data(self):
         from apps.blog.models import Article, ArticleTag
         from apps.courses.models import Course, CourseCategory
-        from apps.events.models import Event
         from apps.profiles.models import Profile
         from apps.research.models import Publication, ResearchProject, ResearchTopic
         from apps.resources.models import Resource, ResourceCategory
 
         Resource.objects.all().delete()
         ResourceCategory.objects.all().delete()
-        Event.objects.all().delete()
         Article.objects.all().delete()
         ArticleTag.objects.all().delete()
         Publication.objects.all().delete()
@@ -774,62 +771,6 @@ class Command(BaseCommand):
                 if tname in tags:
                     article.tags.add(tags[tname])
             self.stdout.write(f"  ✓ Article: {article.title[:60]}")
-
-    # ──────────────────────────────────────────────────────────
-    def _seed_events(self):
-        from apps.events.models import Event
-
-        events_data = [
-            {
-                "title": "ASEAN Digital Economy Symposium 2026",
-                "event_type": "conference",
-                "description": "A symposium bringing together researchers and policymakers to discuss the future of the digital economy in ASEAN. Keynote by Dr. Venepheth Sayavong.",
-                "location": "National Convention Centre, Vientiane",
-                "is_virtual": False,
-                "start_time": timezone.now() + timezone.timedelta(days=15),
-                "end_time": timezone.now() + timezone.timedelta(days=15, hours=8),
-                "organizer": "Ministry of Industry and Commerce",
-            },
-            {
-                "title": "Seminar: Strategies for SME Survival",
-                "event_type": "seminar",
-                "description": "An interactive seminar on strategic planning for small businesses in volatile economic environments.",
-                "location": "Zoom Meeting",
-                "is_virtual": True,
-                "start_time": timezone.now() + timezone.timedelta(days=30),
-                "end_time": timezone.now() + timezone.timedelta(days=30, hours=2),
-                "organizer": "Lao SME Promotion Agency",
-            },
-            {
-                "title": "Guest Lecture: Entrepreneurial Mindset",
-                "event_type": "guest_lecture",
-                "description": "Dr. Sayavong shares his insights on what it takes to build a successful entrepreneurial ecosystem in Laos.",
-                "location": "National University of Laos, Room 202",
-                "is_virtual": False,
-                "start_time": timezone.now() - timezone.timedelta(days=10),
-                "end_time": timezone.now() - timezone.timedelta(days=10, hours=3),
-                "organizer": "Faculty of Business Administration",
-            },
-        ]
-
-        for data in events_data:
-            slug = slugify(data["title"])[:240]
-            if Event.objects.filter(slug=slug).exists():
-                continue
-            evt = Event.objects.create(
-                title=data["title"],
-                slug=slug,
-                event_type=data["event_type"],
-                description=data["description"],
-                location=data["location"],
-                is_virtual=data["is_virtual"],
-                start_time=data["start_time"],
-                end_time=data["end_time"],
-                organizer=data["organizer"],
-                status="published",
-                published_at=timezone.now(),
-            )
-            self.stdout.write(f"  ✓ Event: {evt.title}")
 
     # ──────────────────────────────────────────────────────────
     def _seed_resources(self):
