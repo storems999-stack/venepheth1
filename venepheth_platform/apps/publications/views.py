@@ -3,6 +3,7 @@
 import logging
 
 from django.core.paginator import Paginator
+from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.http import require_GET
 
@@ -82,3 +83,14 @@ def publication_detail(request, slug):
             "meta_description": pub.seo_description or pub.abstract[:200],
         },
     )
+
+
+@require_GET
+def publication_download(request, slug):
+    """Permission-checked PDF download (draft PDFs are never servable)."""
+    from apps.core.sendfile import send_protected_file
+
+    pub = get_object_or_404(Publication, slug=slug, status="published")
+    if not getattr(pub.pdf_file, "name", None):
+        raise Http404()
+    return send_protected_file(pub.pdf_file)

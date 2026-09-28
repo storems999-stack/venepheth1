@@ -67,7 +67,7 @@
                         {% if pub.doi %}
                         <div>
                             <span class="text-gray-500 text-xs uppercase tracking-wider">DOI</span>
-                            <a href="https://doi.org/{{ pub.doi }}" class="text-gold-400 hover:text-gold-300 text-sm block mt-1 break-all" target="_blank">
+                            <a href="{{ pub.doi_url }}" class="text-gold-400 hover:text-gold-300 text-sm block mt-1 break-all" target="_blank" rel="noopener">
                                 {{ pub.doi }}
                             </a>
                         </div>
@@ -96,7 +96,7 @@
                 <!-- Actions -->
                 <div class="space-y-3">
                     {% if pub.pdf_file %}
-                    <a href="{{ pub.pdf_file.url }}" target="_blank"
+                    <a href="{% url 'publications:download' pub.slug %}"
                        class="flex items-center space-x-2 w-full bg-gold-500 hover:bg-gold-400 text-navy-950 font-semibold px-4 py-3 rounded-xl text-sm justify-center transition-all">
                         <i data-lucide="download" class="w-4 h-4"></i>
                         <span>{% trans "Download PDF" %}</span>

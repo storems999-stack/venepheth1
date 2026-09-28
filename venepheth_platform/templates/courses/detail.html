@@ -219,7 +219,7 @@
                                 <span class="text-gray-300 text-sm">{{ resource.title }}</span>
                             </div>
                             {% if resource.file %}
-                            <a href="{{ resource.file.url }}" class="text-gold-400 hover:text-gold-300 transition-colors" target="_blank">
+                            <a href="{% url 'courses:resource_download' resource.pk %}" class="text-gold-400 hover:text-gold-300 transition-colors" target="_blank">
                                 <i data-lucide="download" class="w-4 h-4"></i>
                             </a>
                             {% elif resource.external_url %}

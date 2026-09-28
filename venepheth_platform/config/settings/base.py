@@ -276,6 +276,12 @@ RATELIMIT_VIEW = "apps.core.views.rate_limited"
 RATELIMIT_USE_CACHE = "default"
 RATELIMIT_FAIL_OPEN = True
 
+# ─── Protected File Serving ────────────────────────────────────────────────
+# True in production: Django answers download views with X-Accel-Redirect and
+# nginx serves bytes from an `internal` location (direct /media/ URLs for
+# resources/publications/course-files are denied in nginx.prod.conf).
+SENDFILE_ENABLED = env.bool("SENDFILE_ENABLED", default=False)
+
 # ─── Metrics ─────────────────────────────────────────────────────────
 # Shared secret for /metrics/ (sent as X-Metrics-Token header by Prometheus).
 # Empty = open endpoint (dev only). Production MUST set this.

@@ -55,11 +55,9 @@ def resource_list(request):
 def resource_detail(request, slug):
     """Resource detail and download page."""
     resource = get_object_or_404(Resource, slug=slug)
-
-    if resource.visibility == Resource.Visibility.PRIVATE:
-        raise Http404()
-    if resource.visibility == Resource.Visibility.STUDENTS and not request.user.is_authenticated:
-        return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+    gate = _check_resource_access(request, resource)
+    if gate is not None:
+        return gate
 
     # Increment view count (atomic — avoids lost-update races)
     Resource.objects.filter(pk=resource.pk).update(view_count=F("view_count") + 1)
@@ -77,3 +75,28 @@ def resource_detail(request, slug):
             "related": related,
         },
     )
+
+
+def _check_resource_access(request, resource):
+    """Shared visibility gate for detail + download. Returns redirect/404 or None."""
+    if resource.visibility == Resource.Visibility.PRIVATE:
+        raise Http404()
+    if resource.visibility == Resource.Visibility.STUDENTS and not request.user.is_authenticated:
+        return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+    return None
+
+
+@require_GET
+def resource_download(request, slug):
+    """Permission-checked file download (direct /media/ URLs are denied in prod)."""
+    from apps.core.sendfile import send_protected_file
+
+    resource = get_object_or_404(Resource, slug=slug)
+    gate = _check_resource_access(request, resource)
+    if gate is not None:
+        return gate
+    if not getattr(resource.file, "name", None):
+        raise Http404()
+
+    Resource.objects.filter(pk=resource.pk).update(download_count=F("download_count") + 1)
+    return send_protected_file(resource.file)

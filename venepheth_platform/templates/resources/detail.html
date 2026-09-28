@@ -91,7 +91,7 @@
                         <div class="text-gray-400 text-xs uppercase tracking-wider mb-2">{% trans "File Size" %}</div>
                         <div class="text-white font-mono">{{ resource.file_size|filesizeformat }}</div>
                     </div>
-                    <a href="{{ resource.file.url }}" target="_blank"
+                    <a href="{% url 'resources:download' resource.slug %}"
                        class="flex items-center justify-center space-x-2 w-full bg-gold-500 hover:bg-gold-400 text-navy-950 font-semibold px-4 py-4 rounded-xl transition-all shadow-lg shadow-gold-500/20">
                         <i data-lucide="download" class="w-5 h-5"></i>
                         <span>{% trans "Download File" %}</span>

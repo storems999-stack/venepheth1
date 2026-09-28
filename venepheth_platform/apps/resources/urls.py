@@ -8,5 +8,6 @@ app_name = "resources"
 
 urlpatterns = [
     path("", views.resource_list, name="list"),
+    path("download/<slug:slug>/", views.resource_download, name="download"),
     path("<slug:slug>/", views.resource_detail, name="detail"),
 ]

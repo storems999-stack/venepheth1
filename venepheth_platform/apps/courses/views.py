@@ -2,13 +2,16 @@
 
 import logging
 
+from django.conf import settings
 from django.core.paginator import Paginator
-from django.shortcuts import get_object_or_404, render
+from django.db.models import F, Prefetch
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET
 
 from apps.core.decorators import cache_page_unless_htmx
 
-from .models import Course, CourseCategory
+from .models import Course, CourseCategory, CourseResource
 
 logger = logging.getLogger("apps.courses")
 
@@ -53,7 +56,9 @@ def course_list(request):
 def course_detail(request, slug):
     """Course detail page (public courses only)."""
     course = get_object_or_404(Course, slug=slug, status="published", visibility=Course.Visibility.PUBLIC)
-    modules = course.modules.filter(is_visible=True).prefetch_related("resources")
+    modules = course.modules.filter(is_visible=True).prefetch_related(
+        Prefetch("resources", queryset=CourseResource.objects.filter(visibility="public"))
+    )
     outcomes = course.outcomes.all()
     resources = course.resources.filter(visibility="public")
     announcements = course.announcements.filter(status="published").order_by("-is_pinned", "-published_at")[:5]
@@ -72,3 +77,25 @@ def course_detail(request, slug):
             "meta_image": course.thumbnail.url if getattr(course.thumbnail, "name", None) else None,
         },
     )
+
+
+@require_GET
+def course_resource_download(request, pk):
+    """Permission-checked course file download (direct /media/ URLs are denied in prod)."""
+    from apps.core.sendfile import send_protected_file
+
+    resource = get_object_or_404(
+        CourseResource.objects.select_related("course"),
+        pk=pk,
+        course__status="published",
+        course__visibility=Course.Visibility.PUBLIC,
+    )
+    if resource.visibility == "private":
+        raise Http404()
+    if resource.visibility == "students" and not request.user.is_authenticated:
+        return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+    if not getattr(resource.file, "name", None):
+        raise Http404()
+
+    CourseResource.objects.filter(pk=resource.pk).update(download_count=F("download_count") + 1)
+    return send_protected_file(resource.file)

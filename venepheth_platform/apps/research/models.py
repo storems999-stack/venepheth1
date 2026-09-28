@@ -123,6 +123,18 @@ class Publication(PublishableModel, SlugModel, SEOModel):
         return reverse("publications:detail", kwargs={"slug": self.slug})
 
     @property
+    def doi_url(self):
+        """Resolves to a full https:// URL regardless of stored DOI format."""
+        if not self.doi:
+            return ""
+        doi = self.doi.strip()
+        if doi.startswith(("http://", "https://")):
+            return doi
+        if doi.lower().startswith("doi:"):
+            doi = doi[4:]
+        return f"https://doi.org/{doi}"
+
+    @property
     def citation_apa(self):
         """Generate a simple APA-style citation."""
         parts = [self.authors]
@@ -137,12 +149,6 @@ class Publication(PublishableModel, SlugModel, SEOModel):
             parts.append(f"({self.issue})")
         if self.pages:
             parts.append(f", {self.pages}.")
-        if self.doi:
-            doi = self.doi.strip()
-            if doi.startswith(("http://", "https://")):
-                parts.append(f" {doi}")
-            else:
-                if doi.lower().startswith("doi:"):
-                    doi = doi[4:]
-                parts.append(f" https://doi.org/{doi}")
+        if self.doi_url:
+            parts.append(f" {self.doi_url}")
         return " ".join(parts)
