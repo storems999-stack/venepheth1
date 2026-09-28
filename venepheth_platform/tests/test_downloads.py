@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from apps.courses.models import Course, CourseResource
+from apps.courses.models import Course, CourseModule, CourseResource
 from apps.research.models import Publication
 from apps.resources.models import Resource
 
@@ -130,6 +130,20 @@ class CourseResourceDownloadTests(TestCase):
 
     def test_private_404(self):
         res = self._make("private")
+        self.assertEqual(
+            self.client.get(reverse("courses:resource_download", kwargs={"pk": res.pk})).status_code,
+            404,
+        )
+
+    def test_hidden_module_resource_404(self):
+        mod = CourseModule.objects.create(course=self.course, title="Hidden", is_visible=False)
+        res = CourseResource.objects.create(
+            course=self.course,
+            module=mod,
+            title="Hidden file",
+            visibility="public",
+            file=_pdf("hidden.pdf"),
+        )
         self.assertEqual(
             self.client.get(reverse("courses:resource_download", kwargs={"pk": res.pk})).status_code,
             404,

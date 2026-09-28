@@ -85,15 +85,17 @@ def course_resource_download(request, pk):
     from apps.core.sendfile import send_protected_file
 
     resource = get_object_or_404(
-        CourseResource.objects.select_related("course"),
+        CourseResource.objects.select_related("course", "module"),
         pk=pk,
         course__status="published",
         course__visibility=Course.Visibility.PUBLIC,
     )
-    if resource.visibility == "private":
+    if resource.visibility == CourseResource.Visibility.PRIVATE:
         raise Http404()
-    if resource.visibility == "students" and not request.user.is_authenticated:
+    if resource.visibility == CourseResource.Visibility.STUDENTS and not request.user.is_authenticated:
         return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+    if resource.module is not None and not resource.module.is_visible:
+        raise Http404()
     if not getattr(resource.file, "name", None):
         raise Http404()
 
