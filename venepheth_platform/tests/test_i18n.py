@@ -1,9 +1,11 @@
 """
 Tests for Internationalization (i18n) and Lao Language Support.
 """
-from django.test import TestCase, Client
+
+from django.test import TestCase
 from django.urls import reverse
-from django.utils.translation import activate, gettext as _
+from django.utils.translation import activate
+from django.utils.translation import gettext as _
 
 
 class LaoInternationalizationTests(TestCase):

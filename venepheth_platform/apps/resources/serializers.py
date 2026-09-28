@@ -1,10 +1,13 @@
 from rest_framework import serializers
+
 from .models import Resource, ResourceCategory
+
 
 class ResourceCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ResourceCategory
         fields = ["id", "name", "slug", "icon"]
+
 
 class ResourceSerializer(serializers.ModelSerializer):
     category = ResourceCategorySerializer(read_only=True)
@@ -14,8 +17,25 @@ class ResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
         fields = [
-            "id", "title", "slug", "description", "category", "resource_type",
-            "resource_type_display", "author", "year", "version", "language",
-            "file", "file_size", "external_url", "visibility", "visibility_display",
-            "download_count", "view_count", "is_featured", "created_at", "tags"
+            "id",
+            "title",
+            "slug",
+            "description",
+            "category",
+            "resource_type",
+            "resource_type_display",
+            "author",
+            "year",
+            "version",
+            "language",
+            "file",
+            "file_size",
+            "external_url",
+            "visibility",
+            "visibility_display",
+            "download_count",
+            "view_count",
+            "is_featured",
+            "created_at",
+            "tags",
         ]

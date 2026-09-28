@@ -19,6 +19,14 @@
     {% elif global_profile and global_profile.photo %}
     <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ global_profile.photo.url }}">
     {% endif %}
+
+    <!-- Favicon & App Icons -->
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'icons/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'icons/favicon-16x16.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'icons/apple-touch-icon.png' %}">
+    <link rel="manifest" href="{% static 'site.webmanifest' %}">
+    <meta name="theme-color" content="#0d1f35">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -152,6 +160,15 @@
             background-size: 50px 50px;
         }
 
+        /* Sticky navbar offset — applied to all inner page hero sections */
+        :root { --navbar-h: 64px; }
+        @media (min-width: 1024px) { :root { --navbar-h: 72px; } }
+
+        .page-hero {
+            padding-top: calc(var(--navbar-h) + 3.5rem); /* navbar + extra breathing room */
+            padding-bottom: 4rem;
+        }
+
         /* Smooth scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #0d1f35; }
@@ -173,7 +190,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body 
-    class="bg-white text-gray-900 min-h-screen flex flex-col font-sans"
+    class="bg-navy-950 text-gray-900 min-h-screen flex flex-col font-sans"
     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
     x-data="{ mobileOpen: false, searchOpen: false, scrolled: false }"
     @scroll.window="scrolled = window.scrollY > 20"
@@ -185,18 +202,15 @@
 
     <!-- ══════════════════════════════════════════════ NAVBAR ══════ -->
     <header 
-        class="sticky top-0 z-50 transition-all duration-300"
-        :class="scrolled 
-            ? 'bg-navy-950/95 backdrop-blur-lg border-b border-white/5 shadow-2xl shadow-navy-950/50' 
-            : 'bg-transparent'"
+        class="sticky top-0 z-50 transition-all duration-300 bg-navy-950/95 backdrop-blur-lg border-b border-white/10 shadow-lg shadow-navy-950/50"
     >
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16 lg:h-18">
                 
                 <!-- Logo -->
                 <a href="{% url 'core:home' %}" class="flex items-center space-x-3 group">
-                    <div class="w-9 h-9 bg-gold-500 rounded-lg flex items-center justify-center shadow-lg shadow-gold-500/30 group-hover:scale-110 transition-transform duration-300">
-                        <span class="font-serif font-bold text-navy-950 text-sm">VS</span>
+                    <div class="w-9 h-9 rounded-lg overflow-hidden shadow-lg shadow-gold-500/30 group-hover:scale-110 transition-transform duration-300 ring-2 ring-gold-500/40">
+                        <img src="{% static 'icons/icon-192.png' %}" alt="VS" class="w-full h-full object-cover">
                     </div>
                     <span class="font-serif font-bold text-white text-xl tracking-tight hidden sm:block">
                         V. <span class="gradient-text">SAYAVONG</span>
@@ -484,8 +498,8 @@
                 <!-- Brand -->
                 <div class="lg:col-span-2">
                     <div class="flex items-center space-x-3 mb-4">
-                        <div class="w-10 h-10 bg-gold-500 rounded-lg flex items-center justify-center">
-                            <span class="font-serif font-bold text-navy-950">VS</span>
+                        <div class="w-10 h-10 rounded-xl overflow-hidden ring-2 ring-gold-500/40 shadow-lg shadow-gold-500/20">
+                            <img src="{% static 'icons/icon-192.png' %}" alt="V. SAYAVONG" class="w-full h-full object-cover">
                         </div>
                         <span class="font-serif font-bold text-white text-xl">V. SAYAVONG</span>
                     </div>

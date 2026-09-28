@@ -1,6 +1,8 @@
 """Blog app URL configuration."""
+
 from django.urls import path
-from . import views, feeds
+
+from . import feeds, views
 
 app_name = "blog"
 

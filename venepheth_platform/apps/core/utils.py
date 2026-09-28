@@ -1,5 +1,4 @@
 """Shared core utilities."""
-from django.conf import settings
 
 
 def get_client_ip(request):

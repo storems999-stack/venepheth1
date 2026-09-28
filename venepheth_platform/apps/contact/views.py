@@ -1,14 +1,17 @@
 """Contact views with honeypot anti-spam and notification email."""
+
 import logging
+
 from django.conf import settings
-from django.core.mail import send_mail
-from django_ratelimit.decorators import ratelimit
-from django.shortcuts import render, redirect
-from django.views.decorators.http import require_http_methods
 from django.contrib import messages
+from django.core.mail import send_mail
+from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
-from .models import ContactMessage
+from django.views.decorators.http import require_http_methods
+from django_ratelimit.decorators import ratelimit
+
 from .forms import ContactForm
+from .models import ContactMessage
 
 logger = logging.getLogger("apps.contact")
 
@@ -48,6 +51,7 @@ def contact_form(request):
                         f"Message:\n{contact_msg.message}\n"
                     )
                     from django.template.loader import render_to_string
+
                     html_message = render_to_string(
                         "contact/emails/notification.html",
                         {"contact_msg": contact_msg, "subject": subject},
@@ -74,15 +78,23 @@ def contact_form(request):
     else:
         form = ContactForm()
 
-    return render(request, "contact/form.html", {
-        "form": form,
-        "meta_title": _("Contact"),
-        "meta_description": _("Get in touch with Venepheth Sayavong for academic inquiries and collaboration."),
-    })
+    return render(
+        request,
+        "contact/form.html",
+        {
+            "form": form,
+            "meta_title": _("Contact"),
+            "meta_description": _("Get in touch with Venepheth Sayavong for academic inquiries and collaboration."),
+        },
+    )
 
 
 def contact_success(request):
     """Contact success page."""
-    return render(request, "contact/success.html", {
-        "meta_title": _("Message Sent"),
-    })
+    return render(
+        request,
+        "contact/success.html",
+        {
+            "meta_title": _("Message Sent"),
+        },
+    )

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Privacy Policy" %} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12 max-w-3xl">
+
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Privacy Policy" %}</h1>
+    <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm">{% trans "Last updated: September 2026" %}</p>
+  </div>
+
+  <div class="prose dark:prose-invert max-w-none space-y-8">
+
+    <section>
+      <h2>{% trans "1. Who We Are" %}</h2>
+      <p>
+        {% blocktrans %}
+        This platform is operated by <strong>Venepheth SAYAVONG</strong>, Lecturer and Researcher.
+        This website serves as an academic portfolio and information resource.
+        {% endblocktrans %}
+      </p>
+    </section>
+
+    <section>
+      <h2>{% trans "2. What Data We Collect" %}</h2>
+      <p>{% trans "We follow the principle of data minimization — we only collect what is necessary." %}</p>
+      <ul>
+        <li>{% trans "Contact form submissions: name, email, message" %}</li>
+        <li>{% trans "Server logs: IP address, browser type, pages visited (for security and analytics)" %}</li>
+        <li>{% trans "Authenticated users: email, name, role, login timestamps" %}</li>
+      </ul>
+      <p>{% trans "We do not sell, rent, or share your personal data with third parties for marketing purposes." %}</p>
+    </section>
+
+    <section>
+      <h2>{% trans "3. How We Use Your Data" %}</h2>
+      <ul>
+        <li>{% trans "To respond to contact inquiries" %}</li>
+        <li>{% trans "To operate and secure the platform" %}</li>
+        <li>{% trans "To provide academic resources to registered users" %}</li>
+        <li>{% trans "To detect and prevent unauthorized access" %}</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>{% trans "4. Data Retention" %}</h2>
+      <p>{% trans "Contact messages are retained for up to 2 years. Access logs are retained for 90 days. User accounts are retained until deletion is requested." %}</p>
+    </section>
+
+    <section>
+      <h2>{% trans "5. Your Rights" %}</h2>
+      <p>{% trans "You have the right to:" %}</p>
+      <ul>
+        <li>{% trans "Access the data we hold about you" %}</li>
+        <li>{% trans "Request correction of inaccurate data" %}</li>
+        <li>{% trans "Request deletion of your data" %}</li>
+        <li>{% trans "Withdraw consent at any time" %}</li>
+      </ul>
+      <p>{% trans "To exercise these rights, please contact us via the Contact page." %}</p>
+    </section>
+
+    <section>
+      <h2>{% trans "6. Security" %}</h2>
+      <p>
+        {% trans "We implement technical and organizational security measures including encrypted connections (HTTPS/TLS), access controls, audit logging, and regular security reviews." %}
+      </p>
+    </section>
+
+    <section>
+      <h2>{% trans "7. Contact" %}</h2>
+      <p>
+        {% trans "For privacy-related questions, please use our" %}
+        <a href="{% url 'contact:index' %}" class="text-primary-600 hover:underline">{% trans "contact form" %}</a>.
+      </p>
+    </section>
+
+  </div>
+
+</div>
+{% endblock %}

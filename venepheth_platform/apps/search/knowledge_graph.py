@@ -5,12 +5,11 @@ platform content types (Articles, Research Projects, Courses, Publications).
 
 Zero-cost: uses Django ORM + Counter, no external graph DB required.
 """
+
 from __future__ import annotations
 
 from collections import Counter, defaultdict
 from typing import TypedDict
-
-from django.db.models import Count
 
 
 class TopicNode(TypedDict):
@@ -25,6 +24,7 @@ def _safe_import(module_path: str, model_name: str):
     """Lazily import a model to avoid circular imports."""
     try:
         import importlib
+
         mod = importlib.import_module(module_path)
         return getattr(mod, model_name, None)
     except (ImportError, AttributeError):
@@ -42,17 +42,13 @@ def build_knowledge_graph(min_count: int = 1) -> list[TopicNode]:
     topic_counts: Counter[str] = Counter()
     topic_types: dict[str, set[str]] = defaultdict(set)
     # co-occurrence: topic → Counter of co-occurring topics
-    co_occur: dict[str, Counter[str]] = defaultdict(Counter)
+    defaultdict(Counter)
 
     # ── 1. Blog Articles (tags) ────────────────────────────────────────────────
     Article = _safe_import("apps.blog.models", "Article")
     if Article is not None:
         try:
-            for row in (
-                Article.objects
-                .filter(status="published")
-                .values_list("tags__name", flat=True)
-            ):
+            for row in Article.objects.filter(status="published").values_list("tags__name", flat=True):
                 if row:
                     topic_counts[row] += 1
                     topic_types[row].add("blog")
@@ -63,11 +59,9 @@ def build_knowledge_graph(min_count: int = 1) -> list[TopicNode]:
     ResearchProject = _safe_import("apps.research.models", "ResearchProject")
     if ResearchProject is not None:
         try:
-            for row in (
-                ResearchProject.objects
-                .filter(research_status__in=["ongoing", "completed", "published"])
-                .values_list("topics__name", flat=True)
-            ):
+            for row in ResearchProject.objects.filter(
+                research_status__in=["ongoing", "completed", "published"]
+            ).values_list("topics__name", flat=True):
                 if row:
                     topic_counts[row] += 1
                     topic_types[row].add("research")
@@ -78,11 +72,7 @@ def build_knowledge_graph(min_count: int = 1) -> list[TopicNode]:
     Course = _safe_import("apps.courses.models", "Course")
     if Course is not None:
         try:
-            for row in (
-                Course.objects
-                .filter(status="published")
-                .values_list("tags__name", flat=True)
-            ):
+            for row in Course.objects.filter(status="published").values_list("tags__name", flat=True):
                 if row:
                     topic_counts[row] += 1
                     topic_types[row].add("course")
@@ -93,11 +83,7 @@ def build_knowledge_graph(min_count: int = 1) -> list[TopicNode]:
     Publication = _safe_import("apps.research.models", "Publication")
     if Publication is not None:
         try:
-            for row in (
-                Publication.objects
-                .filter(status="published")
-                .values_list("keywords", flat=True)
-            ):
+            for row in Publication.objects.filter(status="published").values_list("keywords", flat=True):
                 if row:
                     for kw in (k.strip() for k in row.split(",") if k.strip()):
                         topic_counts[kw] += 1
@@ -140,9 +126,9 @@ def get_topic_detail(topic_name: str) -> dict:
     if Article is not None:
         try:
             result["articles"] = list(
-                Article.objects.filter(
-                    status="published", tags__name__iexact=topic_name
-                ).values("title", "slug", "published_at")[:10]
+                Article.objects.filter(status="published", tags__name__iexact=topic_name).values(
+                    "title", "slug", "published_at"
+                )[:10]
             )
         except Exception:
             pass
@@ -151,9 +137,7 @@ def get_topic_detail(topic_name: str) -> dict:
     if ResearchProject is not None:
         try:
             result["research"] = list(
-                ResearchProject.objects.filter(
-                    topics__name__iexact=topic_name
-                ).values("title", "slug")[:10]
+                ResearchProject.objects.filter(topics__name__iexact=topic_name).values("title", "slug")[:10]
             )
         except Exception:
             pass
@@ -162,9 +146,7 @@ def get_topic_detail(topic_name: str) -> dict:
     if Course is not None:
         try:
             result["courses"] = list(
-                Course.objects.filter(
-                    status="published", tags__name__iexact=topic_name
-                ).values("title", "slug")[:10]
+                Course.objects.filter(status="published", tags__name__iexact=topic_name).values("title", "slug")[:10]
             )
         except Exception:
             pass

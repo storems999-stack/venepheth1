@@ -1,11 +1,25 @@
 """
 Main URL configuration for Venepheth SAYAVONG Academic Platform.
 """
+
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from django.contrib.sitemaps.views import sitemap
+from django.urls import include, path
+from django.views.generic import TemplateView
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
+
+from apps.core.sitemaps import (
+    ArticleSitemap,
+    CourseSitemap,
+    ResearchProjectSitemap,
+    StaticViewSitemap,
+)
 
 # ─── Admin URL & Branding ────────────────────────────────────────────────────────
 ADMIN_URL = getattr(settings, "ADMIN_URL", "admin/")
@@ -13,10 +27,6 @@ ADMIN_URL = getattr(settings, "ADMIN_URL", "admin/")
 admin.site.site_header = "Venepheth SAYAVONG Administration"
 admin.site.site_title = "Admin Portal"
 admin.site.index_title = "Welcome to the Academic Platform Admin"
-
-from django.contrib.sitemaps.views import sitemap
-from django.views.generic import TemplateView
-from apps.core.sitemaps import StaticViewSitemap, ArticleSitemap, ResearchProjectSitemap, CourseSitemap
 
 sitemaps = {
     "static": StaticViewSitemap,
@@ -28,7 +38,6 @@ sitemaps = {
 urlpatterns = [
     # ── Admin ──────────────────────────────────────────────────────────────────
     path(ADMIN_URL, admin.site.urls),
-
     # ── SEO ────────────────────────────────────────────────────────────────────
     path(
         "sitemap.xml",
@@ -40,11 +49,12 @@ urlpatterns = [
         "robots.txt",
         TemplateView.as_view(template_name="core/robots.txt", content_type="text/plain"),
     ),
-
     # ── Auth & i18n ───────────────────────────────────────────────────────────
     path("i18n/", include("django.conf.urls.i18n")),
     path("accounts/", include("allauth.urls")),
-
+    path("my/", include("apps.accounts.urls", namespace="accounts")),
+    # ── Health Checks (vision §43) ────────────────────────────────────────────
+    path("health/", include("apps.core.health_urls")),
     # ── Public ─────────────────────────────────────────────────────────────────
     path("", include("apps.core.urls", namespace="core")),
     path("courses/", include("apps.courses.urls", namespace="courses")),
@@ -59,7 +69,6 @@ urlpatterns = [
     path("teaching/", include("apps.teaching.urls", namespace="teaching")),
     path("notifications/", include("apps.notifications.urls", namespace="notifications")),
     path("assistant/", include("apps.assistant.urls", namespace="assistant")),
-
     # ── API ────────────────────────────────────────────────────────────────────
     path("api/v1/", include("config.api_router", namespace="api")),
     path("api/schema/", SpectacularAPIView.as_view(), name="api-schema"),

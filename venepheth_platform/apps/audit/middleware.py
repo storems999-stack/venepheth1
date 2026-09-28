@@ -1,6 +1,7 @@
 """
 Audit middleware — auto-logs POST/PUT/PATCH/DELETE requests by authenticated users.
 """
+
 import logging
 
 logger = logging.getLogger("apps.audit")
@@ -39,6 +40,7 @@ class AuditMiddleware:
 
         try:
             from apps.audit.models import AuditLog
+
             action = {
                 "POST": AuditLog.Action.CREATE,
                 "PUT": AuditLog.Action.UPDATE,
@@ -46,11 +48,7 @@ class AuditMiddleware:
                 "DELETE": AuditLog.Action.DELETE,
             }.get(request.method, AuditLog.Action.UPDATE)
 
-            result = (
-                AuditLog.Result.SUCCESS
-                if 200 <= response.status_code < 400
-                else AuditLog.Result.FAILURE
-            )
+            result = AuditLog.Result.SUCCESS if 200 <= response.status_code < 400 else AuditLog.Result.FAILURE
 
             AuditLog.log(
                 who=request.user,

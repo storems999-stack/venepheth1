@@ -1,10 +1,13 @@
 from rest_framework import serializers
-from .models import ResearchProject, ResearchTopic, Publication
+
+from .models import Publication, ResearchProject, ResearchTopic
+
 
 class ResearchTopicSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResearchTopic
         fields = ["id", "name", "slug"]
+
 
 class ResearchProjectSerializer(serializers.ModelSerializer):
     topics = ResearchTopicSerializer(many=True, read_only=True)
@@ -13,10 +16,20 @@ class ResearchProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResearchProject
         fields = [
-            "id", "title", "slug", "abstract", "research_status", "status_display",
-            "start_date", "end_date", "funding_source", "featured",
-            "published_at", "topics"
+            "id",
+            "title",
+            "slug",
+            "abstract",
+            "research_status",
+            "status_display",
+            "start_date",
+            "end_date",
+            "funding_source",
+            "featured",
+            "published_at",
+            "topics",
         ]
+
 
 class PublicationSerializer(serializers.ModelSerializer):
     topics = ResearchTopicSerializer(many=True, read_only=True)
@@ -25,8 +38,25 @@ class PublicationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Publication
         fields = [
-            "id", "title", "slug", "publication_type", "type_display", "abstract",
-            "authors", "year", "journal_name", "volume", "issue", "pages",
-            "doi", "isbn", "keywords", "cited_by", "featured",
-            "pdf_file", "external_url", "published_at", "topics"
+            "id",
+            "title",
+            "slug",
+            "publication_type",
+            "type_display",
+            "abstract",
+            "authors",
+            "year",
+            "journal_name",
+            "volume",
+            "issue",
+            "pages",
+            "doi",
+            "isbn",
+            "keywords",
+            "cited_by",
+            "featured",
+            "pdf_file",
+            "external_url",
+            "published_at",
+            "topics",
         ]

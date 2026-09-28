@@ -3,12 +3,14 @@ Google Gemini LLM Adapter.
 Connects to Google Generative AI (Gemini 1.5 Flash / Gemini 2.0) using RAG prompting.
 Falls back seamlessly to GroundedFallbackAdapter if API key is not present or API fails.
 """
+
 import json
 import logging
 import urllib.request
-from typing import Any, Dict, List
+from typing import Any
 
 from django.conf import settings
+
 from .base import BaseLLMAdapter
 from .grounded_fallback import GroundedFallbackAdapter
 
@@ -25,16 +27,18 @@ class GeminiAdapter(BaseLLMAdapter):
     def generate_response(
         self,
         query: str,
-        context_items: List[Dict[str, Any]],
+        context_items: list[dict[str, Any]],
         language: str = "en",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         if not self.api_key:
             return self.fallback.generate_response(query, context_items, language)
 
-        context_text = "\n\n".join([
-            f"Type: {item.get('type')}\nTitle: {item.get('title')}\nDetails: {item.get('summary')}\nLink: {item.get('url')}"
-            for item in context_items[:8]
-        ])
+        context_text = "\n\n".join(
+            [
+                f"Type: {item.get('type')}\nTitle: {item.get('title')}\nDetails: {item.get('summary')}\nLink: {item.get('url')}"
+                for item in context_items[:8]
+            ]
+        )
 
         system_instruction = (
             "You are the AI Academic Assistant for Lecturer & Researcher Venepheth SAYAVONG. "
@@ -52,15 +56,11 @@ class GeminiAdapter(BaseLLMAdapter):
 
         api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.api_key}"
         payload = {
-            "contents": [
-                {
-                    "parts": [{"text": prompt}]
-                }
-            ],
+            "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
                 "temperature": 0.2,
                 "maxOutputTokens": 800,
-            }
+            },
         }
 
         try:

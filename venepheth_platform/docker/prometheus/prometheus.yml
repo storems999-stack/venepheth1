@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+  external_labels:
+    platform: venepheth-academic
+
+# ─── Alert Rules ─────────────────────────────────────────────────────────────
+# rule_files:
+#   - /etc/prometheus/rules/*.yml
+
+# ─── Scrape Configs ──────────────────────────────────────────────────────────
+scrape_configs:
+
+  # Prometheus self-monitoring
+  - job_name: prometheus
+    static_configs:
+      - targets: [localhost:9090]
+
+  # Django application (via django-prometheus or /metrics endpoint)
+  - job_name: django
+    static_configs:
+      - targets: [web:8000]
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  # PostgreSQL exporter (optional — add postgres-exporter service if needed)
+  # - job_name: postgres
+  #   static_configs:
+  #     - targets: [postgres-exporter:9187]
+
+  # Redis exporter (optional)
+  # - job_name: redis
+  #   static_configs:
+  #     - targets: [redis-exporter:9121]
+
+  # Nginx exporter (optional)
+  # - job_name: nginx
+  #   static_configs:
+  #     - targets: [nginx-exporter:9113]

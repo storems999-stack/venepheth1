@@ -3,6 +3,7 @@ Automated 3-2-1 Platform Backup Command.
 Creates a complete, verified, tamper-evident backup of the database, media assets,
 and platform metadata.
 """
+
 import hashlib
 import json
 import os
@@ -11,12 +12,12 @@ import sqlite3
 import subprocess
 import tarfile
 import time
-from datetime import datetime
 from pathlib import Path
 
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
 
 class Command(BaseCommand):
@@ -46,7 +47,7 @@ class Command(BaseCommand):
         keep_days = options["keep_days"]
         include_media = not options["no_media"]
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
         staging_dir = output_dir / f"staging_{timestamp}"
         staging_dir.mkdir(parents=True, exist_ok=True)
 
@@ -75,17 +76,25 @@ class Command(BaseCommand):
                     env["PGPASSWORD"] = db_conn["PASSWORD"]
                 pg_cmd = [
                     "pg_dump",
-                    "-h", db_conn.get("HOST", "localhost"),
-                    "-p", str(db_conn.get("PORT", 5432)),
-                    "-U", db_conn.get("USER", "postgres"),
-                    "-d", db_conn["NAME"],
-                    "-F", "c",
-                    "-f", str(staging_dir / "postgres.dump"),
+                    "-h",
+                    db_conn.get("HOST", "localhost"),
+                    "-p",
+                    str(db_conn.get("PORT", 5432)),
+                    "-U",
+                    db_conn.get("USER", "postgres"),
+                    "-d",
+                    db_conn["NAME"],
+                    "-F",
+                    "c",
+                    "-f",
+                    str(staging_dir / "postgres.dump"),
                 ]
                 try:
                     subprocess.run(pg_cmd, env=env, check=True, capture_output=True)
                 except Exception as e:
-                    self.stdout.write(self.style.WARNING(f"    [!] pg_dump direct call failed ({e}), falling back to JSON dumpdata"))
+                    self.stdout.write(
+                        self.style.WARNING(f"    [!] pg_dump direct call failed ({e}), falling back to JSON dumpdata")
+                    )
 
             # 2. Universal JSON Dump for cross-database portability
             self.stdout.write("    -> Generating portable JSON data dump (dumpdata)...")
@@ -109,7 +118,7 @@ class Command(BaseCommand):
             manifest = {
                 "platform": "Venepheth Academic Platform",
                 "timestamp": timestamp,
-                "created_at": datetime.now().isoformat(),
+                "created_at": timezone.now().isoformat(),
                 "db_engine": engine,
                 "django_version": getattr(settings, "DJANGO_VERSION", "5.1"),
                 "media_included": include_media,
@@ -161,4 +170,8 @@ class Command(BaseCommand):
                 sha_f.unlink(missing_ok=True)
                 pruned_count += 1
         if pruned_count > 0:
-            self.stdout.write(self.style.NOTICE(f"    -> Retention policy: pruned {pruned_count} backups older than {keep_days} days."))
+            self.stdout.write(
+                self.style.NOTICE(
+                    f"    -> Retention policy: pruned {pruned_count} backups older than {keep_days} days."
+                )
+            )

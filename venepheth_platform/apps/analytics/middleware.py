@@ -1,19 +1,22 @@
 """
 Analytics middleware.
 """
-from apps.analytics.models import PageView
-from django.conf import settings
+
 import logging
+
+from apps.analytics.models import PageView
 
 logger = logging.getLogger("apps.analytics")
 
 SKIP_PATHS = ["/health/", "/ready/", "/static/", "/media/", "/__debug__/", "/admin/", "/secure-admin/", "/api/"]
+
 
 def get_client_ip(request):
     x_forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded:
         return x_forwarded.split(",")[0].strip()
     return request.META.get("REMOTE_ADDR")
+
 
 class PageViewMiddleware:
     """Records page views for analytics."""
@@ -29,7 +32,7 @@ class PageViewMiddleware:
     def _maybe_log(self, request, response):
         if request.method != "GET":
             return
-            
+
         path = request.path
         if any(path.startswith(skip) for skip in SKIP_PATHS):
             return

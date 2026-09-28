@@ -3,7 +3,9 @@ Audit Log model — records WHO did WHAT, WHEN, WHERE, with what RESULT.
 
 IMPORTANT: Never store passwords, tokens, or secrets in audit logs.
 """
+
 import logging
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -86,7 +88,10 @@ class AuditLog(models.Model):
     )
     object_id = models.CharField(_("object ID"), max_length=255, blank=True, default="")
     object_repr = models.CharField(
-        _("object representation"), max_length=255, blank=True, default="",
+        _("object representation"),
+        max_length=255,
+        blank=True,
+        default="",
         help_text=_("String representation of the affected object at time of action."),
     )
 
@@ -123,8 +128,7 @@ class AuditLog(models.Model):
         return f"{self.user_email} | {self.action} | {self.result} | {self.timestamp:%Y-%m-%d %H:%M:%S}"
 
     @classmethod
-    def log(cls, who, action, result=Result.SUCCESS, ip=None, request=None,
-            obj=None, description="", extra=None):
+    def log(cls, who, action, result=Result.SUCCESS, ip=None, request=None, obj=None, description="", extra=None):
         """
         Convenience method to create an audit log entry.
 

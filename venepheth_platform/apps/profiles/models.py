@@ -1,20 +1,30 @@
 """
 Profile and Academic CV models.
 """
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+from apps.core.file_security import (
+    validate_file_extension,
+    validate_file_mime,
+    validate_file_size,
+)
 from apps.core.models import TimeStampedModel
-from apps.core.file_security import validate_file_extension, validate_file_size, validate_file_mime
 
 
 class Profile(TimeStampedModel):
     """Main profile of Venepheth SAYAVONG."""
+
     full_name = models.CharField(_("full name"), max_length=200)
     title = models.CharField(_("professional title"), max_length=200, blank=True)
     short_bio = models.TextField(_("short bio"), max_length=500, blank=True)
     bio = models.TextField(_("biography"), blank=True)
     photo = models.ImageField(
-        _("photo"), upload_to="profile/", null=True, blank=True,
+        _("photo"),
+        upload_to="profile/",
+        null=True,
+        blank=True,
         validators=[validate_file_extension, validate_file_size, validate_file_mime],
     )
     email = models.EmailField(_("contact email"), blank=True)
@@ -36,6 +46,7 @@ class Profile(TimeStampedModel):
 
 class AcademicInterest(TimeStampedModel):
     """Academic interests / expertise areas."""
+
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="interests")
     name = models.CharField(_("interest"), max_length=200)
     order = models.PositiveSmallIntegerField(default=0)
@@ -49,6 +60,7 @@ class AcademicInterest(TimeStampedModel):
 
 class Education(TimeStampedModel):
     """Academic education history."""
+
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="educations")
     degree = models.CharField(_("degree"), max_length=200)
     field = models.CharField(_("field of study"), max_length=200)
@@ -69,6 +81,7 @@ class Education(TimeStampedModel):
 
 class Experience(TimeStampedModel):
     """Professional / academic experience."""
+
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="experiences")
     position = models.CharField(_("position"), max_length=200)
     organization = models.CharField(_("organization"), max_length=300)
@@ -89,6 +102,7 @@ class Experience(TimeStampedModel):
 
 class Certification(TimeStampedModel):
     """Professional certifications."""
+
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="certifications")
     name = models.CharField(_("name"), max_length=200)
     issuer = models.CharField(_("issuer"), max_length=200)
@@ -107,6 +121,7 @@ class Certification(TimeStampedModel):
 
 class Award(TimeStampedModel):
     """Academic awards and honors."""
+
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="awards")
     name = models.CharField(_("award name"), max_length=200)
     organization = models.CharField(_("organization"), max_length=200, blank=True)
@@ -123,6 +138,7 @@ class Award(TimeStampedModel):
 
 class Membership(TimeStampedModel):
     """Professional memberships."""
+
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="memberships")
     organization = models.CharField(_("organization"), max_length=200)
     role = models.CharField(_("role"), max_length=200, blank=True)

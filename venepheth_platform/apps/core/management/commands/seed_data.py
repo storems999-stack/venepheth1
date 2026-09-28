@@ -3,10 +3,10 @@ Seed data management command for Venepheth Academic Platform.
 Creates realistic sample data: Profile, Courses, Research, Publications, Blog Articles, Events.
 Usage: python manage.py seed_data [--clear]
 """
-import random
+
 from django.core.management.base import BaseCommand
-from django.utils.text import slugify
 from django.utils import timezone
+from django.utils.text import slugify
 
 
 class Command(BaseCommand):
@@ -35,13 +35,13 @@ class Command(BaseCommand):
 
     # ──────────────────────────────────────────────────────────
     def _clear_data(self):
-        from apps.profiles.models import Profile
-        from apps.courses.models import Course, CourseCategory
-        from apps.research.models import ResearchProject, Publication, ResearchTopic
         from apps.blog.models import Article, ArticleTag
+        from apps.courses.models import Course, CourseCategory
         from apps.events.models import Event
+        from apps.profiles.models import Profile
+        from apps.research.models import Publication, ResearchProject, ResearchTopic
         from apps.resources.models import Resource, ResourceCategory
-        
+
         Resource.objects.all().delete()
         ResourceCategory.objects.all().delete()
         Event.objects.all().delete()
@@ -56,17 +56,23 @@ class Command(BaseCommand):
 
     # ──────────────────────────────────────────────────────────
     def _seed_profile(self):
-        from apps.profiles.models import Profile, Education, Experience, Language, AcademicInterest
+        from apps.profiles.models import (
+            AcademicInterest,
+            Education,
+            Experience,
+            Language,
+            Profile,
+        )
 
         profile, created = Profile.objects.get_or_create(
             full_name="Venepheth SAYAVONG",
-            defaults=dict(
-                title="Lecturer & Researcher in Business Administration",
-                short_bio=(
+            defaults={
+                "title": "Lecturer & Researcher in Business Administration",
+                "short_bio": (
                     "An academic dedicated to advancing business education and research "
                     "in Laos, bridging theory and practice for sustainable development."
                 ),
-                bio=(
+                "bio": (
                     "Dr. Venepheth SAYAVONG is a Lecturer and Researcher at the Faculty of "
                     "Business Administration, specializing in strategic management, "
                     "entrepreneurship, and sustainable business development. With over a "
@@ -77,56 +83,113 @@ class Command(BaseCommand):
                     "in peer-reviewed journals and presented at international conferences "
                     "across Southeast Asia."
                 ),
-                email="venepheth@university.edu.la",
-                office="Faculty of Business Administration, Room 301",
-                is_active=True,
-            ),
+                "email": "venepheth@university.edu.la",
+                "office": "Faculty of Business Administration, Room 301",
+                "is_active": True,
+            },
         )
         if not created:
             self.stdout.write("  Profile already exists, skipping.")
             return
 
-        Education.objects.bulk_create([
-            Education(profile=profile, degree="Doctor of Philosophy (PhD)", field="Business Administration",
-                      institution="National University of Laos", country="Laos PDR",
-                      year_start=2015, year_end=2019, order=0),
-            Education(profile=profile, degree="Master of Business Administration (MBA)", field="Strategic Management",
-                      institution="Chiang Mai University", country="Thailand",
-                      year_start=2011, year_end=2013, order=1),
-            Education(profile=profile, degree="Bachelor of Economics", field="Economics",
-                      institution="National University of Laos", country="Laos PDR",
-                      year_start=2006, year_end=2010, order=2),
-        ])
+        Education.objects.bulk_create(
+            [
+                Education(
+                    profile=profile,
+                    degree="Doctor of Philosophy (PhD)",
+                    field="Business Administration",
+                    institution="National University of Laos",
+                    country="Laos PDR",
+                    year_start=2015,
+                    year_end=2019,
+                    order=0,
+                ),
+                Education(
+                    profile=profile,
+                    degree="Master of Business Administration (MBA)",
+                    field="Strategic Management",
+                    institution="Chiang Mai University",
+                    country="Thailand",
+                    year_start=2011,
+                    year_end=2013,
+                    order=1,
+                ),
+                Education(
+                    profile=profile,
+                    degree="Bachelor of Economics",
+                    field="Economics",
+                    institution="National University of Laos",
+                    country="Laos PDR",
+                    year_start=2006,
+                    year_end=2010,
+                    order=2,
+                ),
+            ]
+        )
 
-        Experience.objects.bulk_create([
-            Experience(profile=profile, position="Associate Lecturer", organization="National University of Laos",
-                       department="Faculty of Business Administration", country="Laos PDR",
-                       year_start=2019, is_current=True, order=0),
-            Experience(profile=profile, position="Research Fellow", organization="ASEAN Business Research Network",
-                       country="Regional", year_start=2021, is_current=True, order=1),
-            Experience(profile=profile, position="Lecturer", organization="National University of Laos",
-                       department="Faculty of Economics", country="Laos PDR",
-                       year_start=2013, year_end=2019, order=2),
-        ])
+        Experience.objects.bulk_create(
+            [
+                Experience(
+                    profile=profile,
+                    position="Associate Lecturer",
+                    organization="National University of Laos",
+                    department="Faculty of Business Administration",
+                    country="Laos PDR",
+                    year_start=2019,
+                    is_current=True,
+                    order=0,
+                ),
+                Experience(
+                    profile=profile,
+                    position="Research Fellow",
+                    organization="ASEAN Business Research Network",
+                    country="Regional",
+                    year_start=2021,
+                    is_current=True,
+                    order=1,
+                ),
+                Experience(
+                    profile=profile,
+                    position="Lecturer",
+                    organization="National University of Laos",
+                    department="Faculty of Economics",
+                    country="Laos PDR",
+                    year_start=2013,
+                    year_end=2019,
+                    order=2,
+                ),
+            ]
+        )
 
-        Language.objects.bulk_create([
-            Language(profile=profile, name="Lao", proficiency="native", order=0),
-            Language(profile=profile, name="English", proficiency="fluent", order=1),
-            Language(profile=profile, name="Thai", proficiency="advanced", order=2),
-        ])
+        Language.objects.bulk_create(
+            [
+                Language(profile=profile, name="Lao", proficiency="native", order=0),
+                Language(profile=profile, name="English", proficiency="fluent", order=1),
+                Language(profile=profile, name="Thai", proficiency="advanced", order=2),
+            ]
+        )
 
         interests = [
-            "Strategic Management", "SME Development", "Entrepreneurship",
-            "Digital Transformation", "Sustainable Development", "Business Ethics",
+            "Strategic Management",
+            "SME Development",
+            "Entrepreneurship",
+            "Digital Transformation",
+            "Sustainable Development",
+            "Business Ethics",
         ]
-        AcademicInterest.objects.bulk_create([
-            AcademicInterest(profile=profile, name=i, order=n) for n, i in enumerate(interests)
-        ])
+        AcademicInterest.objects.bulk_create(
+            [AcademicInterest(profile=profile, name=i, order=n) for n, i in enumerate(interests)]
+        )
         self.stdout.write(f"  ✓ Profile created: {profile.full_name}")
 
     # ──────────────────────────────────────────────────────────
     def _seed_courses(self):
-        from apps.courses.models import Course, CourseCategory, LearningOutcome, CourseModule
+        from apps.courses.models import (
+            Course,
+            CourseCategory,
+            CourseModule,
+            LearningOutcome,
+        )
 
         categories_data = [
             ("Business Administration", "business-administration"),
@@ -141,7 +204,8 @@ class Command(BaseCommand):
 
         courses_data = [
             {
-                "code": "BUS301", "name": "Strategic Management",
+                "code": "BUS301",
+                "name": "Strategic Management",
                 "description": (
                     "This course explores the fundamentals of strategic management, including "
                     "environmental analysis, competitive strategy, and strategic implementation. "
@@ -150,8 +214,11 @@ class Command(BaseCommand):
                 ),
                 "short_description": "Comprehensive study of business strategy formulation, implementation and evaluation.",
                 "category": "business-administration",
-                "credits": 3, "semester": "Semester 1", "academic_year": "2026–2027",
-                "level": "Graduate", "language": "Lao / English",
+                "credits": 3,
+                "semester": "Semester 1",
+                "academic_year": "2026–2027",
+                "level": "Graduate",
+                "language": "Lao / English",
                 "featured": True,
                 "outcomes": [
                     "Analyze external and internal business environments using established frameworks",
@@ -169,7 +236,8 @@ class Command(BaseCommand):
                 ],
             },
             {
-                "code": "BUS205", "name": "Entrepreneurship and SME Development",
+                "code": "BUS205",
+                "name": "Entrepreneurship and SME Development",
                 "description": (
                     "Explores the theory and practice of entrepreneurship with a focus on "
                     "small and medium enterprise development in the Lao context. Topics include "
@@ -177,8 +245,11 @@ class Command(BaseCommand):
                 ),
                 "short_description": "Building and growing successful businesses in the Lao and ASEAN context.",
                 "category": "business-administration",
-                "credits": 3, "semester": "Semester 2", "academic_year": "2026–2027",
-                "level": "Undergraduate", "language": "Lao",
+                "credits": 3,
+                "semester": "Semester 2",
+                "academic_year": "2026–2027",
+                "level": "Undergraduate",
+                "language": "Lao",
                 "featured": True,
                 "outcomes": [
                     "Identify and evaluate entrepreneurial opportunities in the local market",
@@ -196,7 +267,8 @@ class Command(BaseCommand):
                 ],
             },
             {
-                "code": "RES401", "name": "Research Methodology in Business",
+                "code": "RES401",
+                "name": "Research Methodology in Business",
                 "description": (
                     "A graduate-level course covering quantitative and qualitative research methods "
                     "in business and social sciences. Students learn to design research projects, "
@@ -204,8 +276,11 @@ class Command(BaseCommand):
                 ),
                 "short_description": "Quantitative and qualitative research design for business studies.",
                 "category": "research-methodology",
-                "credits": 3, "semester": "Semester 1", "academic_year": "2026–2027",
-                "level": "Graduate", "language": "English",
+                "credits": 3,
+                "semester": "Semester 1",
+                "academic_year": "2026–2027",
+                "level": "Graduate",
+                "language": "English",
                 "featured": True,
                 "outcomes": [
                     "Design rigorous research projects using appropriate methodologies",
@@ -224,7 +299,8 @@ class Command(BaseCommand):
                 ],
             },
             {
-                "code": "ECO202", "name": "Microeconomics",
+                "code": "ECO202",
+                "name": "Microeconomics",
                 "description": (
                     "Covers the fundamental principles of microeconomic theory including "
                     "consumer behavior, firm theory, market structures, and welfare economics. "
@@ -232,8 +308,11 @@ class Command(BaseCommand):
                 ),
                 "short_description": "Core principles of microeconomic theory, markets, and resource allocation.",
                 "category": "economics",
-                "credits": 3, "semester": "Semester 2", "academic_year": "2026–2027",
-                "level": "Undergraduate", "language": "Lao",
+                "credits": 3,
+                "semester": "Semester 2",
+                "academic_year": "2026–2027",
+                "level": "Undergraduate",
+                "language": "Lao",
                 "featured": False,
                 "outcomes": [
                     "Understand consumer choice theory and demand analysis",
@@ -251,7 +330,8 @@ class Command(BaseCommand):
                 ],
             },
             {
-                "code": "MGT310", "name": "Organizational Behavior",
+                "code": "MGT310",
+                "name": "Organizational Behavior",
                 "description": (
                     "Studies human behavior in organizational settings, covering individual, "
                     "group, and organizational level phenomena. Topics include motivation, "
@@ -259,8 +339,11 @@ class Command(BaseCommand):
                 ),
                 "short_description": "Understanding human behavior and leadership in modern organizations.",
                 "category": "management",
-                "credits": 3, "semester": "Semester 1", "academic_year": "2026–2027",
-                "level": "Undergraduate", "language": "Lao / English",
+                "credits": 3,
+                "semester": "Semester 1",
+                "academic_year": "2026–2027",
+                "level": "Undergraduate",
+                "language": "Lao / English",
                 "featured": True,
                 "outcomes": [
                     "Analyze individual behavior and motivation in organizational contexts",
@@ -308,12 +391,18 @@ class Command(BaseCommand):
 
     # ──────────────────────────────────────────────────────────
     def _seed_research(self):
-        from apps.research.models import ResearchProject, ResearchTopic, Publication
+        from apps.research.models import Publication, ResearchProject, ResearchTopic
 
         topics_data = [
-            "Strategic Management", "SME Development", "Digital Transformation",
-            "Sustainable Development", "Entrepreneurship", "Business Ethics",
-            "ASEAN Economics", "Financial Inclusion", "Innovation Management",
+            "Strategic Management",
+            "SME Development",
+            "Digital Transformation",
+            "Sustainable Development",
+            "Entrepreneurship",
+            "Business Ethics",
+            "ASEAN Economics",
+            "Financial Inclusion",
+            "Innovation Management",
         ]
         topics = {}
         for name in topics_data:
@@ -421,11 +510,14 @@ class Command(BaseCommand):
                 "authors": "Sayavong, V., Phonethip, K., & Manorath, S.",
                 "year": 2024,
                 "journal": "Journal of Asian Business Studies",
-                "volume": "18", "issue": "2", "pages": "145–167",
+                "volume": "18",
+                "issue": "2",
+                "pages": "145–167",
                 "doi": "10.1108/JABS-2024-0123",
                 "keywords": "digital transformation, SME, Laos, technology adoption",
                 "topics": ["Digital Transformation", "SME Development"],
-                "cited_by": 8, "featured": True,
+                "cited_by": 8,
+                "featured": True,
             },
             {
                 "title": "Sustainability and Firm Performance: A Meta-Analysis of ASEAN Evidence",
@@ -434,11 +526,14 @@ class Command(BaseCommand):
                 "authors": "Sayavong, V., & Chanthavilay, P.",
                 "year": 2023,
                 "journal": "Sustainability",
-                "volume": "15", "issue": "8", "pages": "6823",
+                "volume": "15",
+                "issue": "8",
+                "pages": "6823",
                 "doi": "10.3390/su15086823",
                 "keywords": "ESG, sustainability, financial performance, ASEAN",
                 "topics": ["Sustainable Development", "ASEAN Economics"],
-                "cited_by": 24, "featured": True,
+                "cited_by": 24,
+                "featured": True,
             },
             {
                 "title": "Entrepreneurial Ecosystem in Vientiane: A Stakeholder Perspective",
@@ -450,7 +545,8 @@ class Command(BaseCommand):
                 "pages": "88–99",
                 "keywords": "entrepreneurial ecosystem, startups, Laos",
                 "topics": ["Entrepreneurship"],
-                "cited_by": 5, "featured": False,
+                "cited_by": 5,
+                "featured": False,
             },
             {
                 "title": "Strategic Management Practices of Lao Family Businesses: A Qualitative Study",
@@ -459,11 +555,14 @@ class Command(BaseCommand):
                 "authors": "Sayavong, V.",
                 "year": 2022,
                 "journal": "Asian Journal of Business Research",
-                "volume": "12", "issue": "1", "pages": "21–40",
+                "volume": "12",
+                "issue": "1",
+                "pages": "21–40",
                 "doi": "10.14707/ajbr.220115",
                 "keywords": "family business, strategic management, Laos, qualitative",
                 "topics": ["Strategic Management"],
-                "cited_by": 12, "featured": False,
+                "cited_by": 12,
+                "featured": False,
             },
             {
                 "title": "The Role of Microfinance in Rural Poverty Reduction: Evidence from Laos PDR",
@@ -472,11 +571,14 @@ class Command(BaseCommand):
                 "authors": "Sayavong, V., & Khamphanh, D.",
                 "year": 2021,
                 "journal": "Journal of Development Economics",
-                "volume": "9", "issue": "3", "pages": "310–335",
+                "volume": "9",
+                "issue": "3",
+                "pages": "310–335",
                 "doi": "10.1111/JADE-2021-0037",
                 "keywords": "microfinance, poverty reduction, rural development, Laos",
                 "topics": ["Financial Inclusion", "Sustainable Development"],
-                "cited_by": 31, "featured": False,
+                "cited_by": 31,
+                "featured": False,
             },
             {
                 "title": "Business Education Reform in Laos: Challenges and Opportunities",
@@ -488,7 +590,8 @@ class Command(BaseCommand):
                 "isbn": "978-981-19-5432-1",
                 "keywords": "business education, higher education, Laos, curriculum reform",
                 "topics": ["Entrepreneurship"],
-                "cited_by": 7, "featured": False,
+                "cited_by": 7,
+                "featured": False,
             },
         ]
 
@@ -675,7 +778,7 @@ class Command(BaseCommand):
     # ──────────────────────────────────────────────────────────
     def _seed_events(self):
         from apps.events.models import Event
-        
+
         events_data = [
             {
                 "title": "ASEAN Digital Economy Symposium 2026",
@@ -708,7 +811,7 @@ class Command(BaseCommand):
                 "organizer": "Faculty of Business Administration",
             },
         ]
-        
+
         for data in events_data:
             slug = slugify(data["title"])[:240]
             if Event.objects.filter(slug=slug).exists():
@@ -731,18 +834,18 @@ class Command(BaseCommand):
     # ──────────────────────────────────────────────────────────
     def _seed_resources(self):
         from apps.resources.models import Resource, ResourceCategory
-        
+
         cats = [
             ("Lecture Notes", "lecture-notes"),
             ("Datasets", "datasets"),
             ("Templates", "templates"),
         ]
-        
+
         categories = {}
         for name, slug in cats:
             c, _ = ResourceCategory.objects.get_or_create(slug=slug, defaults={"name": name})
             categories[slug] = c
-            
+
         resources_data = [
             {
                 "title": "Strategic Management Syllabus 2026",
@@ -773,9 +876,9 @@ class Command(BaseCommand):
                 "visibility": "public",
                 "tags": "template, business plan, startup",
                 "external_url": "https://example.com/template.docx",
-            }
+            },
         ]
-        
+
         for data in resources_data:
             slug = slugify(data["title"])[:240]
             if Resource.objects.filter(slug=slug).exists():

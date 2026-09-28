@@ -2,6 +2,7 @@
 AI Academic Assistant Views.
 Provides the HTMX chat endpoint and standalone assistant page.
 """
+
 import json
 import logging
 
@@ -69,9 +70,11 @@ def assistant_chat(request):
     adapter = get_llm_adapter()
     result = adapter.generate_response(query, context_items, language=language)
 
-    return JsonResponse({
-        "answer": result.get("answer", ""),
-        "sources": result.get("sources", []),
-        "provider": result.get("provider", ""),
-        "query": query,
-    })
+    return JsonResponse(
+        {
+            "answer": result.get("answer", ""),
+            "sources": result.get("sources", []),
+            "provider": result.get("provider", ""),
+            "query": query,
+        }
+    )

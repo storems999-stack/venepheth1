@@ -2,19 +2,24 @@
 Development settings — extends base.py.
 Never use in production.
 """
-from .base import *  # noqa: F401, F403
+
+import os
+
+from .base import *
 
 DEBUG = True
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]", "testserver", ".trycloudflare.com"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]", "testserver", ".trycloudflare.com", ".workers.dev"]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "http://localhost:9000",
+    "http://127.0.0.1:9000",
     "https://*.trycloudflare.com",
+    "https://*.workers.dev",
 ]
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
 # ─── Database (SQLite for local dev without Docker) ───────────────────────────
-import os
 if not os.getenv("DATABASE_URL"):
     DATABASES = {
         "default": {
@@ -24,7 +29,6 @@ if not os.getenv("DATABASE_URL"):
     }
 
 # ─── Cache (LocMem if Redis not running) ─────────────────────────────────────
-import os
 if not os.getenv("REDIS_URL"):
     CACHES = {
         "default": {
@@ -36,8 +40,8 @@ if not os.getenv("REDIS_URL"):
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # ─── Debug Toolbar ────────────────────────────────────────────────────────────
-# INSTALLED_APPS += ["debug_toolbar"]  # noqa: F405
-# MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")  # noqa: F405
+# INSTALLED_APPS += ["debug_toolbar"]
+# MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 INTERNAL_IPS = ["127.0.0.1"]
 
 # DEBUG_TOOLBAR_CONFIG = {
@@ -57,8 +61,8 @@ CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
-import logging
-for handler in LOGGING["handlers"].values():  # noqa: F405
+for handler in LOGGING["handlers"].values():
     if handler.get("class") == "logging.handlers.RotatingFileHandler":
         import os
-        os.makedirs(BASE_DIR / "logs", exist_ok=True)  # noqa: F405
+
+        os.makedirs(BASE_DIR / "logs", exist_ok=True)

@@ -1,17 +1,47 @@
 """
 Blog / Articles models with versioning and publish workflow.
 """
+
 import bleach
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from apps.core.models import PublishableModel, SlugModel, SEOModel
-from apps.core.file_security import validate_file_extension, validate_file_size, validate_file_mime
+
+from apps.core.file_security import (
+    validate_file_extension,
+    validate_file_mime,
+    validate_file_size,
+)
+from apps.core.models import PublishableModel, SEOModel, SlugModel
 
 ALLOWED_TAGS = [
-    "p", "br", "strong", "em", "u", "s", "h2", "h3", "h4", "h5", "h6",
-    "ul", "ol", "li", "blockquote", "code", "pre", "a", "img",
-    "table", "thead", "tbody", "tr", "th", "td",
-    "figure", "figcaption", "hr",
+    "p",
+    "br",
+    "strong",
+    "em",
+    "u",
+    "s",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "ul",
+    "ol",
+    "li",
+    "blockquote",
+    "code",
+    "pre",
+    "a",
+    "img",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+    "figure",
+    "figcaption",
+    "hr",
 ]
 ALLOWED_ATTRIBUTES = {
     "a": ["href", "title", "rel", "target"],
@@ -26,6 +56,7 @@ ALLOWED_ATTRIBUTES = {
 
 class ArticleTag(models.Model):
     """Tag for categorizing articles."""
+
     name = models.CharField(_("tag"), max_length=100, unique=True)
     slug = models.SlugField(unique=True)
 
@@ -63,12 +94,13 @@ class Article(PublishableModel, SlugModel, SEOModel):
     )
     tags = models.ManyToManyField(ArticleTag, blank=True, related_name="articles")
     thumbnail = models.ImageField(
-        _("thumbnail"), upload_to="blog/thumbnails/", null=True, blank=True,
+        _("thumbnail"),
+        upload_to="blog/thumbnails/",
+        null=True,
+        blank=True,
         validators=[validate_file_extension, validate_file_size, validate_file_mime],
     )
-    reading_time = models.PositiveSmallIntegerField(
-        _("reading time (min)"), null=True, blank=True, editable=False
-    )
+    reading_time = models.PositiveSmallIntegerField(_("reading time (min)"), null=True, blank=True, editable=False)
     view_count = models.PositiveIntegerField(_("views"), default=0, editable=False)
     is_featured = models.BooleanField(_("featured"), default=False)
     allow_comments = models.BooleanField(_("allow comments"), default=False)
@@ -84,9 +116,10 @@ class Article(PublishableModel, SlugModel, SEOModel):
 
     def __str__(self):
         return self.title
-        
+
     def get_absolute_url(self):
         from django.urls import reverse
+
         return reverse("blog:detail", kwargs={"slug": self.slug})
 
     def save(self, *args, **kwargs):

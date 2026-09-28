@@ -1,7 +1,9 @@
 """
 Celery application configuration for Venepheth Academic Platform.
 """
+
 import os
+
 from celery import Celery
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.production")

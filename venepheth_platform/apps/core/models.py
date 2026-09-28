@@ -1,6 +1,7 @@
 """
 Core abstract base models used across all apps.
 """
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
@@ -8,6 +9,7 @@ from simple_history.models import HistoricalRecords
 
 class TimeStampedModel(models.Model):
     """Abstract base model with created_at and updated_at timestamps."""
+
     created_at = models.DateTimeField(_("created at"), auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
@@ -46,6 +48,7 @@ class PublishableModel(TimeStampedModel):
 
     def publish(self):
         from django.utils import timezone
+
         self.status = self.Status.PUBLISHED
         self.published_at = timezone.now()
         self.save(update_fields=["status", "published_at", "updated_at"])
@@ -61,6 +64,7 @@ class PublishableModel(TimeStampedModel):
 
 class SlugModel(models.Model):
     """Abstract model with a unique slug field."""
+
     slug = models.SlugField(
         _("slug"),
         max_length=255,
@@ -75,6 +79,7 @@ class SlugModel(models.Model):
 
 class SoftDeleteModel(models.Model):
     """Abstract model supporting soft deletion."""
+
     is_deleted = models.BooleanField(_("deleted"), default=False, db_index=True)
     deleted_at = models.DateTimeField(_("deleted at"), null=True, blank=True)
 
@@ -83,6 +88,7 @@ class SoftDeleteModel(models.Model):
 
     def soft_delete(self):
         from django.utils import timezone
+
         self.is_deleted = True
         self.deleted_at = timezone.now()
         self.save(update_fields=["is_deleted", "deleted_at"])
@@ -95,6 +101,7 @@ class SoftDeleteModel(models.Model):
 
 class SEOModel(models.Model):
     """Abstract model for SEO metadata fields."""
+
     seo_title = models.CharField(_("SEO title"), max_length=70, blank=True)
     seo_description = models.CharField(_("SEO description"), max_length=160, blank=True)
     seo_keywords = models.CharField(_("SEO keywords"), max_length=255, blank=True)

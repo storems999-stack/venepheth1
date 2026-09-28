@@ -2,13 +2,13 @@
 Unit tests for AI Academic Assistant.
 Tests the adapter pattern, RAG retriever, and chat API endpoint.
 """
+
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-from django.test import TestCase, RequestFactory
-from django.urls import reverse
+from django.test import TestCase
 
-from apps.assistant.adapters import get_llm_adapter, GroundedFallbackAdapter
+from apps.assistant.adapters import GroundedFallbackAdapter, get_llm_adapter
 from apps.assistant.adapters.base import BaseLLMAdapter
 
 
@@ -127,11 +127,13 @@ class TestAcademicRetriever(TestCase):
     def test_retrieve_returns_list(self):
         """AcademicRetriever.retrieve() should return a list even with empty DB."""
         from apps.assistant.services.retriever import AcademicRetriever
+
         results = AcademicRetriever.retrieve("management", limit=5)
         self.assertIsInstance(results, list)
 
     def test_retrieve_respects_limit(self):
         """AcademicRetriever.retrieve() should not exceed the specified limit."""
         from apps.assistant.services.retriever import AcademicRetriever
+
         results = AcademicRetriever.retrieve("any topic", limit=3)
         self.assertLessEqual(len(results), 3)

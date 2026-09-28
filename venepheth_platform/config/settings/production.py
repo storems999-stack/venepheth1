@@ -2,8 +2,10 @@
 Production settings for Venepheth SAYAVONG Academic Platform.
 Inherits from base.py and overrides with production-specific values.
 """
-from .base import *  # noqa: F401, F403
+
 import environ
+
+from .base import *
 
 env = environ.Env()
 
@@ -13,14 +15,12 @@ SECRET_KEY = env("SECRET_KEY")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
 # ─── Database ────────────────────────────────────────────────────────────────
-DATABASES = {
-    "default": env.db("DATABASE_URL")
-}
+DATABASES = {"default": env.db("DATABASE_URL")}
 DATABASES["default"]["CONN_MAX_AGE"] = 60
 
 # ─── Security ────────────────────────────────────────────────────────────────
 SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=True)
-SECURE_HSTS_SECONDS = 31536000          # 1 year
+SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

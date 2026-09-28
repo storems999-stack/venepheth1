@@ -1,9 +1,11 @@
 """Sitemap classes for core/static pages."""
+
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
+
 from apps.blog.models import Article
-from apps.research.models import ResearchProject
 from apps.courses.models import Course
+from apps.research.models import ResearchProject
 
 
 class StaticViewSitemap(Sitemap):

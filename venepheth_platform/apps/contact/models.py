@@ -1,8 +1,10 @@
 """
 Contact form model with rate limiting.
 """
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
 from apps.core.models import TimeStampedModel
 
 
@@ -21,9 +23,7 @@ class ContactMessage(TimeStampedModel):
     subject = models.CharField(_("subject"), max_length=300)
     message = models.TextField(_("message"), max_length=5000)
     organization = models.CharField(_("organization"), max_length=200, blank=True)
-    status = models.CharField(
-        _("status"), max_length=20, choices=Status.choices, default=Status.NEW, db_index=True
-    )
+    status = models.CharField(_("status"), max_length=20, choices=Status.choices, default=Status.NEW, db_index=True)
     ip_address = models.GenericIPAddressField(_("IP address"), null=True, blank=True)
     user_agent = models.CharField(_("user agent"), max_length=512, blank=True)
     replied_at = models.DateTimeField(_("replied at"), null=True, blank=True)

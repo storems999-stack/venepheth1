@@ -3,7 +3,9 @@ Signals for the accounts app:
 - Audit log on login/logout/failure
 - Auto-require MFA for admin roles
 """
+
 import logging
+
 from django.contrib.auth.signals import (
     user_logged_in,
     user_logged_out,
@@ -35,6 +37,7 @@ def on_user_logged_in(sender, request, user, **kwargs):
     # Create audit log entry
     try:
         from apps.audit.models import AuditLog
+
         AuditLog.log(
             who=user,
             action=AuditLog.Action.LOGIN,
@@ -53,6 +56,7 @@ def on_user_logged_out(sender, request, user, **kwargs):
         logger.info("LOGOUT user=%s ip=%s", user.email, ip)
         try:
             from apps.audit.models import AuditLog
+
             AuditLog.log(
                 who=user,
                 action=AuditLog.Action.LOGOUT,
@@ -71,6 +75,7 @@ def on_user_login_failed(sender, credentials, request, **kwargs):
     logger.warning("LOGIN_FAILED email=%s ip=%s", email, ip)
     try:
         from apps.security.models import SecurityEvent
+
         SecurityEvent.record(
             event_type=SecurityEvent.EventType.LOGIN_FAILURE,
             description=f"Failed login attempt for: {email}",
@@ -84,6 +89,5 @@ def on_user_login_failed(sender, credentials, request, **kwargs):
 @receiver(post_save, sender=CustomUser)
 def enforce_mfa_for_admins(sender, instance, created, **kwargs):
     """Auto-set require_mfa=True for ADMIN/SUPERADMIN roles."""
-    if created and instance.role in (CustomUser.Role.SUPERADMIN, CustomUser.Role.ADMIN):
-        if not instance.require_mfa:
-            CustomUser.objects.filter(pk=instance.pk).update(require_mfa=True)
+    if created and instance.role in (CustomUser.Role.SUPERADMIN, CustomUser.Role.ADMIN) and not instance.require_mfa:
+        CustomUser.objects.filter(pk=instance.pk).update(require_mfa=True)

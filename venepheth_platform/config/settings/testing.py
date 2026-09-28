@@ -1,11 +1,13 @@
 """
 Testing settings — fast, in-memory database, no migrations.
 """
-from .base import *  # noqa: F401, F403
+
+from .base import *
 
 DEBUG = True
 
 import importlib.util
+
 
 def _is_available(entry):
     root = entry.split(".")[0]
@@ -13,6 +15,7 @@ def _is_available(entry):
         return importlib.util.find_spec(root) is not None
     except Exception:
         return False
+
 
 INSTALLED_APPS = [app for app in INSTALLED_APPS if _is_available(app)]
 MIDDLEWARE = [m for m in MIDDLEWARE if _is_available(m)]
@@ -24,18 +27,19 @@ DATABASES = {
     }
 }
 
+
 # Skip migrations for speed
 class DisableMigrations:
     def __contains__(self, item):
         return True
+
     def __getitem__(self, item):
         return None
 
+
 MIGRATION_MODULES = DisableMigrations()
 
-CACHES = {
-    "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
-}
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 

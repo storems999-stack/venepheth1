@@ -1,10 +1,16 @@
 """
 Academic Events models.
 """
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from apps.core.models import TimeStampedModel, PublishableModel, SlugModel, SEOModel
-from apps.core.file_security import validate_file_extension, validate_file_size, validate_file_mime
+
+from apps.core.file_security import (
+    validate_file_extension,
+    validate_file_mime,
+    validate_file_size,
+)
+from apps.core.models import PublishableModel, SEOModel, SlugModel
 
 
 class Event(PublishableModel, SlugModel, SEOModel):
@@ -29,7 +35,10 @@ class Event(PublishableModel, SlugModel, SEOModel):
     start_time = models.DateTimeField(_("start time"), db_index=True)
     end_time = models.DateTimeField(_("end time"), null=True, blank=True)
     cover_image = models.ImageField(
-        _("cover image"), upload_to="events/covers/", null=True, blank=True,
+        _("cover image"),
+        upload_to="events/covers/",
+        null=True,
+        blank=True,
         validators=[validate_file_extension, validate_file_size, validate_file_mime],
     )
     organizer = models.CharField(_("organizer"), max_length=300, blank=True)
@@ -47,4 +56,5 @@ class Event(PublishableModel, SlugModel, SEOModel):
 
     def get_absolute_url(self):
         from django.urls import reverse
+
         return reverse("events:detail", kwargs={"slug": self.slug})

@@ -1,6 +1,8 @@
 """Teaching app admin."""
+
 from django.contrib import admin
-from .models import OfficeHours, TeachingPhilosophy, StudentAnnouncement
+
+from .models import OfficeHours, StudentAnnouncement, TeachingPhilosophy
 
 
 @admin.register(OfficeHours)

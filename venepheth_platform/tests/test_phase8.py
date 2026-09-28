@@ -1,20 +1,20 @@
 """
 Phase 8 test suite: Teaching, Events, Resources, Notifications, HTML emails, and Bulk Actions.
 """
-from django.contrib.auth import get_user_model
-from django.core.cache import cache
-from django.core import mail
-from django.test import TestCase, Client
-from django.urls import reverse
-from django.utils import timezone
+
 from datetime import timedelta
 
-from apps.teaching.models import OfficeHours, TeachingPhilosophy, StudentAnnouncement
+from django.contrib.auth import get_user_model
+from django.core import mail
+from django.core.cache import cache
+from django.test import Client, TestCase
+from django.urls import reverse
+from django.utils import timezone
+
 from apps.events.models import Event
-from apps.resources.models import Resource, ResourceCategory
 from apps.notifications.models import Notification
-from apps.blog.models import Article
-from apps.blog.admin import make_published, make_archived, make_draft
+from apps.resources.models import Resource, ResourceCategory
+from apps.teaching.models import OfficeHours, StudentAnnouncement, TeachingPhilosophy
 
 User = get_user_model()
 

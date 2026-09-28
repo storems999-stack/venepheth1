@@ -1,9 +1,11 @@
 """
 Teaching app models — office hours, student announcements, advising.
 """
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from apps.core.models import TimeStampedModel, PublishableModel
+
+from apps.core.models import PublishableModel, TimeStampedModel
 
 
 class OfficeHours(TimeStampedModel):
@@ -37,6 +39,7 @@ class OfficeHours(TimeStampedModel):
 
 class TeachingPhilosophy(TimeStampedModel):
     """Teaching philosophy statement (singleton)."""
+
     headline = models.CharField(_("headline"), max_length=200)
     body = models.TextField(_("statement"))
     is_active = models.BooleanField(_("active"), default=True)
@@ -51,6 +54,7 @@ class TeachingPhilosophy(TimeStampedModel):
 
 class StudentAnnouncement(PublishableModel):
     """Short announcements directed at students."""
+
     title = models.CharField(_("title"), max_length=300)
     body = models.TextField(_("body"))
     is_urgent = models.BooleanField(_("urgent"), default=False)

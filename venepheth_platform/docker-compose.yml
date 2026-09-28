@@ -6,12 +6,17 @@ volumes:
   redis_data:
   media_data:
   static_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
 
 # ─── Networks ─────────────────────────────────────────────────────────────────
 networks:
   backend:
     driver: bridge
   frontend:
+    driver: bridge
+  monitoring:
     driver: bridge
 
 # ─── Shared Django env (used by web + worker + scheduler) ─────────────────────
@@ -71,7 +76,7 @@ services:
   web:
     <<: *django-env
     build:
-      context: .   # Use builder stage in dev for faster rebuilds
+      context: .
     command: >
       sh -c "
         python manage.py migrate --noinput &&
@@ -83,6 +88,7 @@ services:
     networks:
       - backend
       - frontend
+      - monitoring
     restart: unless-stopped
 
   # ─── Celery Worker ──────────────────────────────────────────────────────────
@@ -123,3 +129,54 @@ services:
       - frontend
     depends_on:
       - web
+
+  # ─── Prometheus (vision §39/40) ─────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    restart: unless-stopped
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --web.enable-lifecycle
+    networks:
+      - monitoring
+      - backend
+    ports:
+      - "127.0.0.1:9090:9090"
+
+  # ─── Grafana (vision §39/40) ────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.2
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change_in_env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana/"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+    networks:
+      - monitoring
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
+
+  # ─── Loki (log aggregation) ─────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:2.9.8
+    restart: unless-stopped
+    volumes:
+      - loki_data:/loki
+      - ./docker/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+    command: -config.file=/etc/loki/loki-config.yml
+    networks:
+      - monitoring
+    ports:
+      - "127.0.0.1:3100:3100"

@@ -3,12 +3,12 @@ Prometheus-compatible /metrics/ endpoint.
 Zero-cost observability — no external agent required.
 Metrics are exposed in Prometheus text format (exposition format 0.0.4).
 """
-import time
+
 import logging
+import time
 
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
-from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_GET
 
 logger = logging.getLogger("apps.core")
@@ -29,6 +29,7 @@ def _safe_count(queryset) -> int:
 def _safe_import_count(app: str, model: str, **filters) -> int:
     try:
         import importlib
+
         mod = importlib.import_module(f"apps.{app}.models")
         klass = getattr(mod, model, None)
         if klass is None:
@@ -46,6 +47,7 @@ def metrics_view(request):
     """
     # Validate optional shared secret
     from django.conf import settings
+
     metrics_token = getattr(settings, "METRICS_TOKEN", None)
     if metrics_token:
         auth_header = request.META.get("HTTP_X_METRICS_TOKEN", "")
@@ -59,41 +61,33 @@ def metrics_view(request):
         "# HELP platform_uptime_seconds Time since process start in seconds.",
         "# TYPE platform_uptime_seconds gauge",
         f"platform_uptime_seconds {uptime:.1f}",
-
         # ── Users ──────────────────────────────────────────────────────────────
         "# HELP platform_users_total Total registered users.",
         "# TYPE platform_users_total gauge",
         f"platform_users_total {_safe_count(User.objects.all())}",
-
         "# HELP platform_active_users_total Active (is_active=True) users.",
         "# TYPE platform_active_users_total gauge",
         f"platform_active_users_total {_safe_count(User.objects.filter(is_active=True))}",
-
         # ── Blog ───────────────────────────────────────────────────────────────
         "# HELP platform_articles_total Published blog articles.",
         "# TYPE platform_articles_total gauge",
         f"platform_articles_total {_safe_import_count('blog', 'Article', status='published')}",
-
         # ── Research ───────────────────────────────────────────────────────────
         "# HELP platform_research_projects_total Active research projects.",
         "# TYPE platform_research_projects_total gauge",
         f"platform_research_projects_total {_safe_import_count('research', 'ResearchProject', status='published')}",
-
         # ── Publications ────────────────────────────────────────────────────────
         "# HELP platform_publications_total Total publications.",
         "# TYPE platform_publications_total gauge",
         f"platform_publications_total {_safe_import_count('research', 'Publication')}",
-
         # ── Courses ─────────────────────────────────────────────────────────────
         "# HELP platform_courses_total Active courses.",
         "# TYPE platform_courses_total gauge",
         f"platform_courses_total {_safe_import_count('courses', 'Course', status='published')}",
-
         # ── Events ──────────────────────────────────────────────────────────────
         "# HELP platform_events_total Total events.",
         "# TYPE platform_events_total gauge",
         f"platform_events_total {_safe_import_count('events', 'Event')}",
-
         # ── Timestamp ──────────────────────────────────────────────────────────
         "# HELP platform_scrape_timestamp_seconds Unix timestamp of last metric scrape.",
         "# TYPE platform_scrape_timestamp_seconds gauge",

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "User Management" %} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-10 max-w-6xl">
+
+  <div class="flex items-center justify-between mb-8">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{% trans "User Management" %}</h1>
+      <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">
+        {{ users.count }} {% trans "total users" %}
+      </p>
+    </div>
+  </div>
+
+  <div class="card overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <tr>
+          <th class="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">{% trans "User" %}</th>
+          <th class="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">{% trans "Role" %}</th>
+          <th class="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">{% trans "Status" %}</th>
+          <th class="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">{% trans "MFA" %}</th>
+          <th class="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">{% trans "Joined" %}</th>
+          <th class="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+        {% for u in users %}
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+          <td class="px-4 py-3">
+            <div class="font-medium text-gray-900 dark:text-white">{{ u.get_full_name }}</div>
+            <div class="text-gray-400 text-xs">{{ u.email }}</div>
+          </td>
+          <td class="px-4 py-3">
+            <span class="px-2 py-0.5 rounded text-xs font-medium
+              {% if u.role == 'superadmin' %}bg-red-100 text-red-700
+              {% elif u.role == 'admin' %}bg-orange-100 text-orange-700
+              {% elif u.role == 'lecturer' %}bg-blue-100 text-blue-700
+              {% elif u.role == 'editor' %}bg-green-100 text-green-700
+              {% elif u.role == 'researcher' %}bg-purple-100 text-purple-700
+              {% else %}bg-gray-100 text-gray-600{% endif %}">
+              {{ u.get_role_display }}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            {% if u.is_active %}
+              <span class="text-green-600 text-xs">● {% trans "Active" %}</span>
+            {% else %}
+              <span class="text-red-500 text-xs">● {% trans "Inactive" %}</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            {% if u.require_mfa %}
+              <span class="text-green-600 text-xs">{% trans "Required" %}</span>
+            {% else %}
+              <span class="text-gray-400 text-xs">—</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-gray-400 text-xs">{{ u.date_joined|date:"d M Y" }}</td>
+          <td class="px-4 py-3">
+            <a href="{% url 'accounts:user_detail' u.pk %}"
+               class="text-primary-600 hover:text-primary-700 text-xs font-medium">
+              {% trans "View" %}
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-4 py-8 text-center text-gray-400">{% trans "No users found." %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}

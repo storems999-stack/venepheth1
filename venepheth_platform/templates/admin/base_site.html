@@ -1,9 +1,21 @@
 {% extends "admin/base.html" %}
+{% load static %}
 
 {% block title %}{{ title }} | Venepheth SAYAVONG Platform Admin{% endblock %}
 
+{% block extrahead %}
+{{ block.super }}
+<link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+<link rel="icon" type="image/png" sizes="32x32" href="{% static 'icons/favicon-32x32.png' %}">
+{% endblock %}
+
 {% block branding %}
-<h1 id="site-name"><a href="{% url 'admin:index' %}">Venepheth Platform Administration</a></h1>
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}" style="display: inline-flex; align-items: center; gap: 10px;">
+        <img src="{% static 'icons/favicon-32x32.png' %}" alt="Logo" style="width: 28px; height: 28px; border-radius: 6px; object-fit: cover; border: 1px solid #D4A017;">
+        <span>Venepheth Platform Administration</span>
+    </a>
+</h1>
 {% endblock %}
 
 {% block extrastyle %}

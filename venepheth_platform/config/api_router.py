@@ -1,15 +1,16 @@
 """
 API Router configuration for DRF.
 """
+
 from django.conf import settings
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
-from apps.profiles.api_views import ProfileViewSet
-from apps.courses.api_views import CourseViewSet, CourseCategoryViewSet
 from apps.blog.api_views import ArticleViewSet
-from apps.research.api_views import ResearchProjectViewSet, PublicationViewSet
+from apps.courses.api_views import CourseCategoryViewSet, CourseViewSet
 from apps.events.api_views import EventViewSet
-from apps.resources.api_views import ResourceViewSet, ResourceCategoryViewSet
+from apps.profiles.api_views import ProfileViewSet
+from apps.research.api_views import PublicationViewSet, ResearchProjectViewSet
+from apps.resources.api_views import ResourceCategoryViewSet, ResourceViewSet
 
 if settings.DEBUG:
     router = DefaultRouter()

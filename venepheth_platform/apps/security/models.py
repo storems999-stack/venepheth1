@@ -1,7 +1,9 @@
 """
 Security events model — records anomalies, blocked attempts, and threats.
 """
+
 import logging
+
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -29,9 +31,7 @@ class SecurityEvent(models.Model):
         HIGH = "high", _("High")
         CRITICAL = "critical", _("Critical")
 
-    event_type = models.CharField(
-        _("event type"), max_length=50, choices=EventType.choices, db_index=True
-    )
+    event_type = models.CharField(_("event type"), max_length=50, choices=EventType.choices, db_index=True)
     severity = models.CharField(
         _("severity"), max_length=20, choices=Severity.choices, default=Severity.MEDIUM, db_index=True
     )
@@ -58,8 +58,7 @@ class SecurityEvent(models.Model):
         return f"{self.event_type} | {self.severity} | {self.ip_address} | {self.timestamp:%Y-%m-%d %H:%M}"
 
     @classmethod
-    def record(cls, event_type, description, ip=None, request=None,
-               severity=None, extra=None):
+    def record(cls, event_type, description, ip=None, request=None, severity=None, extra=None):
         """Create a security event record."""
         # Auto-assign severity based on event type
         severity_map = {
@@ -95,6 +94,7 @@ class SecurityEvent(models.Model):
 def lockout_response(request, credentials, *args, **kwargs):
     """Called by django-axes when an account is locked out."""
     from django.http import HttpResponse
+
     SecurityEvent.record(
         event_type=SecurityEvent.EventType.ACCOUNT_LOCKED,
         description=f"Account locked for: {credentials.get('username', 'unknown')}",

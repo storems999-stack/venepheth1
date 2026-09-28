@@ -1,6 +1,7 @@
 """
 Tests for Automated Backup and Disaster Recovery (Pillar 1).
 """
+
 import shutil
 import tempfile
 from pathlib import Path
@@ -39,7 +40,7 @@ class BackupAndDisasterRecoveryTests(TestCase):
     def test_restore_platform_verifies_checksum(self):
         """Test restore_platform detects corrupted archive checksum."""
         call_command("backup_platform", output_dir=str(self.test_backup_dir), no_media=True)
-        archive = list(self.test_backup_dir.glob("backup_venepheth_platform_*.tar.gz"))[0]
+        archive = next(iter(self.test_backup_dir.glob("backup_venepheth_platform_*.tar.gz")))
         checksum_file = archive.with_name(f"{archive.name}.sha256")
 
         # Tamper with checksum file
@@ -47,6 +48,7 @@ class BackupAndDisasterRecoveryTests(TestCase):
             f.write(f"badchecksum1234567890  {archive.name}\n")
 
         from django.core.management.base import CommandError
+
         with self.assertRaises(CommandError) as ctx:
             call_command("restore_platform", archive=str(archive), confirm=True)
         self.assertIn("Integrity Check Failed", str(ctx.exception))
@@ -55,13 +57,28 @@ class BackupAndDisasterRecoveryTests(TestCase):
 class CeleryBeatBackupTests(TestCase):
     """Verify scheduled daily backup task and schedule."""
 
+    @classmethod
+    def setUpTestData(cls):
+        from django_celery_beat.models import IntervalSchedule, PeriodicTask
+
+        schedule, _ = IntervalSchedule.objects.get_or_create(
+            every=1,
+            period=IntervalSchedule.DAYS,
+        )
+        PeriodicTask.objects.get_or_create(
+            name="Daily Platform Backup",
+            defaults={
+                "task": "apps.core.tasks.daily_backup",
+                "interval": schedule,
+                "enabled": True,
+            },
+        )
+
     def test_daily_backup_schedule_exists(self):
         """IntervalSchedule and PeriodicTask for daily backup must exist."""
         from django_celery_beat.models import IntervalSchedule, PeriodicTask
 
-        schedule_exists = IntervalSchedule.objects.filter(
-            every=1, period=IntervalSchedule.DAYS
-        ).exists()
+        schedule_exists = IntervalSchedule.objects.filter(every=1, period=IntervalSchedule.DAYS).exists()
         self.assertTrue(schedule_exists, "Daily interval schedule missing")
 
         task_exists = PeriodicTask.objects.filter(

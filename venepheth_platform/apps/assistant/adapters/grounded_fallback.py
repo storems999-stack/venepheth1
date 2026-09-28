@@ -4,7 +4,9 @@ Provides zero-cost, privacy-first, local academic synthesis directly from
 retrieved database records without requiring an external paid LLM.
 Conforms to Section 2 & 50 of vision.txt (Zero-Cost Enterprise & AI Adapter).
 """
-from typing import Any, Dict, List
+
+from typing import Any
+
 from .base import BaseLLMAdapter
 
 
@@ -14,15 +16,15 @@ class GroundedFallbackAdapter(BaseLLMAdapter):
     def generate_response(
         self,
         query: str,
-        context_items: List[Dict[str, Any]],
+        context_items: list[dict[str, Any]],
         language: str = "en",
-    ) -> Dict[str, Any]:
-        is_lao = (language == "lo")
+    ) -> dict[str, Any]:
+        is_lao = language == "lo"
 
         if not context_items:
             if is_lao:
                 answer = (
-                    f"ຂໍອະໄພ, ບໍ່ພົບຂໍ້ມູນທີ່ກ່ຽວຂ້ອງໂດຍກົງກັບ: \"**{query}**\" ໃນຖານຂໍ້ມູນວິຊາການ.\n\n"
+                    f'ຂໍອະໄພ, ບໍ່ພົບຂໍ້ມູນທີ່ກ່ຽວຂ້ອງໂດຍກົງກັບ: "**{query}**" ໃນຖານຂໍ້ມູນວິຊາການ.\n\n'
                     "💡 **ຄຳແນະນຳທີ່ທ່ານສາມາດຖາມໄດ້:**\n"
                     "- *ເວລາຮັບນັກສຶກສາ (Office Hours) ຂອງອາຈານແມ່ນຕອນໃດ?*\n"
                     "- *ອາຈານສອນວິຊາຫຍັງແດ່? (Courses)*\n"
@@ -30,7 +32,7 @@ class GroundedFallbackAdapter(BaseLLMAdapter):
                 )
             else:
                 answer = (
-                    f"I couldn't find any direct academic records matching: \"**{query}**\".\n\n"
+                    f'I couldn\'t find any direct academic records matching: "**{query}**".\n\n'
                     "💡 **Here are some suggested topics you can explore:**\n"
                     "- *When are the professor's office hours?*\n"
                     "- *What courses are currently offered?*\n"
@@ -45,9 +47,9 @@ class GroundedFallbackAdapter(BaseLLMAdapter):
         # Format retrieved items into an answer
         lines = []
         if is_lao:
-            lines.append(f"ອີງຕາມຖານຂໍ້ມູນວິຊາການຂອງ ອາຈານ ວີນພເຈດ ສາຍາວົງ ສຳລັບຫົວຂໍ້ \"**{query}**\":\n")
+            lines.append(f'ອີງຕາມຖານຂໍ້ມູນວິຊາການຂອງ ອາຈານ ວີນພເຈດ ສາຍາວົງ ສຳລັບຫົວຂໍ້ "**{query}**":\n')
         else:
-            lines.append(f"Based on the academic records of Lecturer Venepheth SAYAVONG regarding \"**{query}**\":\n")
+            lines.append(f'Based on the academic records of Lecturer Venepheth SAYAVONG regarding "**{query}**":\n')
 
         sources = []
         for idx, item in enumerate(context_items[:5], 1):
@@ -57,11 +59,13 @@ class GroundedFallbackAdapter(BaseLLMAdapter):
             url = item.get("url", "#")
             extra = item.get("extra", "")
 
-            sources.append({
-                "title": title,
-                "type": category,
-                "url": url,
-            })
+            sources.append(
+                {
+                    "title": title,
+                    "type": category,
+                    "url": url,
+                }
+            )
 
             lines.append(f"### {idx}. [{category}] [{title}]({url})")
             if summary:
@@ -73,7 +77,9 @@ class GroundedFallbackAdapter(BaseLLMAdapter):
         if is_lao:
             lines.append("📌 *ທ່ານສາມາດກົດທີ່ລິ້ງດ້ານເທິງເພື່ອເບິ່ງລາຍລະອຽດ ຫຼື ດາວໂຫຼດເອກະສານ.*")
         else:
-            lines.append("📌 *Click any of the links above to inspect the complete syllabus, abstract, or download resources.*")
+            lines.append(
+                "📌 *Click any of the links above to inspect the complete syllabus, abstract, or download resources.*"
+            )
 
         return {
             "answer": "\n".join(lines),

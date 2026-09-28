@@ -1,6 +1,7 @@
 """Rate limiting tests (Vision §14, §21)."""
+
 from django.core.cache import cache
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 from django.urls import reverse
 
 
@@ -36,13 +37,9 @@ class RateLimitTests(TestCase):
         """Assistant chat should return 429 on the 11th POST request."""
         url = reverse("assistant:api_chat")
         for _ in range(10):
-            response = self.client.post(
-                url, {"query": "hello"}, content_type="application/json"
-            )
+            response = self.client.post(url, {"query": "hello"}, content_type="application/json")
             self.assertEqual(response.status_code, 200)
-        response = self.client.post(
-            url, {"query": "hello"}, content_type="application/json"
-        )
+        response = self.client.post(url, {"query": "hello"}, content_type="application/json")
         self.assertEqual(response.status_code, 429)
 
     def test_rate_limited_view_returns_json_429(self):
@@ -56,6 +53,7 @@ class RateLimitTests(TestCase):
     def test_api_viewset_blocks_after_hundred_gets_per_minute(self):
         """API ViewSets should be rate-limited by IP."""
         from django.contrib.auth import get_user_model
+
         User = get_user_model()
         user = User.objects.create_user(
             email="ratelimit@test.com",

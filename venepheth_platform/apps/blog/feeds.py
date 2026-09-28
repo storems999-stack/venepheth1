@@ -1,7 +1,8 @@
 """RSS Feed for Blog articles."""
+
 from django.contrib.syndication.views import Feed
-from django.urls import reverse
 from django.utils.feedgenerator import Atom1Feed
+
 from apps.blog.models import Article
 
 

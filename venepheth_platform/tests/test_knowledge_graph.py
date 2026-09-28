@@ -1,6 +1,7 @@
 """
 Unit tests for Knowledge Graph service and views.
 """
+
 from django.test import TestCase
 
 from apps.search.knowledge_graph import build_knowledge_graph, get_topic_detail

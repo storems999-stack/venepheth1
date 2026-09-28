@@ -1,10 +1,12 @@
 """Unit and integration tests for Contact form, anti-spam honeypot, and notifications."""
-from django.core.cache import cache
-from django.test import TestCase, Client
-from django.urls import reverse
+
 from django.core import mail
-from apps.contact.models import ContactMessage
+from django.core.cache import cache
+from django.test import Client, TestCase
+from django.urls import reverse
+
 from apps.contact.forms import ContactForm
+from apps.contact.models import ContactMessage
 
 
 class ContactTests(TestCase):

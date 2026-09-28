@@ -36,8 +36,8 @@
 
                 <!-- Welcome message -->
                 <div class="flex items-start space-x-3">
-                    <div class="w-8 h-8 bg-gold-500 rounded-lg flex-shrink-0 flex items-center justify-center">
-                        <span class="text-navy-950 font-bold text-xs">VS</span>
+                    <div class="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ring-1 ring-gold-500/40">
+                        <img src="{% static 'icons/favicon-32x32.png' %}" alt="VS" class="w-full h-full object-cover">
                     </div>
                     <div class="bg-navy-800/60 border border-white/5 rounded-xl rounded-tl-none px-4 py-3 max-w-[80%]">
                         <p class="text-gray-200 text-sm leading-relaxed">
@@ -64,8 +64,8 @@
                         </div>
                         <!-- Assistant message -->
                         <div x-show="msg.role === 'assistant'" class="flex items-start space-x-3">
-                            <div class="w-8 h-8 bg-gold-500 rounded-lg flex-shrink-0 flex items-center justify-center">
-                                <span class="text-navy-950 font-bold text-xs">VS</span>
+                            <div class="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ring-1 ring-gold-500/40">
+                                <img src="{% static 'icons/favicon-32x32.png' %}" alt="VS" class="w-full h-full object-cover">
                             </div>
                             <div class="bg-navy-800/60 border border-white/5 rounded-xl rounded-tl-none px-4 py-3 max-w-[80%] prose prose-sm prose-invert max-w-none">
                                 <div x-html="msg.html"></div>
@@ -89,8 +89,8 @@
                         </div>
                         <!-- Typing indicator -->
                         <div x-show="msg.role === 'typing'" class="flex items-start space-x-3">
-                            <div class="w-8 h-8 bg-gold-500 rounded-lg flex-shrink-0 flex items-center justify-center">
-                                <span class="text-navy-950 font-bold text-xs">VS</span>
+                            <div class="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ring-1 ring-gold-500/40">
+                                <img src="{% static 'icons/favicon-32x32.png' %}" alt="VS" class="w-full h-full object-cover">
                             </div>
                             <div class="bg-navy-800/60 border border-white/5 rounded-xl rounded-tl-none px-4 py-3">
                                 <div class="flex space-x-1 items-center h-4">

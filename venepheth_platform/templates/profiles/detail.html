@@ -42,15 +42,15 @@
 {% block content %}
 {% if profile %}
 <!-- Hero Section -->
-<section class="bg-navy-950 border-b border-white/5 pt-24 pb-16 relative overflow-hidden">
+<section class="bg-navy-950 border-b border-white/5 page-hero relative overflow-hidden">
     <div class="absolute inset-0 bg-grid"></div>
     <div class="absolute top-0 right-0 w-96 h-96 bg-gold-500/5 rounded-full blur-3xl"></div>
     
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row gap-10 items-start">
             <!-- Photo -->
-            <div class="shrink-0 relative group">
-                <div class="w-40 h-40 md:w-56 md:h-56 rounded-3xl overflow-hidden border border-white/10 bg-navy-900 relative z-10">
+            <div class="shrink-0 relative group isolate">
+                <div class="w-40 h-40 md:w-56 md:h-56 rounded-3xl overflow-hidden border border-white/10 ring-4 ring-gold-500/30 shadow-2xl bg-navy-900 relative z-10">
                     {% if profile.photo %}
                         <img src="{{ profile.photo.url }}" alt="{{ profile.full_name }}" class="w-full h-full object-cover">
                     {% else %}

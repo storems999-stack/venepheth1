@@ -1,16 +1,22 @@
 """
 Digital Resource Library models.
 """
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from apps.core.models import TimeStampedModel, SlugModel
+
 from apps.core.file_security import (
-    secure_upload_path, validate_file_extension, validate_file_size, validate_file_mime
+    secure_upload_path,
+    validate_file_extension,
+    validate_file_mime,
+    validate_file_size,
 )
+from apps.core.models import SlugModel, TimeStampedModel
 
 
 class ResourceCategory(TimeStampedModel):
     """Category for organizing digital resources."""
+
     name = models.CharField(_("name"), max_length=200)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
@@ -71,7 +77,8 @@ class Resource(TimeStampedModel, SlugModel):
     file = models.FileField(
         _("file"),
         upload_to=resource_file_path,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         validators=[validate_file_extension, validate_file_size, validate_file_mime],
     )
     file_size = models.PositiveBigIntegerField(_("file size (bytes)"), null=True, blank=True, editable=False)
@@ -105,6 +112,7 @@ class Resource(TimeStampedModel, SlugModel):
 
     def get_absolute_url(self):
         from django.urls import reverse
+
         return reverse("resources:detail", kwargs={"slug": self.slug})
 
     def save(self, *args, **kwargs):
@@ -112,6 +120,7 @@ class Resource(TimeStampedModel, SlugModel):
         if self.file:
             try:
                 from apps.core.file_security import compute_file_hash
+
                 self.file_size = self.file.size
                 if not self.file_hash:
                     self.file_hash = compute_file_hash(self.file)

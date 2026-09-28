@@ -1,10 +1,11 @@
 """
 Notifications views with HTMX support.
 """
+
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.http import require_GET, require_POST
+
 from .models import Notification
 
 

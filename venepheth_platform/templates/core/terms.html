@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Terms of Use" %} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-12 max-w-3xl">
+
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{% trans "Terms of Use" %}</h1>
+    <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm">{% trans "Last updated: September 2026" %}</p>
+  </div>
+
+  <div class="prose dark:prose-invert max-w-none space-y-8">
+
+    <section>
+      <h2>{% trans "1. Acceptance of Terms" %}</h2>
+      <p>{% trans "By accessing this platform, you agree to these terms of use. If you do not agree, please do not use this site." %}</p>
+    </section>
+
+    <section>
+      <h2>{% trans "2. Permitted Use" %}</h2>
+      <p>{% trans "This platform is intended for academic and educational purposes. You may:" %}</p>
+      <ul>
+        <li>{% trans "Browse public content (courses, research, articles)" %}</li>
+        <li>{% trans "Download materials made available for public use" %}</li>
+        <li>{% trans "Contact the lecturer through provided contact forms" %}</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>{% trans "3. Prohibited Use" %}</h2>
+      <p>{% trans "You may not:" %}</p>
+      <ul>
+        <li>{% trans "Attempt to gain unauthorized access to any part of this platform" %}</li>
+        <li>{% trans "Reproduce or redistribute copyrighted content without permission" %}</li>
+        <li>{% trans "Use automated scraping tools without prior consent" %}</li>
+        <li>{% trans "Submit false, misleading, or harmful content through forms" %}</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>{% trans "4. Intellectual Property" %}</h2>
+      <p>{% trans "All content on this platform, including course materials, research papers, and articles, is the intellectual property of Venepheth SAYAVONG unless otherwise stated. Unauthorized reproduction is prohibited." %}</p>
+    </section>
+
+    <section>
+      <h2>{% trans "5. Accounts" %}</h2>
+      <p>{% trans "If you have an account on this platform, you are responsible for maintaining the security of your credentials. You must not share your account with others." %}</p>
+    </section>
+
+    <section>
+      <h2>{% trans "6. Disclaimer" %}</h2>
+      <p>{% trans "This platform is provided 'as is'. While we strive for accuracy, academic content may evolve and we cannot guarantee that all information is current at all times." %}</p>
+    </section>
+
+    <section>
+      <h2>{% trans "7. Contact" %}</h2>
+      <p>
+        {% trans "For questions about these terms, please use our" %}
+        <a href="{% url 'contact:index' %}" class="text-primary-600 hover:underline">{% trans "contact form" %}</a>.
+      </p>
+    </section>
+
+  </div>
+
+</div>
+{% endblock %}

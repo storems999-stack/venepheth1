@@ -15,7 +15,7 @@
     <div class="absolute bottom-1/4 -right-32 w-96 h-96 bg-navy-500/20 rounded-full blur-3xl"></div>
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-navy-800/30 rounded-full blur-3xl"></div>
     
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32 w-full">
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20 w-full">
         <div class="grid lg:grid-cols-2 gap-16 items-center">
             
             <!-- Left Content -->
@@ -71,20 +71,36 @@
             <!-- Right Visual Card -->
             <div class="relative hidden lg:flex justify-center">
                 <div class="relative">
+                    <!-- Floating badge - Active Researcher (Top Right, z-20) -->
+                    <div class="absolute -top-5 -right-6 z-20 glass-dark border border-gold-500/30 rounded-xl px-4 py-2.5 text-xs shadow-xl animate-float">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span class="text-white font-medium">{% trans "Active Researcher" %}</span>
+                        </div>
+                    </div>
+
+                    <!-- Floating badge - Expert Lecturer (Bottom Left, z-20) -->
+                    <div class="absolute -bottom-5 -left-6 z-20 glass-dark border border-gold-500/30 rounded-xl px-4 py-2.5 text-xs shadow-xl" style="animation: float 3s ease-in-out 1.5s infinite;">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="award" class="w-4 h-4 text-gold-400"></i>
+                            <span class="text-white font-medium">{% trans "Expert Lecturer" %}</span>
+                        </div>
+                    </div>
+
                     <!-- Main profile card -->
-                    <div class="glass rounded-3xl p-8 w-80 text-center relative z-10">
+                    <div class="glass-dark rounded-3xl p-8 w-80 text-center relative z-10 border border-white/10 shadow-2xl">
                         {% if profile.photo %}
                             <img src="{{ profile.photo.url }}" alt="{{ profile.full_name }}" 
-                                 class="w-32 h-32 rounded-2xl object-cover mx-auto mb-6 ring-4 ring-gold-500/30">
+                                 class="w-32 h-32 rounded-2xl object-cover mx-auto mb-6 ring-4 ring-gold-500/40 shadow-xl">
                         {% else %}
-                            <div class="w-32 h-32 rounded-2xl bg-gradient-to-br from-navy-700 to-navy-600 mx-auto mb-6 flex items-center justify-center ring-4 ring-gold-500/30">
+                            <div class="w-32 h-32 rounded-2xl bg-gradient-to-br from-navy-700 to-navy-600 mx-auto mb-6 flex items-center justify-center ring-4 ring-gold-500/40 shadow-xl">
                                 <span class="font-serif text-4xl font-bold text-gold-400">VS</span>
                             </div>
                         {% endif %}
                         <h2 class="text-white font-bold text-xl mb-1">
                             {{ profile.full_name|default:"Venepheth Sayavong" }}
                         </h2>
-                        <p class="text-gold-400 text-sm mb-4">
+                        <p class="text-gold-400 text-sm mb-4 font-medium">
                             {{ profile.title|default:"Academic Lecturer & Researcher" }}
                         </p>
                         {% if profile.institution %}
@@ -102,20 +118,6 @@
                                 <div class="text-white font-bold">{{ stats.publications_count|default:"20" }}+</div>
                                 <div class="text-gray-500 text-xs">{% trans "Papers" %}</div>
                             </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Floating badge cards -->
-                    <div class="absolute -top-4 -right-8 glass rounded-xl px-4 py-3 text-xs animate-float">
-                        <div class="flex items-center space-x-2">
-                            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                            <span class="text-white font-medium">{% trans "Active Researcher" %}</span>
-                        </div>
-                    </div>
-                    <div class="absolute -bottom-4 -left-8 glass rounded-xl px-4 py-3 text-xs" style="animation: float 3s ease-in-out 1.5s infinite;">
-                        <div class="flex items-center space-x-2">
-                            <i data-lucide="award" class="w-4 h-4 text-gold-400"></i>
-                            <span class="text-white font-medium">{% trans "Expert Lecturer" %}</span>
                         </div>
                     </div>
                 </div>

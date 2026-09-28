@@ -1,14 +1,22 @@
 """
 Course management models.
 """
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from apps.core.models import TimeStampedModel, PublishableModel, SlugModel, SEOModel
-from apps.core.file_security import secure_upload_path, validate_file_extension, validate_file_size, validate_file_mime
+
+from apps.core.file_security import (
+    secure_upload_path,
+    validate_file_extension,
+    validate_file_mime,
+    validate_file_size,
+)
+from apps.core.models import PublishableModel, SEOModel, SlugModel, TimeStampedModel
 
 
 class CourseCategory(TimeStampedModel):
     """Category for organizing courses."""
+
     name = models.CharField(_("name"), max_length=200)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
@@ -44,21 +52,19 @@ class Course(PublishableModel, SlugModel, SEOModel):
     credits = models.PositiveSmallIntegerField(_("credits"), default=3)
     semester = models.CharField(_("semester"), max_length=50, blank=True)
     academic_year = models.CharField(_("academic year"), max_length=20, blank=True)
-    level = models.CharField(
-        _("level"), max_length=50, blank=True,
-        help_text=_("e.g. Undergraduate, Graduate, PhD")
-    )
+    level = models.CharField(_("level"), max_length=50, blank=True, help_text=_("e.g. Undergraduate, Graduate, PhD"))
     language = models.CharField(_("language of instruction"), max_length=50, default="Lao")
 
     # ─── Display ────────────────────────────────────────────────────────────────
     thumbnail = models.ImageField(
-        _("thumbnail"), upload_to="courses/thumbnails/", null=True, blank=True,
+        _("thumbnail"),
+        upload_to="courses/thumbnails/",
+        null=True,
+        blank=True,
         validators=[validate_file_extension, validate_file_size, validate_file_mime],
     )
     featured = models.BooleanField(_("featured"), default=False)
-    visibility = models.CharField(
-        _("visibility"), max_length=20, choices=Visibility.choices, default=Visibility.PUBLIC
-    )
+    visibility = models.CharField(_("visibility"), max_length=20, choices=Visibility.choices, default=Visibility.PUBLIC)
 
     class Meta:
         verbose_name = _("course")
@@ -74,11 +80,13 @@ class Course(PublishableModel, SlugModel, SEOModel):
 
     def get_absolute_url(self):
         from django.urls import reverse
+
         return reverse("courses:detail", kwargs={"slug": self.slug})
 
 
 class LearningOutcome(TimeStampedModel):
     """Learning outcomes for a course."""
+
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="outcomes")
     description = models.CharField(_("outcome"), max_length=500)
     order = models.PositiveSmallIntegerField(default=0)
@@ -92,6 +100,7 @@ class LearningOutcome(TimeStampedModel):
 
 class CourseModule(TimeStampedModel):
     """A module/week within a course."""
+
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="modules")
     title = models.CharField(_("title"), max_length=300)
     description = models.TextField(_("description"), blank=True)
@@ -129,19 +138,16 @@ class CourseResource(TimeStampedModel):
         STUDENTS = "students", _("Students Only")
         PRIVATE = "private", _("Private")
 
-    module = models.ForeignKey(
-        CourseModule, on_delete=models.CASCADE, null=True, blank=True, related_name="resources"
-    )
+    module = models.ForeignKey(CourseModule, on_delete=models.CASCADE, null=True, blank=True, related_name="resources")
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="resources")
     title = models.CharField(_("title"), max_length=300)
     description = models.TextField(_("description"), blank=True)
-    resource_type = models.CharField(
-        _("type"), max_length=20, choices=ResourceType.choices, default=ResourceType.OTHER
-    )
+    resource_type = models.CharField(_("type"), max_length=20, choices=ResourceType.choices, default=ResourceType.OTHER)
     file = models.FileField(
         _("file"),
         upload_to=resource_upload_path,
-        null=True, blank=True,
+        null=True,
+        blank=True,
         validators=[validate_file_extension, validate_file_size, validate_file_mime],
     )
     external_url = models.URLField(_("external URL"), blank=True)
@@ -161,6 +167,7 @@ class CourseResource(TimeStampedModel):
 
 class Announcement(PublishableModel):
     """Course announcement."""
+
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="announcements")
     title = models.CharField(_("title"), max_length=300)
     content = models.TextField(_("content"))

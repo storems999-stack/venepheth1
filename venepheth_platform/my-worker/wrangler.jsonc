@@ -1,0 +1,12 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "vp",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-09-25",
+	"observability": {
+		"enabled": true
+	},
+	"vars": {
+		"BACKEND_URL": "https://led-highlighted-concentration-five.trycloudflare.com"
+	}
+}

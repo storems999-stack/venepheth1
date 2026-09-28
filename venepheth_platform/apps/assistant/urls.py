@@ -1,5 +1,7 @@
 """URL configuration for AI Academic Assistant."""
+
 from django.urls import path
+
 from . import views
 
 app_name = "assistant"

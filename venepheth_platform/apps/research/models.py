@@ -1,14 +1,21 @@
 """
 Research and Publications models.
 """
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from apps.core.models import TimeStampedModel, PublishableModel, SlugModel, SEOModel
-from apps.core.file_security import validate_file_extension, validate_file_size, validate_file_mime
+
+from apps.core.file_security import (
+    validate_file_extension,
+    validate_file_mime,
+    validate_file_size,
+)
+from apps.core.models import PublishableModel, SEOModel, SlugModel, TimeStampedModel
 
 
 class ResearchTopic(TimeStampedModel):
     """Research interest/topic tag."""
+
     name = models.CharField(_("name"), max_length=200, unique=True)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
@@ -57,6 +64,7 @@ class ResearchProject(PublishableModel, SlugModel, SEOModel):
 
     def get_absolute_url(self):
         from django.urls import reverse
+
         return reverse("research:project_detail", kwargs={"slug": self.slug})
 
 
@@ -74,9 +82,7 @@ class Publication(PublishableModel, SlugModel, SEOModel):
         OTHER = "other", _("Other")
 
     title = models.CharField(_("title"), max_length=500)
-    publication_type = models.CharField(
-        _("type"), max_length=30, choices=PublicationType.choices, db_index=True
-    )
+    publication_type = models.CharField(_("type"), max_length=30, choices=PublicationType.choices, db_index=True)
     abstract = models.TextField(_("abstract"), blank=True)
     authors = models.CharField(_("authors"), max_length=500, help_text=_("Comma-separated list of authors"))
     year = models.PositiveSmallIntegerField(_("year"), null=True, blank=True, db_index=True)
@@ -89,7 +95,10 @@ class Publication(PublishableModel, SlugModel, SEOModel):
     keywords = models.CharField(_("keywords"), max_length=500, blank=True)
     external_url = models.URLField(_("URL"), blank=True)
     pdf_file = models.FileField(
-        _("PDF"), upload_to="publications/pdfs/", null=True, blank=True,
+        _("PDF"),
+        upload_to="publications/pdfs/",
+        null=True,
+        blank=True,
         validators=[validate_file_extension, validate_file_size, validate_file_mime],
     )
     cited_by = models.PositiveIntegerField(_("times cited"), default=0)
@@ -110,6 +119,7 @@ class Publication(PublishableModel, SlugModel, SEOModel):
 
     def get_absolute_url(self):
         from django.urls import reverse
+
         return reverse("publications:detail", kwargs={"slug": self.slug})
 
     @property

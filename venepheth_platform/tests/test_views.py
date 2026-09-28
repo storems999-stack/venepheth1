@@ -1,9 +1,11 @@
 """Unit and integration tests for public views and HTMX partials."""
-from django.test import TestCase, Client
+
+from django.test import Client, TestCase
 from django.urls import reverse
+
 from apps.blog.models import Article, ArticleTag
-from apps.research.models import ResearchProject, ResearchTopic
 from apps.courses.models import Course, CourseCategory
+from apps.research.models import ResearchProject, ResearchTopic
 
 
 class ViewTests(TestCase):
@@ -81,9 +83,7 @@ class ViewTests(TestCase):
 
     def test_blog_list_category_filter(self):
         """Category filter reduces to matching articles."""
-        response = self.client.get(
-            reverse("blog:list"), {"category": Article.Category.ACADEMIC}
-        )
+        response = self.client.get(reverse("blog:list"), {"category": Article.Category.ACADEMIC})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.article.title)
 
@@ -126,9 +126,7 @@ class ViewTests(TestCase):
 
     def test_research_list_status_filter(self):
         """Status filter shows projects with matching research_status."""
-        response = self.client.get(
-            reverse("research:list"), {"status": "ongoing"}
-        )
+        response = self.client.get(reverse("research:list"), {"status": "ongoing"})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.project.title)
 
@@ -263,10 +261,9 @@ class ViewTests(TestCase):
     def test_dashboard_regular_user_redirects_home(self):
         """Non-staff user is redirected to home."""
         from django.contrib.auth import get_user_model
+
         User = get_user_model()
-        student = User.objects.create_user(
-            email="student@example.com", password="Password123!", is_staff=False
-        )
+        student = User.objects.create_user(email="student@example.com", password="Password123!", is_staff=False)
         self.client.force_login(student)
         response = self.client.get(reverse("core:dashboard"))
         self.assertEqual(response.status_code, 302)
@@ -275,6 +272,7 @@ class ViewTests(TestCase):
     def test_dashboard_staff_user_renders_studio(self):
         """Authenticated staff member accesses Academic Studio dashboard."""
         from django.contrib.auth import get_user_model
+
         User = get_user_model()
         staff_user = User.objects.create_user(
             email="lecturer_test@example.com",
@@ -290,6 +288,3 @@ class ViewTests(TestCase):
         self.assertIn("stats", response.context)
         self.assertIn("courses_total", response.context["stats"])
         self.assertIn("system_status", response.context)
-
-
-

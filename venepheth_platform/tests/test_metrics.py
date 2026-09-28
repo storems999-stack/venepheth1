@@ -1,6 +1,7 @@
 """
 Unit tests for Prometheus metrics endpoint.
 """
+
 from django.test import TestCase, override_settings
 
 

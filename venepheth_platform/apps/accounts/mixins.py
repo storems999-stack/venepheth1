@@ -1,15 +1,19 @@
 """
 Permission mixins and decorators for RBAC.
 """
+
 from functools import wraps
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
+
 from apps.accounts.models import CustomUser
 
 
 class RoleRequiredMixin(LoginRequiredMixin):
     """Mixin that requires one or more roles."""
+
     required_roles = []
 
     def dispatch(self, request, *args, **kwargs):
@@ -43,6 +47,7 @@ class EditorOrAboveMixin(RoleRequiredMixin):
 
 def role_required(*roles):
     """Function decorator for role-based access."""
+
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped(request, *args, **kwargs):
@@ -51,5 +56,7 @@ def role_required(*roles):
             if request.user.role not in roles:
                 raise PermissionDenied
             return view_func(request, *args, **kwargs)
+
         return _wrapped
+
     return decorator

@@ -6,13 +6,9 @@
 
 {% block content %}
 
-{# ── Skip to content for accessibility ── #}
-<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-gold-500 text-navy-950 px-4 py-2 rounded-lg font-semibold z-[9999]">
-    {% trans "Skip to main content" %}
-</a>
 
 {# ── Page Hero ── #}
-<section class="bg-navy-950 border-b border-white/5 py-20 relative overflow-hidden" aria-label="{% trans 'Page header' %}">
+<section class="bg-navy-950 border-b border-white/5 page-hero relative overflow-hidden" aria-label="{% trans 'Page header' %}">
     <div class="absolute inset-0 bg-grid"></div>
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav aria-label="{% trans 'Breadcrumb' %}" class="flex items-center space-x-2 text-gray-500 text-sm mb-6">
@@ -29,7 +25,7 @@
     </div>
 </section>
 
-<main id="main-content" class="bg-navy-950 py-12">
+<section id="teaching-content" class="bg-navy-950 py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
 
         {# ── Student Announcements ── #}
@@ -169,5 +165,6 @@
         {% endif %}
 
     </div>
-</main>
+</section>
 {% endblock %}
+

@@ -1,14 +1,14 @@
 """
 Core views — homepage, health check, custom error pages, rate limit handler.
 """
+
 import logging
 
 from django.conf import settings
-from django.http import JsonResponse, HttpResponseForbidden
-from django.shortcuts import render, redirect
-from django.views.decorators.cache import cache_page
-from django.views.decorators.http import require_GET
 from django.db import connection
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.views.decorators.http import require_GET
 
 logger = logging.getLogger("apps.core")
 
@@ -16,10 +16,10 @@ logger = logging.getLogger("apps.core")
 @require_GET
 def homepage(request):
     """Public homepage."""
-    from apps.courses.models import Course
-    from apps.research.models import ResearchProject, Publication
     from apps.blog.models import Article
+    from apps.courses.models import Course
     from apps.profiles.models import Profile
+    from apps.research.models import Publication, ResearchProject
 
     profile = Profile.objects.first()
 
@@ -29,18 +29,10 @@ def homepage(request):
 
     context = {
         "profile": profile,
-        "featured_courses": Course.objects.filter(
-            status="published", featured=True
-        ).select_related("category")[:6],
-        "recent_research": ResearchProject.objects.filter(
-            status="published"
-        ).order_by("-updated_at")[:4],
-        "recent_articles": Article.objects.filter(
-            status=Article.Status.PUBLISHED
-        ).prefetch_related("tags")[:3],
-        "recent_publications": Publication.objects.filter(
-            status="published"
-        ).order_by("-year")[:4],
+        "featured_courses": Course.objects.filter(status="published", featured=True).select_related("category")[:6],
+        "recent_research": ResearchProject.objects.filter(status="published").order_by("-updated_at")[:4],
+        "recent_articles": Article.objects.filter(status=Article.Status.PUBLISHED).prefetch_related("tags")[:3],
+        "recent_publications": Publication.objects.filter(status="published").order_by("-year")[:4],
         "stats": {
             "courses_count": courses_count,
             "publications_count": publications_count,
@@ -66,21 +58,23 @@ def dashboard(request):
     """
     if not request.user.is_authenticated:
         from django.shortcuts import redirect
+
         return redirect(f"{settings.LOGIN_URL}?next={request.path}")
 
     if not (request.user.is_staff or request.user.is_superuser):
         from django.shortcuts import redirect
+
         return redirect("core:home")
 
-    from apps.courses.models import Course
-    from apps.research.models import ResearchProject, Publication
-    from apps.blog.models import Article
-    from apps.resources.models import Resource
-    from apps.contact.models import ContactMessage
     from apps.analytics.models import PageView
     from apps.audit.models import AuditLog
-    from apps.security.models import SecurityEvent
+    from apps.blog.models import Article
+    from apps.contact.models import ContactMessage
+    from apps.courses.models import Course
     from apps.profiles.models import Profile
+    from apps.research.models import Publication, ResearchProject
+    from apps.resources.models import Resource
+    from apps.security.models import SecurityEvent
 
     profile = Profile.objects.filter(is_active=True).first()
 
@@ -125,8 +119,9 @@ def dashboard(request):
     cache_ok = True
     try:
         from django.core.cache import cache
+
         cache.set("dashboard_ping", "ok", 5)
-        cache_ok = (cache.get("dashboard_ping") == "ok")
+        cache_ok = cache.get("dashboard_ping") == "ok"
     except Exception:
         cache_ok = False
 
@@ -161,7 +156,6 @@ def dashboard(request):
     return render(request, "dashboard/index.html", context)
 
 
-
 @require_GET
 def health_check(request):
     """
@@ -182,6 +176,7 @@ def health_check(request):
     # Cache check
     try:
         from django.core.cache import cache
+
         cache.set("health_check", "ok", 5)
         val = cache.get("health_check")
         checks["cache"] = "ok" if val == "ok" else "error"
@@ -202,14 +197,18 @@ def readiness_check(request):
 def error_400(request, exception=None):
     return render(request, "errors/400.html", status=400)
 
+
 def error_403(request, exception=None):
     return render(request, "errors/403.html", status=403)
+
 
 def error_404(request, exception=None):
     return render(request, "errors/404.html", status=404)
 
+
 def error_429(request, exception=None):
     return render(request, "errors/429.html", status=429)
+
 
 def error_500(request):
     return render(request, "errors/500.html", status=500)
@@ -225,4 +224,3 @@ def rate_limited(request, exception=None):
         {"error": "Too many requests. Please try again later."},
         status=429,
     )
-

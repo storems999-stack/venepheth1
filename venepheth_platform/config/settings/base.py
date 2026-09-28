@@ -2,7 +2,9 @@
 Base settings for Venepheth SAYAVONG Academic Platform.
 All environments inherit from this file.
 """
+
 from pathlib import Path
+
 import environ
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
@@ -127,9 +129,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
 
 # ─── Database ─────────────────────────────────────────────────────────────────
-DATABASES = {
-    "default": env.db("DATABASE_URL", default="sqlite:///db.sqlite3")
-}
+DATABASES = {"default": env.db("DATABASE_URL", default="sqlite:///db.sqlite3")}
 DATABASES["default"]["CONN_MAX_AGE"] = 60
 DATABASES["default"]["OPTIONS"] = {"connect_timeout": 10}
 
@@ -159,7 +159,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # ─── Session Security ─────────────────────────────────────────────────────────
-SESSION_COOKIE_AGE = 3600 * 8   # 8 hours
+SESSION_COOKIE_AGE = 3600 * 8  # 8 hours
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
 
@@ -253,8 +253,8 @@ LOGOUT_REDIRECT_URL = "/"
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=["http://localhost:8000", "http://127.0.0.1:8000"])
 
 # ─── File Upload Security ─────────────────────────────────────────────────────
-FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024      # 5 MB in memory threshold
-DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024     # 50 MB total
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5 MB in memory threshold
+DATA_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50 MB total
 
 ALLOWED_UPLOAD_EXTENSIONS = {
     "document": [".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx", ".txt", ".md"],

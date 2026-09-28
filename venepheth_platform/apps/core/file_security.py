@@ -1,10 +1,10 @@
 """
 File security validation utilities.
 """
+
 import hashlib
 import logging
 import mimetypes
-import os
 from pathlib import Path
 
 from django.conf import settings
@@ -16,6 +16,7 @@ logger = logging.getLogger("apps.security")
 # Try to use python-magic for MIME detection
 try:
     import magic
+
     HAS_MAGIC = True
 except ImportError:
     HAS_MAGIC = False
@@ -56,7 +57,8 @@ def validate_file_extension(value):
         all_allowed.update(extensions)
     if ext not in all_allowed:
         raise ValidationError(
-            _("File extension '%(ext)s' is not allowed. Allowed types: %(allowed)s") % {
+            _("File extension '%(ext)s' is not allowed. Allowed types: %(allowed)s")
+            % {
                 "ext": ext,
                 "allowed": ", ".join(sorted(all_allowed)),
             }
@@ -68,7 +70,8 @@ def validate_file_size(value):
     if value.size > settings.MAX_UPLOAD_SIZE:
         max_mb = settings.MAX_UPLOAD_SIZE / (1024 * 1024)
         raise ValidationError(
-            _("File size %(size)s MB exceeds maximum allowed %(max)s MB.") % {
+            _("File size %(size)s MB exceeds maximum allowed %(max)s MB.")
+            % {
                 "size": round(value.size / (1024 * 1024), 2),
                 "max": max_mb,
             }
@@ -84,14 +87,12 @@ def validate_file_mime(value):
     if HAS_MAGIC:
         mime = magic.from_buffer(header, mime=True)
     else:
-        mime, encoding = mimetypes.guess_type(value.name)
+        mime, _encoding = mimetypes.guess_type(value.name)
         mime = mime or "application/octet-stream"
 
     if mime not in ALLOWED_MIME_TYPES:
         logger.warning("Blocked upload with MIME type: %s, filename: %s", mime, value.name)
-        raise ValidationError(
-            _("File type '%(mime)s' is not permitted.") % {"mime": mime}
-        )
+        raise ValidationError(_("File type '%(mime)s' is not permitted.") % {"mime": mime})
 
 
 def normalize_filename(filename: str) -> str:
@@ -102,6 +103,7 @@ def normalize_filename(filename: str) -> str:
     - Keep the extension
     """
     from slugify import slugify
+
     path = Path(filename)
     stem = slugify(path.stem, allow_unicode=False)[:100]  # Limit length
     ext = path.suffix.lower()
@@ -121,6 +123,7 @@ def compute_file_hash(file_obj) -> str:
 def secure_upload_path(instance, filename, subdir="uploads"):
     """Generate a secure upload path with normalized filename."""
     from django.utils import timezone
+
     safe_name = normalize_filename(filename)
     date_path = timezone.now().strftime("%Y/%m/%d")
     return f"{subdir}/{date_path}/{safe_name}"

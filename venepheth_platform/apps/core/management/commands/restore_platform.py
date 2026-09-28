@@ -3,11 +3,11 @@ Disaster Recovery Platform Restore Command.
 Restores database and media assets from an automated backup archive with
 checksum integrity verification.
 """
+
 import hashlib
 import json
 import shutil
 import sqlite3
-import subprocess
 import tarfile
 from pathlib import Path
 
@@ -80,15 +80,13 @@ class Command(BaseCommand):
             actual_sha = sha256.hexdigest().lower()
 
             if actual_sha != expected_sha:
-                raise CommandError(
-                    f"Integrity Check Failed!\n"
-                    f"Expected: {expected_sha}\n"
-                    f"Actual:   {actual_sha}"
-                )
+                raise CommandError(f"Integrity Check Failed!\nExpected: {expected_sha}\nActual:   {actual_sha}")
             self.stdout.write(self.style.SUCCESS("    -> Checksum verified: OK"))
 
         if options.get("verify_only"):
-            self.stdout.write(self.style.SUCCESS("[+] Integrity verification passed! (Verify-only mode, no changes made)"))
+            self.stdout.write(
+                self.style.SUCCESS("[+] Integrity verification passed! (Verify-only mode, no changes made)")
+            )
             return
 
         if not confirm:
