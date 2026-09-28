@@ -40,7 +40,7 @@ def contact_form(request):
 
                 # Dispatch notification email
                 try:
-                    admin_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@venepheth.edu.la")
+                    admin_email = settings.DEFAULT_FROM_EMAIL
                     subject = f"[Contact Form] {contact_msg.subject} from {contact_msg.name}"
                     plain_message = (
                         f"New inquiry received from website:\n\n"
