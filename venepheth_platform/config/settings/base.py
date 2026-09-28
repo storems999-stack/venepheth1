@@ -21,6 +21,8 @@ environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+# Obscured admin path (e.g. ADMIN_URL=secure-admin/). Empty/default = admin/.
+ADMIN_URL = env("ADMIN_URL", default="admin/")
 
 # ─── Application Definition ───────────────────────────────────────────────────
 DJANGO_APPS = [
@@ -48,7 +50,6 @@ THIRD_PARTY_APPS = [
     "django_otp.plugins.otp_totp",
     "django_otp.plugins.otp_static",
     "axes",
-    "guardian",
     # Content
     "simple_history",
     "django_cleanup.apps.CleanupConfig",
@@ -148,7 +149,6 @@ AUTHENTICATION_BACKENDS = [
     "axes.backends.AxesStandaloneBackend",
     "django.contrib.auth.backends.ModelBackend",
     "allauth.account.auth_backends.AuthenticationBackend",
-    "guardian.backends.ObjectPermissionBackend",
 ]
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -157,6 +157,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+# ─── Password Reset ────────────────────────────────────────────────────────────
+# Reset links expire after 24h (Django default is 3 days).
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
 
 # ─── Session Security ─────────────────────────────────────────────────────────
 SESSION_COOKIE_AGE = 3600 * 8  # 8 hours
@@ -230,10 +234,7 @@ REST_FRAMEWORK = {
 # ─── Django Axes (Brute-force Protection) ────────────────────────────────────
 AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1  # hours
-# AXES_LOCKOUT_CALLABLE = "apps.security.views.lockout_response"
 AXES_RESET_ON_SUCCESS = True
-# AXES_USERNAME_CALLABLE = "apps.accounts.utils.get_username"
-AXES_NEVER_LOCKOUT_WHITELIST = False
 
 # ─── Django Allauth ───────────────────────────────────────────────────────────
 # Public registration CLOSED — admins create accounts (see apps/accounts/adapter.py).
@@ -286,6 +287,8 @@ SENDFILE_ENABLED = env.bool("SENDFILE_ENABLED", default=False)
 # Shared secret for /metrics/ (sent as X-Metrics-Token header by Prometheus).
 # Empty = open endpoint (dev only). Production MUST set this.
 METRICS_TOKEN = env("METRICS_TOKEN", default="")
+# When True, /metrics/ returns 403 unless a valid token is presented.
+METRICS_REQUIRE_TOKEN = env.bool("METRICS_REQUIRE_TOKEN", default=False)
 
 # ─── Simple History ─────────────────────────────────────────────────
 SIMPLE_HISTORY_REVERT_DISABLED = False

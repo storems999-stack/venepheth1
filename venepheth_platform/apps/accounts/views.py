@@ -191,6 +191,30 @@ def toggle_user_active(request, pk):
         messages.error(request, _("You cannot deactivate your own account."))
         return redirect("accounts:user_detail", pk=pk)
 
+    # Role hierarchy: only a superadmin may touch superadmins; otherwise
+    # nobody may change an account at or above their own role.
+    _role_rank = {
+        CustomUser.Role.STUDENT: 0,
+        CustomUser.Role.RESEARCHER: 1,
+        CustomUser.Role.EDITOR: 2,
+        CustomUser.Role.LECTURER: 3,
+        CustomUser.Role.ADMIN: 4,
+        CustomUser.Role.SUPERADMIN: 5,
+    }
+    is_super = request.user.role == CustomUser.Role.SUPERADMIN
+    if not is_super and _role_rank.get(user.role, 0) >= _role_rank.get(request.user.role, 0):
+        messages.error(request, _("You cannot change an account at or above your role."))
+        return redirect("accounts:user_list")
+
+    # Last-superadmin guard: never deactivate the final active superadmin.
+    if user.role == CustomUser.Role.SUPERADMIN and user.is_active:
+        remaining = (
+            CustomUser.objects.filter(role=CustomUser.Role.SUPERADMIN, is_active=True).exclude(pk=user.pk).count()
+        )
+        if remaining == 0:
+            messages.error(request, _("Cannot deactivate the last active superadmin."))
+            return redirect("accounts:user_detail", pk=pk)
+
     user.is_active = not user.is_active
     user.save(update_fields=["is_active"])
 

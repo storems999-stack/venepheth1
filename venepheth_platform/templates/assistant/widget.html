@@ -164,10 +164,20 @@ function assistantWidget() {
         },
 
         toHtml(md) {
+            // Escape raw HTML first (answers may echo user input),
+            // then allow only http(s)/relative link targets.
             if (!md) return '';
-            return md
+            const escaped = md
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            return escaped
                 .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, url) => {
+                    const safe = /^(https?:\/\/|\/)/.test(url) ? url : '#';
+                    return `<a href="${safe}" target="_blank" rel="noopener">${text}</a>`;
+                })
                 .replace(/\n/g, '<br>');
         },
 

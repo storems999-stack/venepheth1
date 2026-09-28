@@ -24,6 +24,12 @@ venepheth_platform/venv/
 db.sqlite3
 venepheth_platform/db.sqlite3
 
+# Backups contain full database dumps — NEVER commit (see DISASTER_RECOVERY.md)
+backups/
+*.tar.gz
+*.tar.gz.sha256
+venepheth_platform/backups/
+
 # Static & Media
 staticfiles/
 venepheth_platform/staticfiles/

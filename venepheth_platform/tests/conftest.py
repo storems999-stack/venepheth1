@@ -41,8 +41,12 @@ def admin_user(db):
 
 @pytest.fixture
 def lecturer_user(db):
-    """Lecturer user."""
-    return LecturerUserFactory.create()
+    """Lecturer user with MFA configured (passes security enforcement)."""
+    from allauth.mfa.models import Authenticator
+
+    lecturer = LecturerUserFactory.create()
+    Authenticator.objects.create(user=lecturer, type=Authenticator.Type.TOTP, data={"secret": "TESTSECRET"})
+    return lecturer
 
 
 @pytest.fixture

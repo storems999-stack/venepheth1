@@ -6,6 +6,12 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
 
+from apps.core.file_security import (
+    validate_file_extension,
+    validate_file_mime,
+    validate_file_size,
+)
+
 
 class TimeStampedModel(models.Model):
     """Abstract base model with created_at and updated_at timestamps."""
@@ -105,7 +111,13 @@ class SEOModel(models.Model):
     seo_title = models.CharField(_("SEO title"), max_length=70, blank=True)
     seo_description = models.CharField(_("SEO description"), max_length=160, blank=True)
     seo_keywords = models.CharField(_("SEO keywords"), max_length=255, blank=True)
-    og_image = models.ImageField(_("OG image"), upload_to="seo/og/", null=True, blank=True)
+    og_image = models.ImageField(
+        _("OG image"),
+        upload_to="seo/og/",
+        null=True,
+        blank=True,
+        validators=[validate_file_extension, validate_file_size, validate_file_mime],
+    )
 
     class Meta:
         abstract = True

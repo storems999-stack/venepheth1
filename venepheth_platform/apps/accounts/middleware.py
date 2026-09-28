@@ -16,24 +16,18 @@ from django.utils.deprecation import MiddlewareMixin
 
 logger = logging.getLogger("apps.accounts")
 
-# URL path fragments that must stay reachable while under enforcement
-# (setup flows, logout, password flows) — otherwise users get redirect loops.
-_ALWAYS_ALLOWED_SUBSTRINGS = (
-    "logout",
-    "password",
-    "2fa",
-    "mfa",
-    "reauthenticate",
-    "confirm-email",
-)
-
-# Path prefixes that bypass enforcement entirely (infra / non-HTML endpoints).
+# URL prefixes that must stay reachable while under enforcement
+# (auth flows, logout, password/MFA setup) — otherwise users get redirect loops.
+# Prefix (not substring) matching: /blog/password-tips/ must NOT bypass.
 _ALWAYS_ALLOWED_PREFIXES = (
+    "/accounts/",
+    "/my/logout/",
+    "/my/password/",
     "/i18n/",
-    "/health/",
-    "/ready/",
-    "/live/",
-    "/metrics/",
+    "/health",
+    "/ready",
+    "/live",
+    "/metrics",
 )
 
 _API_PREFIX = "/api/"
@@ -69,8 +63,6 @@ class SecurityEnforcementMiddleware(MiddlewareMixin):
         if path.startswith(_ALWAYS_ALLOWED_PREFIXES):
             return None
         if path.startswith((settings.STATIC_URL, settings.MEDIA_URL)):
-            return None
-        if any(fragment in path for fragment in _ALWAYS_ALLOWED_SUBSTRINGS):
             return None
 
         must_change = getattr(user, "must_change_password", False)

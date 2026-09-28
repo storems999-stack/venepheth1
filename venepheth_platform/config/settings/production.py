@@ -74,6 +74,9 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cached_db"
 SESSION_CACHE_ALIAS = "default"
 
+# Metrics endpoint requires the shared token (fail-closed if unset).
+METRICS_REQUIRE_TOKEN = True
+
 # ─── Logging ─────────────────────────────────────────────────────────────────
 LOGGING = {
     "version": 1,

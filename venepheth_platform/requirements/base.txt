@@ -21,7 +21,6 @@ fido2<2.0.0                      # Required by allauth.mfa webauthn
 django-otp==1.5.3                # TOTP-based 2FA
 qrcode[pil]==8.0                 # QR code for 2FA setup
 django-axes==7.0.1               # Brute-force login protection
-django-guardian==2.4.0           # Object-level permissions
 django-ratelimit==4.1.0          # Rate limiting decorator
 
 # ─── Content & File Handling ───────────────────────────────────────────

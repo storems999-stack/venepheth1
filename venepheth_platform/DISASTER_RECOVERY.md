@@ -27,13 +27,19 @@ This document defines the recovery procedures for the Venepheth Academic Platfor
 |------|----------|-----------|-----------|
 | 1st  | Local server volume | Continuous (PostgreSQL WAL) | 7 days |
 | 2nd  | Secondary server / external drive | Daily (pg_dump + media) | 30 days |
-| 3rd  | Off-site (cloud / remote location) | Weekly encrypted archive | 90 days |
+| 3rd  | Off-site (cloud / remote location) | Weekly archive (see ⚠️ below) | 90 days |
+
+> ⚠️ **TODO (pre-launch):** archives are currently **unencrypted** tarballs with owner-only
+> (0600) permissions. Before storing off-site, encrypt (e.g. `age`/`gpg` with an
+> offline key) and document the key location here. The 2nd/3rd copies do not exist
+> yet — set up the transfer job before going live, otherwise RPO/RTO below are unmet.
 
 ### What is Backed Up
 
 - **PostgreSQL database** — `pg_dump` compressed
 - **Media files** — `/app/media/` (uploaded files, images)
-- **Configuration** — `.env` (encrypted), `docker-compose.prod.yml`, Nginx config
+- **Configuration** — `docker-compose.prod.yml`, Nginx config, and (separately, encrypted)
+  the production `.env` — never the backup archive itself
 - **SSL certificates** — Let's Encrypt certs
 
 ### Backup Scripts
@@ -42,8 +48,8 @@ This document defines the recovery procedures for the Venepheth Academic Platfor
 # Daily backup (run via cron at 02:00)
 0 2 * * * /app/scripts/backup.sh >> /var/log/backup.log 2>&1
 
-# Verify restore monthly
-0 9 1 * * /app/scripts/restore.sh --dry-run >> /var/log/restore-test.log 2>&1
+# Verify latest backup monthly (checksum + archive integrity, no destructive restore)
+0 9 1 * * python /app/manage.py restore_platform --archive $(ls -t /app/backups/backup_*.tar.gz | head -1) --verify-only >> /var/log/restore-test.log 2>&1
 ```
 
 > ⚠️ **CRITICAL**: Test restore at least once per month. A backup that has never been tested is not a backup.
@@ -83,8 +89,8 @@ docker compose -f docker-compose.prod.yml logs db --tail=50
 # Restart DB
 docker compose -f docker-compose.prod.yml restart db
 
-# If data is corrupt — restore from backup
-./scripts/restore.sh --latest
+# If data is corrupt — restore from backup (script takes the archive path)
+./scripts/restore.sh /app/backups/<latest-backup>.tar.gz
 ```
 
 ---

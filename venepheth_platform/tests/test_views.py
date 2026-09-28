@@ -202,6 +202,21 @@ class ViewTests(TestCase):
         self.assertEqual(response["Content-Type"], "application/xml")
         self.assertContains(response, self.article.get_absolute_url())
 
+    def test_sitemap_hides_nonpublic_courses(self):
+        """Enrolled/private courses must not appear in sitemap.xml."""
+        hidden = Course.objects.create(
+            name="Hidden Course",
+            slug="hidden-course",
+            code="HID101",
+            description="Not public.",
+            visibility="private",
+            status="published",
+        )
+        response = self.client.get("/sitemap.xml")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, hidden.get_absolute_url())
+        self.assertContains(response, self.course.get_absolute_url())
+
     def test_robots_txt(self):
         """Robots.txt returns 200."""
         response = self.client.get("/robots.txt")

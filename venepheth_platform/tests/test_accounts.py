@@ -164,6 +164,34 @@ class TestSecurityEnforcement:
         response = self._login(user).get(reverse("api:article-list"), HTTP_ACCEPT="application/json")
         assert response.status_code == 403
 
+    def test_admin_cannot_toggle_superadmin(self, admin_client):
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        sup = User.objects.create_user(email="sup@test.com", password="TestPass123456!", role=User.Role.SUPERADMIN)
+        url = reverse("accounts:toggle_user_active", kwargs={"pk": sup.pk})
+        assert admin_client.post(url).status_code == 302
+        sup.refresh_from_db()
+        assert sup.is_active is True
+
+    def test_superadmin_can_toggle_admin(self, db):
+        from allauth.mfa.models import Authenticator
+        from django.contrib.auth import get_user_model
+        from django.test import Client
+
+        User = get_user_model()
+        sup = User.objects.create_user(email="sup2@test.com", password="TestPass123456!", role=User.Role.SUPERADMIN)
+        Authenticator.objects.create(user=sup, type=Authenticator.Type.TOTP, data={"secret": "TEST"})
+        target = User.objects.create_user(
+            email="adm@test.com", password="TestPass123456!", role=User.Role.ADMIN, is_staff=True
+        )
+        c = Client()
+        c.force_login(sup)
+        url = reverse("accounts:toggle_user_active", kwargs={"pk": target.pk})
+        assert c.post(url).status_code == 302
+        target.refresh_from_db()
+        assert target.is_active is False
+
     def test_promotion_to_admin_enables_require_mfa(self, user):
         from django.contrib.auth import get_user_model
 

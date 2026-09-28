@@ -53,6 +53,9 @@ def metrics_view(request):
         auth_header = request.META.get("HTTP_X_METRICS_TOKEN", "")
         if auth_header != metrics_token:
             return HttpResponse("Forbidden", status=403, content_type="text/plain")
+    elif getattr(settings, "METRICS_REQUIRE_TOKEN", False):
+        # Fail-closed where required (production): unset token must not expose metrics.
+        return HttpResponse("Forbidden", status=403, content_type="text/plain")
 
     now = time.time()
     uptime = now - _START_TIME

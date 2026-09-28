@@ -89,8 +89,11 @@ def on_user_login_failed(sender, credentials, request, **kwargs):
 
 @receiver(post_save, sender=CustomUser)
 def enforce_mfa_for_admins(sender, instance, created, **kwargs):
-    """Auto-set require_mfa=True for ADMIN/SUPERADMIN roles (including promotions)."""
-    if instance.role in (CustomUser.Role.SUPERADMIN, CustomUser.Role.ADMIN) and not instance.require_mfa:
+    """Auto-set require_mfa=True for privileged roles (including promotions)."""
+    if (
+        instance.role in (CustomUser.Role.SUPERADMIN, CustomUser.Role.ADMIN, CustomUser.Role.LECTURER)
+        and not instance.require_mfa
+    ):
         # Queryset update: no signal recursion.
         CustomUser.objects.filter(pk=instance.pk, require_mfa=False).update(require_mfa=True)
 

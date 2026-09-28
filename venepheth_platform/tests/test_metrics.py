@@ -46,3 +46,11 @@ class TestPrometheusMetrics(TestCase):
         # Authorized with correct token
         resp = self.client.get("/metrics/", HTTP_X_METRICS_TOKEN="super-secret-token")
         self.assertEqual(resp.status_code, 200)
+
+    @override_settings(METRICS_REQUIRE_TOKEN=True)
+    def test_metrics_closed_without_token_when_required(self):
+        """METRICS_REQUIRE_TOKEN=True must 403 without a valid token."""
+        self.assertEqual(self.client.get("/metrics/").status_code, 403)
+        resp = self.client.get("/metrics/", HTTP_X_METRICS_TOKEN="x")
+        # Wrong token with no METRICS_TOKEN configured is still closed.
+        self.assertEqual(resp.status_code, 403)

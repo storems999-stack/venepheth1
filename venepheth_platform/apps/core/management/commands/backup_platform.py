@@ -44,6 +44,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         output_dir = Path(options["output_dir"])
         output_dir.mkdir(parents=True, exist_ok=True)
+        os.chmod(output_dir, 0o700)
         keep_days = options["keep_days"]
         include_media = not options["no_media"]
 
@@ -142,6 +143,10 @@ class Command(BaseCommand):
 
             with open(checksum_path, "w", encoding="utf-8") as f:
                 f.write(f"{checksum_str}  {archive_name}\n")
+
+            # 7. Restrict permissions: archives hold a full DB dump (owner-only).
+            os.chmod(archive_path, 0o600)
+            os.chmod(checksum_path, 0o600)
 
             archive_size_mb = archive_path.stat().st_size / (1024 * 1024)
             self.stdout.write(
