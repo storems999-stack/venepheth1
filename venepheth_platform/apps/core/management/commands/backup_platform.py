@@ -168,11 +168,10 @@ class Command(BaseCommand):
     def _prune_old_backups(self, output_dir: Path, keep_days: int):
         cutoff = time.time() - (keep_days * 86400)
         pruned_count = 0
-        for f in output_dir.glob("backup_venepheth_platform_*"):
+        for f in output_dir.glob("backup_venepheth_platform_*.tar.gz"):
             if f.is_file() and f.stat().st_mtime < cutoff:
                 f.unlink(missing_ok=True)
-                sha_f = f.with_name(f"{f.name}.sha256")
-                sha_f.unlink(missing_ok=True)
+                f.with_name(f"{f.name}.sha256").unlink(missing_ok=True)
                 pruned_count += 1
         if pruned_count > 0:
             self.stdout.write(

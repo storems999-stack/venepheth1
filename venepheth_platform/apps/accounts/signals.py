@@ -100,8 +100,14 @@ def enforce_mfa_for_admins(sender, instance, created, **kwargs):
 
 try:
     from allauth.account.signals import password_changed as allauth_password_changed
+    from allauth.account.signals import password_reset as allauth_password_reset
 except ImportError:  # pragma: no cover — allauth always installed here
     allauth_password_changed = None
+    allauth_password_reset = None
+
+
+def _clear_forced_password_change(user):
+    CustomUser.objects.filter(pk=user.pk).update(must_change_password=False, password_changed_at=timezone.now())
 
 
 if allauth_password_changed is not None:
@@ -109,4 +115,12 @@ if allauth_password_changed is not None:
     @receiver(allauth_password_changed)
     def clear_forced_password_change(sender, request, user, **kwargs):
         """A successful password change satisfies must_change_password."""
-        CustomUser.objects.filter(pk=user.pk).update(must_change_password=False, password_changed_at=timezone.now())
+        _clear_forced_password_change(user)
+
+
+if allauth_password_reset is not None:
+
+    @receiver(allauth_password_reset)
+    def clear_forced_password_reset(sender, request, user, **kwargs):
+        """A successful password reset also satisfies must_change_password."""
+        _clear_forced_password_change(user)

@@ -58,6 +58,9 @@ class ResearchProject(PublishableModel, SlugModel, SEOModel):
     class Meta:
         verbose_name = _("research project")
         ordering = ["-start_date", "-created_at"]
+        indexes = [
+            models.Index(fields=["status", "research_status"]),
+        ]
 
     def __str__(self):
         return self.title
@@ -111,7 +114,6 @@ class Publication(PublishableModel, SlugModel, SEOModel):
         ordering = ["-year", "-created_at"]
         indexes = [
             models.Index(fields=["publication_type", "year"]),
-            models.Index(fields=["doi"]),
         ]
 
     def __str__(self):

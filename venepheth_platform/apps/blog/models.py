@@ -112,6 +112,7 @@ class Article(PublishableModel, SlugModel, SEOModel):
         indexes = [
             models.Index(fields=["status", "category"]),
             models.Index(fields=["status", "is_featured"]),
+            models.Index(fields=["status", "published_at"]),
         ]
 
     def __str__(self):

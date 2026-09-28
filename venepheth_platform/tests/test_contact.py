@@ -16,6 +16,7 @@ class ContactTests(TestCase):
         self.client = Client()
         self.contact_url = reverse("contact:form")
         cache.clear()
+        mail.outbox.clear()
 
     def _valid_data(self, **overrides):
         data = {

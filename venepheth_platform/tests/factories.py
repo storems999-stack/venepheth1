@@ -62,11 +62,11 @@ class CourseFactory:
     def create(cls, **kwargs):
         cid = _next_id()
         code = kwargs.get("code", f"CS{100 + cid}")
-        title = kwargs.get("title", f"Introduction to CS {cid}")
+        name = kwargs.get("name", f"Introduction to CS {cid}")
         slug = kwargs.get("slug", slugify(code))
         return Course.objects.create(
             code=code,
-            title=title,
+            name=name,
             slug=slug,
             description=kwargs.get("description", "A sample course description."),
             status=kwargs.get("status", "published"),
@@ -84,9 +84,9 @@ class ArticleFactory:
         return Article.objects.create(
             title=title,
             slug=slug,
-            content=kwargs.get("content", "Sample article body content."),
+            content_raw=kwargs.get("content_raw", "<p>Sample article body content.</p>"),
+            excerpt=kwargs.get("excerpt", "Summary of sample article."),
             status=kwargs.get("status", "published"),
-            summary=kwargs.get("summary", "Summary of sample article."),
         )
 
 

@@ -4,12 +4,17 @@ Tests for Internationalization (i18n) and Lao Language Support.
 
 from django.test import TestCase
 from django.urls import reverse
-from django.utils.translation import activate
+from django.utils.translation import activate, deactivate
 from django.utils.translation import gettext as _
 
 
 class LaoInternationalizationTests(TestCase):
     """Tests verifying Lao locale translation and language switcher."""
+
+    def tearDown(self):
+        # Never leak global translation state into other tests.
+        deactivate()
+        super().tearDown()
 
     def test_gettext_lao_translation(self):
         """Verify that gettext returns Lao translations when 'lo' locale is active."""

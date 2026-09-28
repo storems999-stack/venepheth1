@@ -6,8 +6,10 @@ checksum integrity verification.
 
 import hashlib
 import json
+import os
 import shutil
 import sqlite3
+import subprocess
 import tarfile
 from pathlib import Path
 
@@ -33,7 +35,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--confirm",
             action="store_true",
-            help="Confirm restoration without interactive prompt",
+            help="Confirm restoration without interactive prompt (database is flushed before portable restore)",
         )
         parser.add_argument(
             "--verify-only",
@@ -82,6 +84,8 @@ class Command(BaseCommand):
             if actual_sha != expected_sha:
                 raise CommandError(f"Integrity Check Failed!\nExpected: {expected_sha}\nActual:   {actual_sha}")
             self.stdout.write(self.style.SUCCESS("    -> Checksum verified: OK"))
+        elif not skip_checksum:
+            self.stdout.write(self.style.WARNING("    [!] No checksum sidecar found — archive integrity NOT verified."))
 
         if options.get("verify_only"):
             self.stdout.write(
@@ -124,14 +128,40 @@ class Command(BaseCommand):
             engine = db_conn["ENGINE"]
             staged_sqlite = staging_dir / "db.sqlite3"
             staged_json = staging_dir / "data_dump.json"
+            staged_pg = staging_dir / "postgres.dump"
 
-            if "sqlite3" in engine and staged_sqlite.exists():
+            if "postgresql" in engine and staged_pg.exists():
+                self.stdout.write("    -> Restoring PostgreSQL dump via pg_restore...")
+                env = os.environ.copy()
+                if db_conn.get("PASSWORD"):
+                    env["PGPASSWORD"] = db_conn["PASSWORD"]
+                subprocess.run(
+                    [
+                        "pg_restore",
+                        "--clean",
+                        "--if-exists",
+                        "-h",
+                        db_conn.get("HOST", "localhost"),
+                        "-p",
+                        str(db_conn.get("PORT", 5432)),
+                        "-U",
+                        db_conn.get("USER", "postgres"),
+                        "-d",
+                        db_conn["NAME"],
+                        str(staged_pg),
+                    ],
+                    env=env,
+                    check=True,
+                    capture_output=True,
+                )
+            elif "sqlite3" in engine and staged_sqlite.exists():
                 self.stdout.write("    -> Restoring SQLite database snapshot...")
                 dest_sqlite = Path(db_conn["NAME"])
                 with sqlite3.connect(str(staged_sqlite)) as src, sqlite3.connect(str(dest_sqlite)) as dst:
                     src.backup(dst)
             elif staged_json.exists():
-                self.stdout.write("    -> Loading data from portable dump (loaddata)...")
+                self.stdout.write("    -> Flushing database, then loading portable dump (loaddata)...")
+                call_command("flush", "--no-input")
                 call_command("loaddata", str(staged_json))
             else:
                 self.stdout.write(self.style.WARNING("    [!] No compatible database dump found in archive."))

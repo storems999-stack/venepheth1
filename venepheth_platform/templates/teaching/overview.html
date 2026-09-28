@@ -83,7 +83,8 @@
                             {% else %}
                             <p class="text-gray-400 text-xs mt-0.5">
                                 <i data-lucide="map-pin" class="w-3 h-3 inline mr-1" aria-hidden="true"></i>
-                                {{ oh.location|default:_("Room TBD") }}
+                                {% trans "Room TBD" as room_tbd %}
+                                {{ oh.location|default:room_tbd }}
                             </p>
                             {% endif %}
                             {% if oh.notes %}

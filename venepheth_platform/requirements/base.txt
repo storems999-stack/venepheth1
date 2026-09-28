@@ -16,7 +16,7 @@ django-celery-beat==2.7.0        # Periodic tasks scheduler
 django-celery-results==2.5.1
 
 # ─── Authentication & Security ─────────────────────────────────────────
-django-allauth==65.3.0           # Auth flows (email login, social future)
+django-allauth==65.19.2          # Auth flows (email login, MFA) — pinned to tested version
 fido2<2.0.0                      # Required by allauth.mfa webauthn
 django-otp==1.5.3                # TOTP-based 2FA
 qrcode[pil]==8.0                 # QR code for 2FA setup

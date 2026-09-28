@@ -81,16 +81,26 @@ def cv_print(request):
     }
 
     if _HAS_RESEARCH:
-        context["research_projects"] = ResearchProject.objects.filter(
-            status="published",
-            research_status__in=["ongoing", "completed", "published"],
-        ).order_by("-start_date")[:20]
-        context["publications"] = Publication.objects.filter(status="published").order_by("-year", "-created_at")[:30]
+        context["research_projects"] = (
+            ResearchProject.objects.filter(
+                status="published",
+                research_status__in=["ongoing", "completed", "published"],
+            )
+            .prefetch_related("topics")
+            .order_by("-start_date")[:20]
+        )
+        context["publications"] = (
+            Publication.objects.filter(status="published")
+            .prefetch_related("topics")
+            .order_by("-year", "-created_at")[:30]
+        )
 
     if _HAS_COURSES:
-        context["courses"] = Course.objects.filter(status="published", visibility="public").order_by(
-            "-academic_year", "name"
-        )[:20]
+        context["courses"] = (
+            Course.objects.filter(status="published", visibility="public")
+            .select_related("category")
+            .order_by("-academic_year", "name")[:20]
+        )
 
     logger.info("CV print page accessed from %s", request.META.get("REMOTE_ADDR", "unknown"))
     return render(request, "profiles/cv_print.html", context)

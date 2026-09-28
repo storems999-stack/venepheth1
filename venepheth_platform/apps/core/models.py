@@ -74,8 +74,7 @@ class SlugModel(models.Model):
     slug = models.SlugField(
         _("slug"),
         max_length=255,
-        unique=True,
-        db_index=True,
+        unique=True,  # unique implies an index — no separate db_index needed
         help_text=_("URL-friendly identifier. Auto-generated from title."),
     )
 

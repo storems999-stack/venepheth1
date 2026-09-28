@@ -72,6 +72,7 @@ class Course(PublishableModel, SlugModel, SEOModel):
         ordering = ["-academic_year", "-created_at"]
         indexes = [
             models.Index(fields=["status", "featured"]),
+            models.Index(fields=["status", "visibility"]),
             models.Index(fields=["code"]),
         ]
 
@@ -160,6 +161,10 @@ class CourseResource(TimeStampedModel):
     class Meta:
         ordering = ["order", "created_at"]
         verbose_name = _("course resource")
+        indexes = [
+            models.Index(fields=["course", "visibility"]),
+            models.Index(fields=["module", "visibility"]),
+        ]
 
     def __str__(self):
         return self.title

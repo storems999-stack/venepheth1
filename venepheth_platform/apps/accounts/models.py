@@ -61,7 +61,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     # ─── Identity Fields ────────────────────────────────────────────────────────
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    email = models.EmailField(_("email address"), unique=True, db_index=True)
+    email = models.EmailField(_("email address"), unique=True)  # unique implies an index
     first_name = models.CharField(_("first name"), max_length=150, blank=True)
     last_name = models.CharField(_("last name"), max_length=150, blank=True)
 

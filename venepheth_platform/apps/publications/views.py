@@ -70,6 +70,7 @@ def publication_detail(request, slug):
         Publication.objects.filter(status="published", topics__in=pub.topics.all())
         .exclude(pk=pub.pk)
         .distinct()
+        .prefetch_related("topics")
         .order_by("-year")[:5]
     )
 

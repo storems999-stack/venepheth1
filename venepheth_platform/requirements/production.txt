@@ -4,6 +4,10 @@
 gunicorn==23.0.0
 whitenoise==6.8.2                # Efficient static file serving fallback
 
+# ─── Production cache + logging backends (imported by production settings) ──
+django-redis==5.4.0              # CACHES backend in production.py
+python-json-logger==2.0.7        # JSON log formatter in production.py
+
 # ─── Monitoring ────────────────────────────────────────────────────────
 sentry-sdk[django]==2.19.2       # Error tracking (optional free tier)
 django-prometheus==2.3.1         # Prometheus metrics endpoint

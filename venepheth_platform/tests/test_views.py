@@ -212,9 +212,18 @@ class ViewTests(TestCase):
             visibility="private",
             status="published",
         )
+        enrolled = Course.objects.create(
+            name="Enrolled Course",
+            slug="enrolled-course",
+            code="ENR101",
+            description="Enrolled only.",
+            visibility="enrolled",
+            status="published",
+        )
         response = self.client.get("/sitemap.xml")
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, hidden.get_absolute_url())
+        self.assertNotContains(response, enrolled.get_absolute_url())
         self.assertContains(response, self.course.get_absolute_url())
 
     def test_robots_txt(self):
@@ -230,6 +239,11 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/rss+xml; charset=utf-8")
         self.assertContains(response, self.article.title)
+
+    def test_rss_feed_excludes_drafts(self):
+        """Draft articles must never appear in feeds."""
+        response = self.client.get(reverse("blog:feed"))
+        self.assertNotContains(response, self.draft_article.title)
 
     def test_atom_feed(self):
         """Atom Feed returns 200."""

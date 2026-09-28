@@ -192,6 +192,23 @@ class TestSecurityEnforcement:
         target.refresh_from_db()
         assert target.is_active is False
 
+    def test_enforcement_not_bypassed_by_substring_path(self, user):
+        """A URL merely containing 'password' must not skip enforcement."""
+        user.require_mfa = True
+        user.save(update_fields=["require_mfa"])
+        response = self._login(user).get("/blog/password-tips/")
+        assert response.status_code == 302
+        assert response.url == reverse("mfa_index")
+
+    def test_password_reset_clears_must_change(self, user):
+        from allauth.account.signals import password_reset
+
+        user.must_change_password = True
+        user.save(update_fields=["must_change_password"])
+        password_reset.send(sender=None, request=None, user=user)
+        user.refresh_from_db()
+        assert user.must_change_password is False
+
     def test_promotion_to_admin_enables_require_mfa(self, user):
         from django.contrib.auth import get_user_model
 

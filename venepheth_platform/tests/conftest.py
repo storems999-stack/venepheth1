@@ -4,23 +4,8 @@ Pytest configuration and global fixtures.
 
 import pytest
 from django.test import Client
-from rest_framework.test import APIClient
 
-from tests.factories import (
-    AdminUserFactory,
-    ArticleFactory,
-    CourseFactory,
-    LecturerUserFactory,
-    PublicationFactory,
-    ResearchProjectFactory,
-    UserFactory,
-)
-
-
-@pytest.fixture
-def api_client():
-    """Unauthenticated DRF API client."""
-    return APIClient()
+from tests.factories import AdminUserFactory, LecturerUserFactory, UserFactory
 
 
 @pytest.fixture
@@ -63,31 +48,3 @@ def admin_client(admin_user):
     client = Client()
     client.force_login(admin_user)
     return client
-
-
-@pytest.fixture
-def auth_api_client(user):
-    """DRF API client authenticated with a standard user."""
-    client = APIClient()
-    client.force_authenticate(user=user)
-    return client
-
-
-@pytest.fixture
-def sample_course(db):
-    return CourseFactory.create()
-
-
-@pytest.fixture
-def sample_article(db):
-    return ArticleFactory.create()
-
-
-@pytest.fixture
-def sample_publication(db):
-    return PublicationFactory.create()
-
-
-@pytest.fixture
-def sample_project(db):
-    return ResearchProjectFactory.create()
