@@ -4,12 +4,16 @@ Generates a "topic node" view by aggregating tags/topics across all
 platform content types (Articles, Research Projects, Courses, Publications).
 
 Zero-cost: uses Django ORM + Counter, no external graph DB required.
+Only published/public records are ever aggregated.
 """
 
 from __future__ import annotations
 
+import logging
 from collections import Counter, defaultdict
 from typing import TypedDict
+
+logger = logging.getLogger("apps.search")
 
 
 class TopicNode(TypedDict):
@@ -38,11 +42,9 @@ def build_knowledge_graph(min_count: int = 1) -> list[TopicNode]:
 
     Supported content types: Article, ResearchProject, Course, Publication.
     """
-    # topic_name → {count, types, slugs of related topics (co-occurring)}
+    # topic_name → {count, types}
     topic_counts: Counter[str] = Counter()
     topic_types: dict[str, set[str]] = defaultdict(set)
-    # co-occurrence: topic → Counter of co-occurring topics
-    defaultdict(Counter)
 
     # ── 1. Blog Articles (tags) ────────────────────────────────────────────────
     Article = _safe_import("apps.blog.models", "Article")
@@ -53,31 +55,34 @@ def build_knowledge_graph(min_count: int = 1) -> list[TopicNode]:
                     topic_counts[row] += 1
                     topic_types[row].add("blog")
         except Exception:
-            pass
+            logger.exception("Knowledge graph: article aggregation failed")
 
     # ── 2. Research Projects (topics M2M → ResearchTopic) ────────────────────
     ResearchProject = _safe_import("apps.research.models", "ResearchProject")
     if ResearchProject is not None:
         try:
             for row in ResearchProject.objects.filter(
-                research_status__in=["ongoing", "completed", "published"]
+                status="published",
+                research_status__in=["ongoing", "completed", "published"],
             ).values_list("topics__name", flat=True):
                 if row:
                     topic_counts[row] += 1
                     topic_types[row].add("research")
         except Exception:
-            pass
+            logger.exception("Knowledge graph: research aggregation failed")
 
-    # ── 3. Courses (tags / category) ──────────────────────────────────────────
+    # ── 3. Courses (category name — Course has no tags field) ────────────────
     Course = _safe_import("apps.courses.models", "Course")
     if Course is not None:
         try:
-            for row in Course.objects.filter(status="published").values_list("tags__name", flat=True):
+            for row in Course.objects.filter(status="published", visibility="public").values_list(
+                "category__name", flat=True
+            ):
                 if row:
                     topic_counts[row] += 1
                     topic_types[row].add("course")
         except Exception:
-            pass
+            logger.exception("Knowledge graph: course aggregation failed")
 
     # ── 4. Publications (keywords CharField — split by comma) ──────────────────
     Publication = _safe_import("apps.research.models", "Publication")
@@ -89,7 +94,7 @@ def build_knowledge_graph(min_count: int = 1) -> list[TopicNode]:
                         topic_counts[kw] += 1
                         topic_types[kw].add("publication")
         except Exception:
-            pass
+            logger.exception("Knowledge graph: publication aggregation failed")
 
     # ── Build result list ──────────────────────────────────────────────────────
     results: list[TopicNode] = []
@@ -114,6 +119,7 @@ def get_topic_detail(topic_name: str) -> dict:
     Return aggregated content for a single topic node.
     Used by the topic detail view to show all related items.
     """
+    topic_name = (topic_name or "")[:100]
     result: dict = {
         "topic": topic_name,
         "articles": [],
@@ -121,6 +127,8 @@ def get_topic_detail(topic_name: str) -> dict:
         "courses": [],
         "publications": [],
     }
+    if not topic_name:
+        return result
 
     Article = _safe_import("apps.blog.models", "Article")
     if Article is not None:
@@ -131,36 +139,51 @@ def get_topic_detail(topic_name: str) -> dict:
                 )[:10]
             )
         except Exception:
-            pass
+            logger.exception("Knowledge graph: article detail failed")
 
     ResearchProject = _safe_import("apps.research.models", "ResearchProject")
     if ResearchProject is not None:
         try:
             result["research"] = list(
-                ResearchProject.objects.filter(topics__name__iexact=topic_name).values("title", "slug")[:10]
+                ResearchProject.objects.filter(status="published", topics__name__iexact=topic_name).values(
+                    "title", "slug"
+                )[:10]
             )
         except Exception:
-            pass
+            logger.exception("Knowledge graph: research detail failed")
 
     Course = _safe_import("apps.courses.models", "Course")
     if Course is not None:
         try:
-            result["courses"] = list(
-                Course.objects.filter(status="published", tags__name__iexact=topic_name).values("title", "slug")[:10]
-            )
+            # Course.name → exposed as "title" for the shared template.
+            rows = Course.objects.filter(
+                status="published",
+                visibility="public",
+                category__name__iexact=topic_name,
+            ).values("name", "slug")[:10]
+            result["courses"] = [{"title": row["name"], "slug": row["slug"]} for row in rows]
         except Exception:
-            pass
+            logger.exception("Knowledge graph: course detail failed")
 
     Publication = _safe_import("apps.research.models", "Publication")
     if Publication is not None:
         try:
-            result["publications"] = list(
-                Publication.objects.filter(
-                    status="published",
-                    keywords__icontains=topic_name,
-                ).values("title", "slug")[:10]
+            # Whole-keyword match in Python: icontains("art") must not match "earth".
+            wanted = topic_name.lower()
+            matches = []
+            rows = (
+                Publication.objects.filter(status="published")
+                .exclude(keywords="")
+                .values("title", "slug", "keywords")[:50]
             )
+            for row in rows:
+                keywords = [k.strip().lower() for k in (row["keywords"] or "").split(",")]
+                if wanted in keywords:
+                    matches.append({"title": row["title"], "slug": row["slug"]})
+                    if len(matches) >= 10:
+                        break
+            result["publications"] = matches
         except Exception:
-            pass
+            logger.exception("Knowledge graph: publication detail failed")
 
     return result

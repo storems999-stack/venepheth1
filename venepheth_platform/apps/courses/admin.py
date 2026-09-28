@@ -37,7 +37,7 @@ class CourseAdmin(admin.ModelAdmin):
         ("Core Information", {"fields": ("code", "name", "slug", "category", "description", "short_description")}),
         ("Academic Details", {"fields": ("credits", "semester", "academic_year", "level", "language")}),
         ("Display & Access", {"fields": ("thumbnail", "featured", "visibility", "status", "published_at")}),
-        ("SEO", {"fields": ("meta_title", "meta_description"), "classes": ("collapse",)}),
+        ("SEO", {"fields": ("seo_title", "seo_description", "og_image"), "classes": ("collapse",)}),
     )
 
     class Media:

@@ -45,7 +45,7 @@ class ArticleAdmin(admin.ModelAdmin):
         ),
         ("Publication", {"fields": ("status", "published_at", "is_featured", "tags", "allow_comments")}),
         ("Stats (Auto)", {"fields": ("reading_time", "view_count")}),
-        ("SEO", {"fields": ("meta_title", "meta_description"), "classes": ("collapse",)}),
+        ("SEO", {"fields": ("seo_title", "seo_description", "og_image"), "classes": ("collapse",)}),
     )
 
     class Media:

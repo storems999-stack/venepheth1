@@ -56,7 +56,7 @@
         </div>
         <div class="divide-y divide-white/5">
           {% for project in data.research %}
-          <a href="/research/{{ project.slug }}/" class="flex items-center justify-between px-6 py-3 hover:bg-white/5 transition-colors group">
+          <a href="/research/project/{{ project.slug }}/" class="flex items-center justify-between px-6 py-3 hover:bg-white/5 transition-colors group">
             <span class="text-gray-300 text-sm group-hover:text-white transition-colors">{{ project.title }}</span>
             <i data-lucide="arrow-right" class="w-4 h-4 text-gray-600 group-hover:text-gold-400 transition-colors"></i>
           </a>

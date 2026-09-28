@@ -20,7 +20,7 @@ logger = logging.getLogger("apps.search")
 @require_GET
 def search_results(request):
     """Full-text search across all content types."""
-    q = request.GET.get("q", "").strip()
+    q = request.GET.get("q", "").strip()[:200]
     results = {
         "courses": [],
         "articles": [],
@@ -31,20 +31,21 @@ def search_results(request):
     if q and len(q) >= 2:
         results["courses"] = Course.objects.filter(
             status="published",
+            visibility=Course.Visibility.PUBLIC,
             name__icontains=q,
-        )[:5]
+        ).select_related("category")[:5]
         results["articles"] = Article.objects.filter(
             status=Article.Status.PUBLISHED,
             title__icontains=q,
-        )[:5]
+        ).prefetch_related("tags")[:5]
         results["research"] = ResearchProject.objects.filter(
             status="published",
             title__icontains=q,
-        )[:5]
+        ).prefetch_related("topics")[:5]
         results["publications"] = Publication.objects.filter(
             status="published",
             title__icontains=q,
-        )[:5]
+        ).prefetch_related("topics")[:5]
 
         total = sum(len(v) for v in results.values())
     else:
@@ -79,6 +80,7 @@ def knowledge_graph_view(request):
     )
 
 
+@ratelimit(key="ip", rate="10/m", method="GET", block=True)
 @require_GET
 def topic_detail_view(request, topic_name: str):
     """Detail view for a single topic node — aggregated content."""

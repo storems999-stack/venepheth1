@@ -17,4 +17,12 @@ class SecurityEventAdmin(admin.ModelAdmin):
         "request_path",
         "extra_data",
         "timestamp",
+        "resolved_at",
     )
+
+    def has_add_permission(self, request):
+        # Security history must only be written by the system, never by staff.
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

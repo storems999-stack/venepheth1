@@ -71,3 +71,17 @@ class ContactForm(forms.ModelForm):
         else:
             self.is_spam = False
         return cleaned_data
+
+    @staticmethod
+    def _one_line(value):
+        """Collapse whitespace/newlines — prevents email header injection."""
+        return " ".join(str(value or "").split())
+
+    def clean_name(self):
+        return self._one_line(self.cleaned_data.get("name"))
+
+    def clean_subject(self):
+        return self._one_line(self.cleaned_data.get("subject"))
+
+    def clean_organization(self):
+        return self._one_line(self.cleaned_data.get("organization"))

@@ -7,7 +7,25 @@ Conforms to Section 2 & 50 of vision.txt (Zero-Cost Enterprise & AI Adapter).
 
 from typing import Any
 
+from django.utils.html import escape
+
 from .base import BaseLLMAdapter
+
+
+def _safe_text(value: Any) -> str:
+    """Escape user/DB content echoed into the Markdown answer (XSS-safe)."""
+    return escape(str(value or ""))
+
+
+def _safe_title(value: Any) -> str:
+    """Escape title and neutralize Markdown link-breaking characters."""
+    return _safe_text(value).replace("[", "&#91;").replace("]", "&#93;")
+
+
+def _safe_url(value: Any) -> str:
+    """Only relative in-site URLs are allowed; everything else becomes '#'."""
+    url = str(value or "#")
+    return url if url.startswith("/") else "#"
 
 
 class GroundedFallbackAdapter(BaseLLMAdapter):
@@ -24,7 +42,7 @@ class GroundedFallbackAdapter(BaseLLMAdapter):
         if not context_items:
             if is_lao:
                 answer = (
-                    f'ຂໍອະໄພ, ບໍ່ພົບຂໍ້ມູນທີ່ກ່ຽວຂ້ອງໂດຍກົງກັບ: "**{query}**" ໃນຖານຂໍ້ມູນວິຊາການ.\n\n'
+                    f'ຂໍອະໄພ, ບໍ່ພົບຂໍ້ມູນທີ່ກ່ຽວຂ້ອງໂດຍກົງກັບ: "**{_safe_text(query)}**" ໃນຖານຂໍ້ມູນວິຊາການ.\n\n'
                     "💡 **ຄຳແນະນຳທີ່ທ່ານສາມາດຖາມໄດ້:**\n"
                     "- *ເວລາຮັບນັກສຶກສາ (Office Hours) ຂອງອາຈານແມ່ນຕອນໃດ?*\n"
                     "- *ອາຈານສອນວິຊາຫຍັງແດ່? (Courses)*\n"
@@ -32,7 +50,7 @@ class GroundedFallbackAdapter(BaseLLMAdapter):
                 )
             else:
                 answer = (
-                    f'I couldn\'t find any direct academic records matching: "**{query}**".\n\n'
+                    f'I couldn\'t find any direct academic records matching: "**{_safe_text(query)}**".\n\n'
                     "💡 **Here are some suggested topics you can explore:**\n"
                     "- *When are the professor's office hours?*\n"
                     "- *What courses are currently offered?*\n"
@@ -46,18 +64,21 @@ class GroundedFallbackAdapter(BaseLLMAdapter):
 
         # Format retrieved items into an answer
         lines = []
+        safe_query = _safe_text(query)
         if is_lao:
-            lines.append(f'ອີງຕາມຖານຂໍ້ມູນວິຊາການຂອງ ອາຈານ ວີນພເຈດ ສາຍາວົງ ສຳລັບຫົວຂໍ້ "**{query}**":\n')
+            lines.append(f'ອີງຕາມຖານຂໍ້ມູນວິຊາການຂອງ ອາຈານ ວີນພເຈດ ສາຍາວົງ ສຳລັບຫົວຂໍ້ "**{safe_query}**":\n')
         else:
-            lines.append(f'Based on the academic records of Lecturer Venepheth SAYAVONG regarding "**{query}**":\n')
+            lines.append(
+                f'Based on the academic records of Lecturer Venepheth SAYAVONG regarding "**{safe_query}**":\n'
+            )
 
         sources = []
         for idx, item in enumerate(context_items[:5], 1):
-            category = item.get("type", "General")
-            title = item.get("title", "Untitled")
-            summary = item.get("summary", "")
-            url = item.get("url", "#")
-            extra = item.get("extra", "")
+            category = _safe_text(item.get("type", "General"))
+            title = _safe_title(item.get("title", "Untitled"))
+            summary = _safe_text(item.get("summary", ""))
+            url = _safe_url(item.get("url", "#"))
+            extra = _safe_text(item.get("extra", ""))
 
             sources.append(
                 {

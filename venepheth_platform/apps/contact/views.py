@@ -25,8 +25,10 @@ def contact_form(request):
     if request.method == "POST":
         form = ContactForm(request.POST)
         if form.is_valid():
+            from apps.core.utils import get_client_ip
+
             contact_msg = form.save(commit=False)
-            contact_msg.ip_address = request.META.get("REMOTE_ADDR")
+            contact_msg.ip_address = get_client_ip(request)
             contact_msg.user_agent = request.META.get("HTTP_USER_AGENT", "")[:512]
 
             # Check honeypot
@@ -38,7 +40,7 @@ def contact_form(request):
                 contact_msg.status = ContactMessage.Status.NEW
                 contact_msg.save()
 
-                # Dispatch notification email
+                # Dispatch notification email (fail-closed: never claim success if it fails).
                 try:
                     admin_email = settings.DEFAULT_FROM_EMAIL
                     subject = f"[Contact Form] {contact_msg.subject} from {contact_msg.name}"
@@ -62,10 +64,30 @@ def contact_form(request):
                         html_message=html_message,
                         from_email=admin_email,
                         recipient_list=[admin_email],
-                        fail_silently=True,
+                        fail_silently=False,
                     )
                 except Exception as mail_err:
+                    # Message is already saved — tell the visitor the truth instead
+                    # of redirecting to the success page.
                     logger.warning("Failed to send contact notification email: %s", mail_err)
+                    messages.error(
+                        request,
+                        _(
+                            "Your message was saved and will be reviewed, "
+                            "but the email notification failed. Please try again later if urgent."
+                        ),
+                    )
+                    return render(
+                        request,
+                        "contact/form.html",
+                        {
+                            "form": ContactForm(),
+                            "meta_title": _("Contact"),
+                            "meta_description": _(
+                                "Get in touch with Venepheth Sayavong for academic inquiries and collaboration."
+                            ),
+                        },
+                    )
 
             if is_htmx:
                 return render(request, "contact/partials/success_inline.html")

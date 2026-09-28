@@ -42,7 +42,7 @@ def assistant_chat(request):
     """HTMX / JSON chat endpoint. Returns AI-synthesized academic answer."""
     try:
         body = json.loads(request.body.decode("utf-8"))
-    except (ValueError, KeyError):
+    except (ValueError, KeyError, UnicodeDecodeError):
         body = {}
 
     query = body.get("query", "").strip()
@@ -61,7 +61,8 @@ def assistant_chat(request):
             status=400,
         )
 
-    logger.info(f"Assistant query: '{query[:60]}' | lang={language}")
+    # Log shape, not content (queries may contain PII).
+    logger.info("Assistant query received | lang=%s chars=%d", language, len(query))
 
     # RAG: Retrieve relevant academic context
     context_items = AcademicRetriever.retrieve(query, limit=8)

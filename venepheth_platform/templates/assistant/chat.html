@@ -236,11 +236,20 @@ function academicAssistant() {
         },
 
         markdownToHtml(md) {
-            // Minimal safe Markdown → HTML conversion
-            return md
+            // Minimal safe Markdown → HTML conversion.
+            // Escape raw HTML first (answers may echo user input),
+            // then allow only http(s)/relative link targets.
+            const escaped = md
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            return escaped
                 .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-gold-400 underline hover:text-gold-300">$1</a>')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, url) => {
+                    const safe = /^(https?:\/\/|\/)/.test(url) ? url : '#';
+                    return `<a href="${safe}" target="_blank" class="text-gold-400 underline hover:text-gold-300">${text}</a>`;
+                })
                 .replace(/^### (.+)$/gm, '<h3 class="text-white font-semibold text-sm mt-3 mb-1">$1</h3>')
                 .replace(/^## (.+)$/gm, '<h2 class="text-white font-semibold text-base mt-3 mb-1">$1</h2>')
                 .replace(/^- (.+)$/gm, '<li class="text-gray-300 text-sm">$1</li>')

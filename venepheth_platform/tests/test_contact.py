@@ -120,3 +120,22 @@ class ContactTests(TestCase):
         """The success page returns 200."""
         response = self.client.get(reverse("contact:success"))
         self.assertEqual(response.status_code, 200)
+
+    def test_email_failure_does_not_claim_success(self):
+        """SMTP failure must not redirect to the success page (fail-closed)."""
+        from unittest.mock import patch
+
+        with patch("apps.contact.views.send_mail", side_effect=Exception("SMTP down")):
+            response = self.client.post(self.contact_url, self._valid_data())
+        self.assertEqual(response.status_code, 200)
+        self.assertNotEqual(getattr(response, "url", None), reverse("contact:success"))
+        # Message is still saved for admin review.
+        self.assertTrue(ContactMessage.objects.filter(email="jane@example.com").exists())
+
+    def test_subject_newlines_stripped(self):
+        """Header-injection newlines in subject are collapsed."""
+        form = ContactForm(
+            data=self._valid_data(subject="Hello\nBcc: victim@example.com"),
+        )
+        self.assertTrue(form.is_valid())
+        self.assertNotIn("\n", form.cleaned_data["subject"])
