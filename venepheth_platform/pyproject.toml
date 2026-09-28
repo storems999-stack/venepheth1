@@ -17,7 +17,7 @@ extend-exclude = [
 
 [tool.ruff.lint]
 # RUF012: Django Model/Form Meta `fields` / `widgets` lists are idiomatic mutable defaults.
-ignore = ["RUF012"]
+ignore = ["RUF012", "EXE001"]
 
 [tool.ruff.lint.per-file-ignores]
 "config/settings/*.py" = ["F403", "F405", "E402"]

@@ -28,9 +28,11 @@ jobs:
         run: pip install ruff mypy django-stubs
 
       - name: Run Ruff linter
+        working-directory: venepheth_platform
         run: ruff check . --output-format=github
 
       - name: Run Ruff formatter check
+        working-directory: venepheth_platform
         run: ruff format --check .
 
   # ── Job 2: Unit & Integration Tests ────────────────────────────────────────

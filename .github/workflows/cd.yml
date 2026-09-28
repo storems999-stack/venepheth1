@@ -1,8 +1,8 @@
 name: 🚀 CD — Deploy to Production
 
 on:
+  workflow_dispatch:
   push:
-    branches: [main]
     tags: ["v*.*.*"]
 
 concurrency:
@@ -14,7 +14,6 @@ jobs:
     name: Deploy to Server
     runs-on: ubuntu-latest
     environment: production
-    if: github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4

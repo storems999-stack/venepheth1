@@ -102,7 +102,8 @@ class Command(BaseCommand):
             # 2. Extract Archive
             self.stdout.write("    -> Extracting archive...")
             with tarfile.open(archive_path, "r:gz") as tar:
-                tar.extractall(path=staging_dir)
+                # Reject path traversal / unsafe members (Bandit B202, PEP 706).
+                tar.extractall(path=staging_dir, filter="data")
 
             manifest_file = staging_dir / "manifest.json"
             if manifest_file.exists():
