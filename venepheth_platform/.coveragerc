@@ -1,0 +1,36 @@
+# Coverage configuration
+#
+# Without `source`, `coverage run -m pytest tests/` measures every imported
+# file — including the test modules, which execute ~100% of their own lines
+# and drag the reported average upward. Scope the measurement to application
+# code so `--fail-under` gates on something real.
+
+[run]
+source =
+    apps
+    config
+branch = False
+omit =
+    */migrations/*
+    */__pycache__/*
+    */tests/*
+    */my-worker/*
+    */venv/*
+    */.venv/*
+    manage.py
+    */settings/testing.py
+    */settings/development.py
+
+[report]
+show_missing = True
+skip_covered = False
+precision = 1
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    def __repr__
+
+[xml]
+output = coverage.xml

@@ -28,6 +28,16 @@ def send_protected_file(field_file, download_name: str | None = None):
     if not storage_path.is_file():
         raise Http404()
 
+    # Defence in depth: the resolved path must stay inside MEDIA_ROOT. The
+    # upload_to slugify already guarantees this, but a name that ever came from
+    # elsewhere must not be able to read outside the media tree.
+    media_root = Path(getattr(settings, "MEDIA_ROOT", "")).resolve()
+    try:
+        resolved = storage_path.resolve()
+        resolved.relative_to(media_root)
+    except (ValueError, OSError):
+        raise Http404()
+
     filename = download_name or storage_path.name
     if getattr(settings, "SENDFILE_ENABLED", False):
         import mimetypes
@@ -36,6 +46,9 @@ def send_protected_file(field_file, download_name: str | None = None):
         response["X-Accel-Redirect"] = f"/protected-media/{name}"
         content_type, _ = mimetypes.guess_type(filename)
         response["Content-Type"] = content_type or "application/octet-stream"
-        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        # Escape quotes/backslashes: Django rejects CR/LF in headers but happily
+        # accepts a bare `"`, which would terminate the quoted filename early.
+        safe_name = filename.replace("\\", "\\\\").replace('"', '\\"')
+        response["Content-Disposition"] = f'attachment; filename="{safe_name}"'
         return response
     return FileResponse(field_file.open("rb"), as_attachment=True, filename=filename)

@@ -1,0 +1,37 @@
+{% extends "account/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Confirm Access" %}{% endblock %}
+
+{% block content %}
+<section class="min-h-[80vh] flex items-center justify-center bg-navy-950 py-20 relative overflow-hidden">
+    <div class="absolute inset-0 bg-grid"></div>
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-gold-500/5 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-navy-500/5 rounded-full blur-3xl"></div>
+
+    <div class="relative w-full max-w-md mx-auto px-4 sm:px-6 z-10">
+        <div class="glass border border-white/5 shadow-2xl shadow-black/50 rounded-2xl p-8 sm:p-10">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gold-500/10 text-gold-400 mb-6">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white mb-2">{% trans "Confirm Access" %}</h1>
+                <p class="text-gray-400 text-sm">
+                    {% trans "Please reauthenticate to safeguard your account." %}
+                </p>
+            </div>
+            {% block reauthenticate_content %}{% endblock %}
+            {% if reauthentication_alternatives %}
+            <div class="mt-6 pt-6 border-t border-white/5 space-y-2">
+                <p class="text-gray-500 text-xs uppercase tracking-wider text-center mb-3">{% trans "Alternative options" %}</p>
+                {% for alt in reauthentication_alternatives %}
+                <a href="{{ alt.url }}" class="block text-center text-sm border border-white/10 hover:border-gold-500/40 text-gray-300 hover:text-gold-300 rounded-xl py-2 transition-colors">
+                    {{ alt.description }}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -19,6 +19,8 @@ from apps.core.sitemaps import (
     CourseSitemap,
     ResearchProjectSitemap,
     StaticViewSitemap,
+    PublicationSitemap,
+    ResourceSitemap,
 )
 
 # ─── Admin URL & Branding ────────────────────────────────────────────────────────
@@ -33,6 +35,8 @@ sitemaps = {
     "blog": ArticleSitemap,
     "research": ResearchProjectSitemap,
     "courses": CourseSitemap,
+    "publications": PublicationSitemap,
+    "resources": ResourceSitemap,
 }
 
 urlpatterns = [
@@ -68,10 +72,11 @@ urlpatterns = [
     path("profile/", include("apps.profiles.urls", namespace="profiles")),
     path("resources/", include("apps.resources.urls", namespace="resources")),
     path("teaching/", include("apps.teaching.urls", namespace="teaching")),
-    # PARKED (re-enable when needed):
+    # AI Academic Assistant (vision §49/§50)
+    path("assistant/", include("apps.assistant.urls", namespace="assistant")),
+    # PARKED — these apps do not exist yet; uncomment when created:
     # path("events/", include("apps.events.urls", namespace="events")),
     # path("notifications/", include("apps.notifications.urls", namespace="notifications")),
-    # path("assistant/", include("apps.assistant.urls", namespace="assistant")),
     # path("search/topics/...") — see apps/search/urls.py
     # ── API ────────────────────────────────────────────────────────────────────
     path("api/v1/", include("config.api_router", namespace="api")),

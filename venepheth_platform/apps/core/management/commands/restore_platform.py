@@ -17,6 +17,41 @@ from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
 
+try:
+    from cryptography.fernet import Fernet, InvalidToken
+
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
+
+
+def _decrypt_archive(archive_path: Path) -> Path:
+    """Decrypt a Fernet-encrypted archive. Returns the decrypted path.
+
+    Key resolution mirrors backup_platform._get_encryption_key so the same
+    BACKUP_ENCRYPTION_KEY (or backup_key.bin) decrypts what the backup wrote.
+    """
+    env_key = os.environ.get("BACKUP_ENCRYPTION_KEY", "").strip()
+    if env_key:
+        key = env_key.encode()
+    else:
+        key_path = Path(settings.BASE_DIR) / "backup_key.bin"
+        if not key_path.exists():
+            raise CommandError(
+                f"{archive_path.name} is encrypted but no key is available. Set "
+                "BACKUP_ENCRYPTION_KEY in the environment or restore backup_key.bin."
+            )
+        key = key_path.read_bytes().strip()
+
+    try:
+        decrypted = Fernet(key).decrypt(archive_path.read_bytes())
+    except InvalidToken as exc:
+        raise CommandError(f"Decryption failed for {archive_path.name}: wrong or corrupt key.") from exc
+
+    decrypted_path = archive_path.with_name(archive_path.name.removesuffix(".enc"))
+    decrypted_path.write_bytes(decrypted)
+    return decrypted_path
+
 
 class Command(BaseCommand):
     help = "Restores the platform database and media assets from a verified backup archive."
@@ -53,9 +88,14 @@ class Command(BaseCommand):
         if archive_path_arg:
             archive_path = Path(archive_path_arg)
         else:
-            # Find latest archive
+            # Find latest archive — match both plain (.tar.gz) and encrypted
+            # (.tar.gz.enc) files, ignoring the .sha256 sidecars.
             archives = sorted(
-                backups_dir.glob("backup_venepheth_platform_*.tar.gz"),
+                (
+                    p
+                    for p in backups_dir.glob("backup_venepheth_platform_*.tar.gz*")
+                    if p.suffix != ".sha256" and p.is_file()
+                ),
                 key=lambda p: p.stat().st_mtime,
                 reverse=True,
             )
@@ -68,7 +108,8 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.NOTICE(f"[*] Preparing restore from: {archive_path.name}"))
 
-        # 1. Checksum verification
+        # 1. Checksum verification — MUST run on the on-disk bytes, i.e. before
+        # decryption (the .sha256 sidecar hashes the encrypted archive).
         checksum_path = archive_path.with_name(f"{archive_path.name}.sha256")
         if checksum_path.exists() and not skip_checksum:
             self.stdout.write("    -> Verifying SHA256 integrity checksum...")
@@ -98,6 +139,14 @@ class Command(BaseCommand):
             if prompt.strip().lower() != "yes":
                 self.stdout.write(self.style.WARNING("Restore cancelled by user."))
                 return
+
+        # 2. Decrypt (after integrity verification, before extraction).
+        if archive_path.name.endswith(".enc"):
+            if not HAS_CRYPTOGRAPHY:
+                raise CommandError("Archive is encrypted but cryptography is not installed.")
+            self.stdout.write("    -> Decrypting encrypted archive...")
+            archive_path = _decrypt_archive(archive_path)
+            self.stdout.write(self.style.SUCCESS("    -> Decryption complete."))
 
         staging_dir = backups_dir / f"restore_staging_{archive_path.stem}"
         staging_dir.mkdir(parents=True, exist_ok=True)

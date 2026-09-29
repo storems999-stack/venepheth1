@@ -56,8 +56,11 @@ def article_detail(request, slug):
     """Blog article detail."""
     article = get_object_or_404(Article, slug=slug, status=Article.Status.PUBLISHED)
 
-    # Increment view count (atomic — avoids lost-update races)
+    # Increment view count (atomic — avoids lost-update races). update() does not
+    # refresh the instance, so bump the attribute too or the template renders a
+    # count one behind.
     Article.objects.filter(pk=article.pk).update(view_count=F("view_count") + 1)
+    article.view_count += 1
 
     # Related articles
     related = (

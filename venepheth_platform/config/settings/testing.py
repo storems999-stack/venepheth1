@@ -57,3 +57,9 @@ LOGGING = {"version": 1, "disable_existing_loggers": True}
 
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
+
+# Metrics must be open in tests and independent of a developer's local .env —
+# base.py reads METRICS_TOKEN from the environment, and a truthy token makes
+# /metrics/ return 403 without the X-Metrics-Token header.
+METRICS_TOKEN = ""
+METRICS_REQUIRE_TOKEN = False

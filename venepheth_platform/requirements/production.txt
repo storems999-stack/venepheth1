@@ -13,4 +13,4 @@ sentry-sdk[django]==2.19.2       # Error tracking (optional free tier)
 django-prometheus==2.3.1         # Prometheus metrics endpoint
 
 # ─── Security ──────────────────────────────────────────────────────────
-cryptography==44.0.0
+# cryptography already in base.txt for backup encryption support

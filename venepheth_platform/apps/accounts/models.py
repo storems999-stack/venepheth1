@@ -77,7 +77,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     # ─── Status ─────────────────────────────────────────────────────────────────
     is_active = models.BooleanField(_("active"), default=True)
     is_staff = models.BooleanField(_("staff status"), default=False)
-    email_verified = models.BooleanField(_("email verified"), default=False)
 
     # ─── Security ───────────────────────────────────────────────────────────────
     require_mfa = models.BooleanField(
@@ -118,6 +117,24 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.first_name or self.email.split("@")[0]
 
     # ─── Role Helpers ───────────────────────────────────────────────────────────
+    @property
+    def email_verified(self):
+        """Whether this user's email is verified, per allauth.
+
+        This used to be a BooleanField that nothing ever wrote to, so the UI
+        always reported "unverified" even after a successful verification.
+        allauth's actual source of truth is the ``account.EmailAddress`` row,
+        so read that instead. Unverified users cannot log in at all while
+        ACCOUNT_EMAIL_VERIFICATION = "mandatory".
+        """
+        try:
+            from allauth.account.models import EmailAddress
+
+            return EmailAddress.objects.filter(user=self, email=self.email, verified=True).exists()
+        except Exception:
+            # Never let a verification lookup break authentication or a page render.
+            return False
+
     @property
     def is_superadmin(self):
         return self.role == self.Role.SUPERADMIN

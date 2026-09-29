@@ -101,7 +101,7 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.settings.testing
         run: |
           coverage run -m pytest tests/ -v --tb=short
-          coverage report --fail-under=60
+          coverage report --fail-under=80
           coverage xml
 
       - name: Upload coverage report

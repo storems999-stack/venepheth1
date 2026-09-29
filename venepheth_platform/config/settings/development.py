@@ -8,7 +8,9 @@ import os
 from .base import *
 
 DEBUG = True
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]", "testserver", ".trycloudflare.com", ".workers.dev"]
+# 0.0.0.0 is a Host-header allowlist entry (dev runs behind a tunnel/Docker), not a
+# socket bind — bandit B104 is a false positive here. Dev-only; production uses env.
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]", "testserver", ".trycloudflare.com", ".workers.dev"]  # nosec B104
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",

@@ -1,0 +1,89 @@
+# ─── Environment & Secrets ──────────────────────────────────────────────
+.env
+.env.prod
+# .env.example and .env.prod.example are committed as templates
+.env.local
+
+# ─── Database ─────────────────────────────────────────────────────────────
+db.sqlite3
+db.sqlite3-journal
+*.sqlite3
+*.sqlite3-journal
+backups/*.sqlite3
+
+# ─── Media & Uploads ────────────────────────────────────────────────────
+media/
+mediafiles/
+
+# ─── Static ───────────────────────────────────────────────────────────────
+staticfiles/
+static/
+!.gitkeep
+
+# ─── Python ───────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+venv.bak/
+.venv.bak/
+
+# ─── IDE ──────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ─── Coverage & Testing ───────────────────────────────────────────────────
+.coverage
+htmlcov/
+.pytest_cache/
+.coverage/
+
+# ─── Node Modules ─────────────────────────────────────────────────────────
+my-worker/node_modules/
+
+# ─── Logs ─────────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ─── Docker ───────────────────────────────────────────────────────────────
+docker-compose.override.yml
+docker-compose.prod.yml.bak
+
+# ─── Backup Staging ───────────────────────────────────────────────────────
+backups/staging_*/
+backups/backup_*.tar.gz
+backups/backup_*.sha256
+!backups/.gitkeep
+
+# ─── OS ───────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Rust ─────────────────────────────────────────────────────────────────
+Cargo.lock
+target/
+
+# ─── Migration files (keep only the __init__.py) ────────────────────────
+# Note: DO NOT ignore migration files in apps/*/migrations/ except __init__.py
+# The initial migration is tracked in git for reproducibility
+
+# ─── Backup encryption key ────────────────────────────────────────────────
+backup_key.bin
+backup_key.enc
+
+# ─── Temp files ───────────────────────────────────────────────────────────
+*.tmp
+*.bak
+*.swp
+
+# ─── Coverage ─────────────────────────────────────────────────────────────
+coverage.xml
+.pytest_cache/
+.rbcov/

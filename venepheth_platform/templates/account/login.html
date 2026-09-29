@@ -41,6 +41,7 @@
         {% endif %}
     </div>
 
+    {% if form.password %}
     <div>
         <div class="flex items-center justify-between mb-1">
             <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium text-gray-300">
@@ -54,7 +55,7 @@
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <i data-lucide="lock" class="w-4 h-4 text-gray-500"></i>
             </div>
-            <input type="password" name="{{ form.password.html_name }}" id="{{ form.password.id_for_label }}" 
+            <input type="password" name="password" id="{{ form.password.id_for_label }}"
                    class="w-full bg-navy-900 border border-white/10 rounded-xl py-2.5 pl-10 pr-3 text-white focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500 placeholder-gray-600 transition-colors"
                    placeholder="Enter your password" required>
         </div>
@@ -62,6 +63,7 @@
         <p class="text-red-400 text-xs mt-1">{{ form.password.errors|striptags }}</p>
         {% endif %}
     </div>
+    {% endif %}
 
     <div class="flex items-center">
         <input type="checkbox" name="{{ form.remember.html_name }}" id="{{ form.remember.id_for_label }}" 

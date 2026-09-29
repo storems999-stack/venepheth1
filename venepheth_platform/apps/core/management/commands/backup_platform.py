@@ -16,8 +16,59 @@ from pathlib import Path
 
 from django.conf import settings
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
+
+try:
+    from cryptography.fernet import Fernet
+
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
+
+
+def _get_encryption_key():
+    """Resolve the Fernet key used to encrypt/decrypt backup archives.
+
+    Resolution order:
+      1. ``BACKUP_ENCRYPTION_KEY`` environment variable (canonical — what
+         .env.prod and scripts/backup.sh set, and what operators store
+         offline per DISASTER_RECOVERY.md §3).
+      2. ``<BASE_DIR>/backup_key.bin`` (git-ignored, for local use only).
+
+    Never auto-generates. A key minted as a side effect of a backup run can be
+    lost with the container and make every existing archive permanently
+    unrecoverable. Provision one explicitly with ``manage.py generate_backup_key``.
+    """
+    env_key = os.environ.get("BACKUP_ENCRYPTION_KEY", "").strip()
+    if env_key:
+        key = env_key.encode()
+        try:
+            Fernet(key)
+        except (ValueError, TypeError) as exc:
+            raise CommandError(
+                "BACKUP_ENCRYPTION_KEY is not a valid Fernet key. Generate one with:\n"
+                '  python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"'
+            ) from exc
+        return key
+
+    key_path = Path(settings.BASE_DIR) / "backup_key.bin"
+    if key_path.exists():
+        return key_path.read_bytes().strip()
+
+    raise CommandError(
+        "No backup encryption key available. Set BACKUP_ENCRYPTION_KEY in the "
+        "environment (recommended — see .env.prod.example) or run "
+        "`manage.py generate_backup_key`. Refusing to encrypt: an auto-generated "
+        "key would be lost with this container and make every backup unrecoverable."
+    )
+
+
+def _encrypt_file(filepath: Path, key: bytes):
+    """Encrypt a file in place using Fernet (AES-128-CBC + HMAC-SHA256)."""
+    if not HAS_CRYPTOGRAPHY:
+        raise CommandError("cryptography is not installed; cannot encrypt backups.")
+    filepath.write_bytes(Fernet(key).encrypt(filepath.read_bytes()))
 
 
 class Command(BaseCommand):
@@ -40,6 +91,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Skip archiving uploaded media files",
         )
+        parser.add_argument(
+            "--encrypt",
+            action="store_true",
+            help="Encrypt the backup archive with AES-256",
+        )
 
     def handle(self, *args, **options):
         output_dir = Path(options["output_dir"])
@@ -47,6 +103,11 @@ class Command(BaseCommand):
         os.chmod(output_dir, 0o700)
         keep_days = options["keep_days"]
         include_media = not options["no_media"]
+        encrypt = options.get("encrypt", False)
+        # Never auto-generate here — a key minted as a side effect of a backup
+        # run can vanish with the container and orphan every archive. Operators
+        # provision one explicitly: `manage.py generate_backup_key`.
+        key = _get_encryption_key() if encrypt else None
 
         timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
         staging_dir = output_dir / f"staging_{timestamp}"
@@ -133,7 +194,17 @@ class Command(BaseCommand):
                 for item in staging_dir.iterdir():
                     tar.add(str(item), arcname=item.name)
 
-            # 6. Calculate SHA256 Checksum
+            # 6. Encrypt archive if requested (in place, then rename to *.enc)
+            if encrypt and key:
+                self.stdout.write("    -> Encrypting backup archive with AES-256...")
+                encrypted_path = archive_path.with_name(archive_path.name + ".enc")
+                _encrypt_file(archive_path, key)  # rewrites archive_path as ciphertext
+                archive_path.rename(encrypted_path)
+                archive_path = encrypted_path
+                checksum_path = output_dir / f"{archive_path.name}.sha256"
+                self.stdout.write(self.style.SUCCESS("    -> Encryption complete."))
+
+            # 7. Calculate SHA256 Checksum (over the final on-disk bytes)
             self.stdout.write("    -> Calculating SHA256 integrity checksum...")
             sha256 = hashlib.sha256()
             with open(archive_path, "rb") as f:
@@ -142,7 +213,7 @@ class Command(BaseCommand):
             checksum_str = sha256.hexdigest()
 
             with open(checksum_path, "w", encoding="utf-8") as f:
-                f.write(f"{checksum_str}  {archive_name}\n")
+                f.write(f"{checksum_str}  {archive_path.name}\n")
 
             # 7. Restrict permissions: archives hold a full DB dump (owner-only).
             os.chmod(archive_path, 0o600)
@@ -168,8 +239,11 @@ class Command(BaseCommand):
     def _prune_old_backups(self, output_dir: Path, keep_days: int):
         cutoff = time.time() - (keep_days * 86400)
         pruned_count = 0
-        for f in output_dir.glob("backup_venepheth_platform_*.tar.gz"):
-            if f.is_file() and f.stat().st_mtime < cutoff:
+        # Match both plain (.tar.gz) and encrypted (.tar.gz.enc) archives.
+        for f in output_dir.glob("backup_venepheth_platform_*.tar.gz*"):
+            if f.suffix == ".sha256" or not f.is_file():
+                continue
+            if f.stat().st_mtime < cutoff:
                 f.unlink(missing_ok=True)
                 f.with_name(f"{f.name}.sha256").unlink(missing_ok=True)
                 pruned_count += 1

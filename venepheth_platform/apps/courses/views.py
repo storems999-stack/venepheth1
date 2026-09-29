@@ -57,10 +57,16 @@ def course_detail(request, slug):
     """Course detail page (public courses only)."""
     course = get_object_or_404(Course, slug=slug, status="published", visibility=Course.Visibility.PUBLIC)
     modules = course.modules.filter(is_visible=True).prefetch_related(
-        Prefetch("resources", queryset=CourseResource.objects.filter(visibility="public"))
+        Prefetch("resources", queryset=CourseResource.objects.filter(visibility=CourseResource.Visibility.PUBLIC))
     )
     outcomes = course.outcomes.all()
-    resources = course.resources.filter(visibility="public")
+    # Sidebar resources must be module-less only. That fixes two bugs at once:
+    #  - resources attached to a hidden module were listed here (leaking their
+    #    title/external_url) even though the download view 404s on
+    #    module.is_visible=False;
+    #  - module-owned resources were ALSO rendered by the `modules` prefetch
+    #    above, so every module file appeared twice with two download buttons.
+    resources = course.resources.filter(visibility=CourseResource.Visibility.PUBLIC, module__isnull=True)
     announcements = course.announcements.filter(status="published").order_by("-is_pinned", "-published_at")[:5]
 
     return render(

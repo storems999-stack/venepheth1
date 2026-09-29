@@ -29,10 +29,25 @@ This document defines the recovery procedures for the Venepheth Academic Platfor
 | 2nd  | Secondary server / external drive | Daily (pg_dump + media) | 30 days |
 | 3rd  | Off-site (cloud / remote location) | Weekly archive (see ⚠️ below) | 90 days |
 
-> ⚠️ **TODO (pre-launch):** archives are currently **unencrypted** tarballs with owner-only
-> (0600) permissions. Before storing off-site, encrypt (e.g. `age`/`gpg` with an
-> offline key) and document the key location here. The 2nd/3rd copies do not exist
-> yet — set up the transfer job before going live, otherwise RPO/RTO below are unmet.
+> ✅ **Encryption (implemented):** `backup_platform --encrypt` produces a Fernet
+> (AES-128-CBC + HMAC-SHA256) `.tar.gz.enc` archive, and the `.sha256` sidecar
+> hashes the **encrypted** bytes, so `restore_platform` verifies integrity
+> *before* decrypting. `scripts/backup.sh` passes `--encrypt` and refuses to run
+> unless `BACKUP_ENCRYPTION_KEY` is set.
+>
+> 🔑 **Key custody (do this before the first backup):**
+> ```bash
+> python manage.py generate_backup_key          # prints a key
+> python manage.py generate_backup_key --write  # also writes backup_key.bin (0600)
+> ```
+> The key is **never auto-generated** by a backup run — a key silently minted
+> inside a container disappears with that container and orphans every archive.
+> Put the value in `BACKUP_ENCRYPTION_KEY` in `.env.prod`, and keep a printed
+> copy **offline and separate from the backups**. Without it, encrypted archives
+> are unrecoverable.
+>
+> ⚠️ **TODO (pre-launch):** the 2nd/3rd copies above do not exist yet — set up
+> the transfer job before going live, otherwise the RPO/RTO targets are unmet.
 
 ### What is Backed Up
 
@@ -41,15 +56,22 @@ This document defines the recovery procedures for the Venepheth Academic Platfor
 - **Configuration** — `docker-compose.prod.yml`, Nginx config, and (separately, encrypted)
   the production `.env` — never the backup archive itself
 - **SSL certificates** — Let's Encrypt certs
+- **Backup encryption key** — offline only, never inside a backup archive
 
 ### Backup Scripts
 
 ```bash
-# Daily backup (run via cron at 02:00)
+# Daily backup (run via cron at 02:00). Requires BACKUP_ENCRYPTION_KEY in the env.
 0 2 * * * /app/scripts/backup.sh >> /var/log/backup.log 2>&1
 
-# Verify latest backup monthly (checksum + archive integrity, no destructive restore)
-0 9 1 * * python /app/manage.py restore_platform --archive $(ls -t /app/backups/backup_*.tar.gz | head -1) --verify-only >> /var/log/restore-test.log 2>&1
+# Verify latest backup monthly (checksum + archive integrity, no destructive restore).
+# Works against both plain and .enc archives; omit --archive to pick the newest.
+0 9 1 * * python /app/manage.py restore_platform --verify-only >> /var/log/restore-test.log 2>&1
+```
+
+```bash
+# Restore (auto-detects and decrypts .enc archives)
+./scripts/restore.sh /app/backups/backup_venepheth_platform_<ts>.tar.gz.enc
 ```
 
 > ⚠️ **CRITICAL**: Test restore at least once per month. A backup that has never been tested is not a backup.
@@ -89,8 +111,8 @@ docker compose -f docker-compose.prod.yml logs db --tail=50
 # Restart DB
 docker compose -f docker-compose.prod.yml restart db
 
-# If data is corrupt — restore from backup (script takes the archive path)
-./scripts/restore.sh /app/backups/<latest-backup>.tar.gz
+# If data is corrupt — restore from backup (accepts plain or .enc archives)
+BACKUP_ENCRYPTION_KEY=... ./scripts/restore.sh /app/backups/backup_venepheth_platform_<ts>.tar.gz.enc
 ```
 
 ---

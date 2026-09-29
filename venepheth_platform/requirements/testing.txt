@@ -4,5 +4,6 @@
 pytest==8.3.4
 pytest-django==4.9.0
 coverage==7.6.10
+coverage-enable-subprocess==1.0.0
 factory-boy==3.3.1
 Faker==33.1.0

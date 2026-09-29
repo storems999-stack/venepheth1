@@ -81,8 +81,10 @@ class SecurityEvent(models.Model):
         if ip:
             event.ip_address = ip
         elif request:
-            x_forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-            event.ip_address = x_forwarded.split(",")[0].strip() if x_forwarded else request.META.get("REMOTE_ADDR")
+            # Trust-aware: never read X-Forwarded-For from an untrusted peer.
+            from apps.core.utils import get_client_ip
+
+            event.ip_address = get_client_ip(request)
         if request:
             event.user_agent = request.META.get("HTTP_USER_AGENT", "")[:512]
             event.request_path = request.path[:255]

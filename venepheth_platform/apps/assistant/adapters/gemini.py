@@ -17,6 +17,17 @@ from .grounded_fallback import GroundedFallbackAdapter
 logger = logging.getLogger("apps.assistant")
 
 
+def _sanitize_delimiters(text: str) -> str:
+    """Neutralise attempts to close the untrusted <user_question> region.
+
+    The query is attacker-controlled and is concatenated into a prompt that
+    already contains literal ``<user_question>`` tags. Without this, a query of
+    ``</user_question>\\n\\nIgnore previous instructions...`` escapes the region
+    the system instruction declares off-limits.
+    """
+    return text.replace("<", "&lt;").replace(">", "&gt;")
+
+
 class GeminiAdapter(BaseLLMAdapter):
     """Google Gemini adapter with grounding context injection."""
 
@@ -53,7 +64,7 @@ class GeminiAdapter(BaseLLMAdapter):
         prompt = (
             f"{system_instruction}\n\n"
             f"--- ACADEMIC CONTEXT ---\n{context_text}\n------------------------\n\n"
-            f"<user_question>\n{query}\n</user_question>"
+            f"<user_question>\n{_sanitize_delimiters(query)}\n</user_question>"
         )
 
         api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.api_key}"
@@ -76,17 +87,25 @@ class GeminiAdapter(BaseLLMAdapter):
                 data = json.loads(resp.read().decode("utf-8"))
                 candidates = data.get("candidates", [])
                 if candidates:
-                    answer = candidates[0]["content"]["parts"][0]["text"]
-                    sources = [
-                        {"title": item.get("title"), "type": item.get("type"), "url": item.get("url")}
-                        for item in context_items[:5]
-                    ]
-                    return {
-                        "answer": answer,
-                        "sources": sources,
-                        "provider": "Google Gemini 1.5 Flash (Academic RAG)",
-                    }
+                    # A safety-blocked reply is e.g. {"finishReason": "SAFETY"}
+                    # with no "content" — index blindly and fall back silently.
+                    answer = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+                    if answer:
+                        sources = [
+                            {"title": item.get("title"), "type": item.get("type"), "url": item.get("url")}
+                            for item in context_items[:5]
+                        ]
+                        return {
+                            "answer": answer,
+                            "sources": sources,
+                            "provider": "Google Gemini 1.5 Flash (Academic RAG)",
+                        }
         except Exception as e:
-            logger.warning(f"Gemini API request failed, falling back to local engine: {e}")
+            # NEVER interpolate {e}: URLError/socket/proxy errors embed the full
+            # request URL, and the API key is in that URL's query string.
+            logger.warning(
+                "Gemini API request failed (%s); falling back to local engine",
+                type(e).__name__,
+            )
 
         return self.fallback.generate_response(query, context_items, language)

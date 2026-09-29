@@ -145,11 +145,13 @@
                         <i data-lucide="list" class="w-5 h-5 text-gold-400"></i>
                         <span>{% trans "Course Modules" %}</span>
                     </h2>
-                    <div class="space-y-3" x-data="{ openModule: null }">
+                    <div class="space-y-3">
                         {% for module in modules %}
                         <div class="border border-white/10 rounded-xl overflow-hidden">
-                            <button 
-                                @click="openModule = openModule === {{ forloop.counter }} ? null : {{ forloop.counter }}"
+                            <button
+                                type="button"
+                                data-accordion-btn="module-panel-{{ forloop.counter }}"
+                                aria-expanded="false"
                                 class="w-full flex items-center justify-between p-4 text-left hover:bg-white/3 transition-colors"
                             >
                                 <div class="flex items-center space-x-3">
@@ -158,10 +160,9 @@
                                     </span>
                                     <span class="text-white font-medium text-sm">{{ module.title }}</span>
                                 </div>
-                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 transition-transform" 
-                                   :class="openModule === {{ forloop.counter }} ? 'rotate-180' : ''"></i>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 transition-transform" data-accordion-chevron></i>
                             </button>
-                            <div x-show="openModule === {{ forloop.counter }}" x-cloak class="px-4 pb-4 border-t border-white/5">
+                            <div id="module-panel-{{ forloop.counter }}" hidden class="px-4 pb-4 border-t border-white/5">
                                 {% if module.description %}
                                 <p class="text-gray-400 text-sm mt-3 leading-relaxed">{{ module.description }}</p>
                                 {% endif %}

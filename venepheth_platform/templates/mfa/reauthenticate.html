@@ -1,0 +1,39 @@
+{% extends "account/base_reauthenticate.html" %}
+{% load i18n %}
+
+{% block reauthenticate_content %}
+<p class="text-gray-400 text-sm mb-5">{% trans "Enter an authenticator code:" %}</p>
+
+<form method="POST" action="{% url 'mfa_reauthenticate' %}" class="space-y-5">
+    {% csrf_token %}
+    {{ redirect_field }}
+
+    {% if form.non_field_errors %}
+    <div class="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm mb-4">
+        {{ form.non_field_errors|striptags }}
+    </div>
+    {% endif %}
+
+    <div>
+        <label for="id_code" class="block text-sm font-medium text-gray-300 mb-1">
+            {% trans "Authenticator Code" %}
+        </label>
+        <input type="text"
+               name="code"
+               id="id_code"
+               maxlength="16"
+               inputmode="numeric"
+               autocomplete="one-time-code"
+               required autofocus
+               placeholder="000000"
+               class="w-full text-center tracking-[0.5em] text-xl font-mono bg-navy-900 border border-white/10 rounded-xl py-2.5 px-3 text-white focus:outline-none focus:border-gold-500 focus:ring-1 focus:ring-gold-500 placeholder-gray-600 transition-colors">
+        {% if form.code.errors %}
+        <p class="text-red-400 text-xs mt-1">{{ form.code.errors|striptags }}</p>
+        {% endif %}
+    </div>
+
+    <button type="submit" class="w-full bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-gold-500/20">
+        {% trans "Confirm" %}
+    </button>
+</form>
+{% endblock %}

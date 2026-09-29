@@ -155,8 +155,10 @@ class AuditLog(models.Model):
         if ip:
             entry.ip_address = ip
         elif request and hasattr(request, "META"):
-            x_forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-            entry.ip_address = x_forwarded.split(",")[0].strip() if x_forwarded else request.META.get("REMOTE_ADDR")
+            # Trust-aware: never read X-Forwarded-For from an untrusted peer.
+            from apps.core.utils import get_client_ip
+
+            entry.ip_address = get_client_ip(request)
 
         if request:
             if hasattr(request, "META"):

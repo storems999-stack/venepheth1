@@ -17,4 +17,6 @@ def site_settings(request):
         "DEBUG": settings.DEBUG,
         "CURRENT_YEAR": timezone.now().year,
         "global_profile": profile,
+        "GOOGLE_ANALYTICS_ID": getattr(settings, "GOOGLE_ANALYTICS_ID", None),
+        "GOOGLE_SITE_VERIFICATION": getattr(settings, "GOOGLE_SITE_VERIFICATION", None),
     }

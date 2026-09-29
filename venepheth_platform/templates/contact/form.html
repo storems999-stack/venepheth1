@@ -29,15 +29,14 @@
             <!-- Contact Form -->
             <div id="contact-form-container">
                 <h2 class="text-xl font-bold text-white mb-6">{% trans "Send a Message" %}</h2>
-                <form 
-                    method="post" 
+                <form
+                    method="post"
                     action="{% url 'contact:form' %}"
                     hx-post="{% url 'contact:form' %}"
                     hx-target="#contact-form-container"
                     hx-swap="outerHTML"
                     class="space-y-5"
-                    x-data="{ submitting: false }"
-                    @submit="submitting = true"
+                    data-contact-form
                 >
                     {% csrf_token %}
                     
@@ -126,14 +125,14 @@
                         {% endif %}
                     </div>
                     
-                    <button 
+                    <button
                         type="submit"
-                        :disabled="submitting"
+                        data-contact-submit
                         class="w-full flex items-center justify-center space-x-2 bg-gold-500 hover:bg-gold-400 disabled:opacity-70 text-navy-950 font-semibold px-6 py-4 rounded-xl transition-all shadow-lg shadow-gold-500/20"
                     >
-                        <i data-lucide="send" class="w-5 h-5" x-show="!submitting"></i>
-                        <i data-lucide="loader-2" class="w-5 h-5 animate-spin" x-show="submitting" x-cloak></i>
-                        <span x-text="submitting ? '{% trans "Sending..." %}' : '{% trans "Send Message" %}'">{% trans "Send Message" %}</span>
+                        <i data-lucide="send" class="w-5 h-5" data-contact-icon-send></i>
+                        <i data-lucide="loader-2" class="w-5 h-5 animate-spin hidden" data-contact-icon-loading></i>
+                        <span data-contact-label data-sending-label="{% trans 'Sending...' %}">{% trans "Send Message" %}</span>
                     </button>
                     
                     <p class="text-gray-600 text-xs text-center">

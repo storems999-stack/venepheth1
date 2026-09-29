@@ -59,8 +59,11 @@ def resource_detail(request, slug):
     if gate is not None:
         return gate
 
-    # Increment view count (atomic — avoids lost-update races)
+    # Increment view count (atomic — avoids lost-update races).
+    # queryset.update() does not refresh the in-memory instance, so bump the
+    # attribute too; otherwise the template renders a count one behind.
     Resource.objects.filter(pk=resource.pk).update(view_count=F("view_count") + 1)
+    resource.view_count += 1
 
     related = Resource.objects.filter(visibility=Resource.Visibility.PUBLIC).exclude(pk=resource.pk)
     if resource.category_id:

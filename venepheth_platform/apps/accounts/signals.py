@@ -16,17 +16,9 @@ from django.dispatch import receiver
 from django.utils import timezone
 
 from apps.accounts.models import CustomUser
+from apps.core.utils import get_client_ip
 
 logger = logging.getLogger("apps.audit")
-
-
-def get_client_ip(request):
-    if request is None:
-        return None
-    x_forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-    if x_forwarded:
-        return x_forwarded.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR")
 
 
 @receiver(user_logged_in)

@@ -116,7 +116,7 @@
                     {% endif %}
                     
                     <!-- Print Button -->
-                    <button onclick="window.print()" class="no-print flex items-center space-x-2 bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-300 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer" title="{% trans 'Print or Save as PDF' %}">
+                    <button type="button" data-print class="no-print flex items-center space-x-2 bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-300 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer" title="{% trans 'Print or Save as PDF' %}">
                         <i data-lucide="printer" class="w-4 h-4"></i>
                         <span>{% trans "Print CV" %}</span>
                     </button>

@@ -1,7 +1,15 @@
-{% extends "admin/index.html" %}
-{% load i18n static %}
+{% extends "admin/base_site.html" %}
+{% comment %}
+This file OVERRIDES django.contrib.admin's admin/index.html, so it must NOT
+extend "admin/index.html" — that resolves back to this same file (project
+TEMPLATES["DIRS"] is searched before APP_DIRS) and {{ block.super }} renders
+empty, leaving the dashboard with no link to any model changelist.
+Extend the (not overridden) base_site.html and include app_list.html instead.
+{% endcomment %}
+{% load i18n static admin_stats %}
 
 {% block content %}
+{% admin_dashboard as dashboard %}
 <div class="dashboard-header flex justify-between items-center mb-6 mt-4">
     <h1 class="text-3xl font-serif font-bold text-primary-900">Dashboard Overview</h1>
 </div>
@@ -10,27 +18,27 @@
 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Total Courses</div>
-        <div class="text-3xl font-bold text-primary-900">{{ dashboard_stats.courses|default:"0" }}</div>
+        <div class="text-3xl font-bold text-primary-900">{{ dashboard.stats.courses }}</div>
     </div>
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Publications</div>
-        <div class="text-3xl font-bold text-primary-900">{{ dashboard_stats.publications|default:"0" }}</div>
+        <div class="text-3xl font-bold text-primary-900">{{ dashboard.stats.publications }}</div>
     </div>
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-2">Active Students</div>
-        <div class="text-3xl font-bold text-primary-900">{{ dashboard_stats.students|default:"0" }}</div>
+        <div class="text-3xl font-bold text-primary-900">{{ dashboard.stats.students }}</div>
     </div>
     <div class="bg-white p-6 rounded-lg shadow-sm border-red-200 bg-red-50">
         <div class="text-red-700 text-sm font-bold uppercase tracking-wider mb-2">Security Events</div>
-        <div class="text-3xl font-bold text-red-700">{{ dashboard_stats.security_events|default:"0" }}</div>
-        <div class="text-xs text-red-600 mt-1">Requires attention</div>
+        <div class="text-3xl font-bold text-red-700">{{ dashboard.stats.security_events }}</div>
+        <div class="text-xs text-red-600 mt-1">Unresolved — requires attention</div>
     </div>
 </div>
 
 <div class="flex gap-8">
-    <!-- Original App List -->
+    <!-- Registered models (Django's own admin app list) -->
     <div class="w-2/3">
-        {{ block.super }}
+        {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
     </div>
     
     <!-- Sidebar / Recent Activity -->
@@ -41,10 +49,18 @@
             <div class="bg-primary-900 text-white px-4 py-3 font-bold text-sm uppercase tracking-wide">
                 Recent Activity
             </div>
-            <div class="p-4 space-y-4">
-                <div class="text-sm text-gray-600 italic text-center py-4">
-                    Activity stream integrated via AuditLog
+            <div class="p-4 space-y-3">
+                {% for log in dashboard.recent_logs %}
+                <div class="text-sm border-b border-gray-100 pb-2 last:border-0">
+                    <span class="font-semibold">{{ log.get_action_display }}</span>
+                    <span class="text-gray-500">— {{ log.user_email|default:log.user|default:"system" }}</span>
+                    <div class="text-xs text-gray-400">{{ log.timestamp|date:"d M Y H:i" }}</div>
                 </div>
+                {% empty %}
+                <div class="text-sm text-gray-600 italic text-center py-4">
+                    No recent activity recorded.
+                </div>
+                {% endfor %}
             </div>
             <div class="bg-gray-50 px-4 py-2 border-t border-gray-200 text-right">
                 <a href="{% url 'admin:audit_auditlog_changelist' %}" class="text-accent-500 hover:text-accent-600 text-sm font-medium">View Full Audit Log &rarr;</a>
@@ -56,10 +72,18 @@
             <div class="bg-red-700 text-white px-4 py-3 font-bold text-sm uppercase tracking-wide">
                 Security Alerts
             </div>
-            <div class="p-4 space-y-4">
-                <div class="text-sm text-gray-600 italic text-center py-4">
-                    System secure. No recent critical alerts.
+            <div class="p-4 space-y-3">
+                {% for event in dashboard.critical_events %}
+                <div class="text-sm border-b border-gray-100 pb-2 last:border-0">
+                    <span class="font-semibold">{{ event.get_event_type_display }}</span>
+                    <span class="text-xs font-bold uppercase text-red-600 ml-1">{{ event.severity }}</span>
+                    <div class="text-xs text-gray-400">{{ event.timestamp|date:"d M Y H:i" }} &middot; {{ event.ip_address|default:"?" }}</div>
                 </div>
+                {% empty %}
+                <div class="text-sm text-gray-600 italic text-center py-4">
+                    System secure. No unresolved high/critical alerts.
+                </div>
+                {% endfor %}
             </div>
             <div class="bg-gray-50 px-4 py-2 border-t border-gray-200 text-right">
                 <a href="{% url 'admin:security_securityevent_changelist' %}" class="text-red-700 hover:text-red-800 text-sm font-medium">Review Security Events &rarr;</a>

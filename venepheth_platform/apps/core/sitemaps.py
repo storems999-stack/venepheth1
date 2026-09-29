@@ -5,7 +5,8 @@ from django.urls import reverse
 
 from apps.blog.models import Article
 from apps.courses.models import Course
-from apps.research.models import ResearchProject
+from apps.research.models import ResearchProject, Publication
+from apps.resources.models import Resource
 
 
 class StaticViewSitemap(Sitemap):
@@ -47,6 +48,28 @@ class CourseSitemap(Sitemap):
 
     def items(self):
         return Course.objects.filter(status="published", visibility="public")
+
+    def lastmod(self, obj):
+        return obj.updated_at
+
+
+class PublicationSitemap(Sitemap):
+    changefreq = "monthly"
+    priority = 0.7
+
+    def items(self):
+        return Publication.objects.filter(status="published")
+
+    def lastmod(self, obj):
+        return obj.updated_at
+
+
+class ResourceSitemap(Sitemap):
+    changefreq = "monthly"
+    priority = 0.6
+
+    def items(self):
+        return Resource.objects.filter(visibility="public")
 
     def lastmod(self, obj):
         return obj.updated_at

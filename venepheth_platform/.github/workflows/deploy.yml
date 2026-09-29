@@ -113,6 +113,12 @@ jobs:
 
             echo "✅ Deployment successful!"
 
+      - name: Certbot SSL renewal (cron-safe wrapper)
+        if: always()
+        run: |
+          # Renew certs safely — do not block deployment
+          docker compose -f docker-compose.prod.yml run --rm certbot renew --quiet || true
+
       - name: Notify on failure
         if: failure()
         run: echo "🚨 Deployment failed for ${{ github.sha }}. Check logs."
