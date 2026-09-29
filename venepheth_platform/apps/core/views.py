@@ -72,7 +72,11 @@ def dashboard(request):
 
         return redirect("core:home")
 
+    from django.db.models import Q
+    from django.utils import timezone
+
     from apps.analytics.models import PageView
+    from apps.assistant.models import KnowledgeDocument
     from apps.audit.models import AuditLog
     from apps.blog.models import Article
     from apps.contact.models import ContactMessage
@@ -115,6 +119,19 @@ def dashboard(request):
     # Recent Security Events
     recent_security_events = SecurityEvent.objects.order_by("-timestamp")[:6]
 
+    # AI Knowledge Box health (read-only — query contents are never logged)
+    kb_total = KnowledgeDocument.objects.count()
+    kb_active = KnowledgeDocument.objects.filter(is_active=True).count()
+    kb_needs_attention = KnowledgeDocument.objects.filter(is_active=True).filter(
+        Q(content="") & Q(file_text="") & Q(summary="")
+    ).count()
+    kb_recent = KnowledgeDocument.objects.order_by("-updated_at")[:5]
+    assistant_blocks_7d = SecurityEvent.objects.filter(
+        event_type=SecurityEvent.EventType.SUSPICIOUS_ACTIVITY,
+        description__icontains="Assistant anti-bot",
+        timestamp__gte=timezone.now() - timezone.timedelta(days=7),
+    ).count()
+
     # System Health check
     db_ok = True
     try:
@@ -153,6 +170,13 @@ def dashboard(request):
         "recent_inquiries": recent_inquiries,
         "recent_audit_logs": recent_audit_logs,
         "recent_security_events": recent_security_events,
+        "assistant": {
+            "kb_total": kb_total,
+            "kb_active": kb_active,
+            "kb_needs_attention": kb_needs_attention,
+            "kb_recent": kb_recent,
+            "blocks_7d": assistant_blocks_7d,
+        },
         "system_status": {
             "database": db_ok,
             "cache": cache_ok,

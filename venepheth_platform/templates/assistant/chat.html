@@ -125,6 +125,9 @@
             <!-- Input Area -->
             <div class="p-4">
                 <form @submit.prevent="sendMessage(inputQuery)" class="flex items-center space-x-3">
+                    <!-- Anti-bot honeypot: real users never see/fill this -->
+                    <input type="text" name="website_url_hp" x-model="honeypot" tabindex="-1" autocomplete="off"
+                           aria-hidden="true" style="display:none !important; position:absolute !important; left:-9999px !important;">
                     <input
                         x-model="inputQuery"
                         type="text"
@@ -149,17 +152,23 @@
                 </form>
                 <p class="text-gray-600 text-xs mt-2 text-center">
                     Responses are grounded in academic records. Max 500 characters per query.
+                    {% blocktrans %}Quota: {{ quota_note }}.{% endblocktrans %}
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'account_login' %}?next={% url 'assistant:chat' %}" class="text-gold-400 hover:text-gold-300 underline">{% trans "Log in for 3× quota." %}</a>
+                    {% endif %}
                 </p>
             </div>
         </div>
     </div>
 </div>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 function academicAssistant() {
     return {
         messages: [],
         inputQuery: '',
+        honeypot: '',
+        pageLoadedAt: Date.now(),
         isLoading: false,
         msgCounter: 0,
 
@@ -189,7 +198,7 @@ function academicAssistant() {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken,
                     },
-                    body: JSON.stringify({ query: query, language: lang }),
+                    body: JSON.stringify({ query: query, language: lang, website_url_hp: this.honeypot || '', loaded_at: this.pageLoadedAt }),
                 });
 
                 const data = await resp.json();
@@ -237,12 +246,17 @@ function academicAssistant() {
 
         markdownToHtml(md) {
             // Minimal safe Markdown → HTML conversion.
-            // Escape raw HTML first (answers may echo user input),
-            // then allow only http(s)/relative link targets.
+            // Escape raw HTML first (answers may echo user input), then allow
+            // only http(s)/relative link targets.
+            // Double quotes MUST be escaped too: link URLs are interpolated into
+            // href="…", so an unescaped " closes the attribute and injects a
+            // live event handler (e.g. [a](https://x/" onmouseover=alert`1`)).
             const escaped = md
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
             return escaped
                 .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
                 .replace(/\*([^*]+)\*/g, '<em>$1</em>')

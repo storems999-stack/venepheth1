@@ -87,6 +87,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     "apps.core.middleware.TrustedProxyMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "csp.middleware.CSPMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
@@ -236,12 +237,58 @@ AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1  # hours
 AXES_RESET_ON_SUCCESS = True
 
+# ─── Content Security Policy (enforcing, nonce-free by design) ─────────────────
+# All first-party JS lives in static/js/*.js so cached pages (blog/research/
+# courses lists) share byte-identical HTML — per-request nonces would break
+# on cache hits (stale nonce in HTML vs fresh nonce in header). Inline event
+# handlers are banned — UI actions go through the delegated listener in
+# static/js/site.js ([data-print], [data-reload], [data-copy],
+# form[data-confirm]). The two remaining nonced snippets (cv_print page,
+# parked assistant templates) sit on uncached views.
+# - style-src keeps 'unsafe-inline': required by the Tailwind Play CDN,
+#   which injects generated styles, and by style="" attributes.
+# - EXCLUDE_URL_PREFIXES: Django admin and DRF/Swagger ship extensive
+#   first-party inline scripts; sandboxing them is a separate project.
+from csp.constants import SELF as _CSP_SELF
+
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": [_CSP_SELF],
+        "script-src": [
+            _CSP_SELF,
+            "https://cdn.tailwindcss.com",
+            "https://unpkg.com",
+        ],
+        "style-src": [
+            _CSP_SELF,
+            "'unsafe-inline'",
+            "https://fonts.googleapis.com",
+        ],
+        "font-src": [_CSP_SELF, "https://fonts.gstatic.com", "data:"],
+        "img-src": [_CSP_SELF, "data:", "https:"],
+        "connect-src": [_CSP_SELF],
+        "frame-ancestors": ["'none'"],
+        "form-action": [_CSP_SELF],
+        "base-uri": [_CSP_SELF],
+        "object-src": ["'none'"],
+    },
+    "EXCLUDE_URL_PREFIXES": ["/api/", "/secure-admin/"],
+}
+
 # ─── Django Allauth ───────────────────────────────────────────────────────────
 # Public registration CLOSED — admins create accounts (see apps/accounts/adapter.py).
 ACCOUNT_ADAPTER = "apps.accounts.adapter.ClosedSignupAdapter"
 ACCOUNT_LOGIN_METHODS = {"email"}
-ACCOUNT_SIGNUP_FIELDS = ["email*"]
+# NOTE: password1 must stay in SIGNUP_FIELDS — allauth deletes the login
+# password field when it's absent (_setup_password_field), which silently
+# breaks /accounts/login/ (renders name="" so no password is posted).
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*"]
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+# Do NOT set ACCOUNT_AUTHENTICATION_METHOD / ACCOUNT_USERNAME_REQUIRED /
+# ACCOUNT_EMAIL_REQUIRED. allauth 65.19 deprecates all three and derives them
+# from ACCOUNT_LOGIN_METHODS + ACCOUNT_SIGNUP_FIELDS above, which already
+# declare email-only auth with no username. (On allauth 65.3 the old settings
+# were required or startup raised SystemCheckError; target the pinned version.)
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_RATE_LIMITS = {"login_failed": "5/300s"}
 ACCOUNT_MFA_ENABLED = True
@@ -275,7 +322,7 @@ TRUSTED_PROXY_IPS = env.list("TRUSTED_PROXY_IPS", default=[])
 RATELIMIT_ENABLE = True
 RATELIMIT_VIEW = "apps.core.views.rate_limited"
 RATELIMIT_USE_CACHE = "default"
-RATELIMIT_FAIL_OPEN = True
+RATELIMIT_FAIL_OPEN = False  # Fail closed: if Redis is down, block requests
 
 # ─── Protected File Serving ────────────────────────────────────────────────
 # True in production: Django answers download views with X-Accel-Redirect and
@@ -289,6 +336,11 @@ SENDFILE_ENABLED = env.bool("SENDFILE_ENABLED", default=False)
 METRICS_TOKEN = env("METRICS_TOKEN", default="")
 # When True, /metrics/ returns 403 unless a valid token is presented.
 METRICS_REQUIRE_TOKEN = env.bool("METRICS_REQUIRE_TOKEN", default=False)
+
+# ─── AI Academic Assistant ──────────────────────────────────────────
+# Google Gemini key for grounded answers. Empty = zero-cost local engine
+# (GroundedFallbackAdapter). Get a key at https://aistudio.google.com/apikey
+GEMINI_API_KEY = env("GEMINI_API_KEY", default="")
 
 # ─── Simple History ─────────────────────────────────────────────────
 SIMPLE_HISTORY_REVERT_DISABLED = False
@@ -351,3 +403,7 @@ LOGGING = {
 SITE_ID = 1
 SITE_NAME = "Venepheth SAYAVONG Academic Platform"
 SITE_TAGLINE = "Lecturer · Researcher · Academic"
+
+# Google Analytics and Search Console
+GOOGLE_ANALYTICS_ID = env.str("GOOGLE_ANALYTICS_ID", default="")
+GOOGLE_SITE_VERIFICATION = env.str("GOOGLE_SITE_VERIFICATION", default="")

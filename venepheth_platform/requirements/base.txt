@@ -22,11 +22,14 @@ django-otp==1.5.3                # TOTP-based 2FA
 qrcode[pil]==8.0                 # QR code for 2FA setup
 django-axes==7.0.1               # Brute-force login protection
 django-ratelimit==4.1.0          # Rate limiting decorator
+django-csp==4.0                  # Content-Security-Policy headers (report-only; see base.py)
 
 # ─── Content & File Handling ───────────────────────────────────────────
 Pillow>=11.0.0                   # Image processing (Python 3.14 compatible)
 bleach==6.2.0                    # XSS sanitization
 python-magic==0.4.27             # MIME detection for file upload security
+pypdf>=4.0.0                     # PDF text extraction for AI Knowledge Box
+cryptography==44.0.0             # Backup encryption (AES-256)
 django-simple-history==3.7.0     # Content version history
 django-storages==1.14.4          # Storage backends (S3/R2 ready)
 # WeasyPrint: install separately via Docker — requires system libs (Pango/Cairo)

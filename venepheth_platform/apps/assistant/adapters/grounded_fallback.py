@@ -23,9 +23,11 @@ def _safe_title(value: Any) -> str:
 
 
 def _safe_url(value: Any) -> str:
-    """Only relative in-site URLs are allowed; everything else becomes '#'."""
+    """Allow relative links + http(s) (e.g. Knowledge Box source_url); else '#'."""
     url = str(value or "#")
-    return url if url.startswith("/") else "#"
+    if url.startswith("/") or url.startswith("https://") or url.startswith("http://"):
+        return url
+    return "#"
 
 
 class GroundedFallbackAdapter(BaseLLMAdapter):

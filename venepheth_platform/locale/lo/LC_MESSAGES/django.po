@@ -1048,3 +1048,163 @@ msgstr "ຕົວກອງ"
 #: templates
 msgid "All Categories"
 msgstr "ທຸກໝວດໝູ່"
+
+# ---------------------------------------------------------------------------
+# AI Academic Assistant & Knowledge Box (2026-09-30)
+# ---------------------------------------------------------------------------
+
+#: templates/base.html
+msgid "AI Assistant"
+msgstr "ຜູ້ຊ່ວຍ AI"
+
+#: templates/assistant/chat.html
+msgid "Quota: %(quota_note)s."
+msgstr "ໂຄວຕ້າ: %(quota_note)s."
+
+#: templates/assistant/chat.html
+msgid "Log in for 3× quota."
+msgstr "ເຂົ້າສູ່ລະບົບເພື່ອ quota 3 ເທົ່າ."
+
+#: templates/search/results.html
+msgid "Knowledge Base"
+msgstr "ຖານຄວາມຮູ້"
+
+#: templates/search/results.html
+msgid "AI-curated answer"
+msgstr "ຄຳຕອບທີ່ AI ຄັດເລືອກ"
+
+#: templates/dashboard/index.html
+msgid "Knowledge Box"
+msgstr "ກ່ອງຄວາມຮູ້"
+
+#: templates/dashboard/index.html
+msgid "total"
+msgstr "ທັງໝົດ"
+
+#: templates/dashboard/index.html
+msgid "need content"
+msgstr "ຕ້ອງການເນື້ອຫາ"
+
+#: templates/dashboard/index.html
+msgid "AI Assistant Health"
+msgstr "ສະຖານະ AI Assistant"
+
+#: templates/dashboard/index.html
+msgid "Manage Knowledge"
+msgstr "ຈັດການຄວາມຮູ້"
+
+#: templates/dashboard/index.html
+msgid "active docs"
+msgstr "ເອກະສານທີ່ໃຊ້ງານ"
+
+#: templates/dashboard/index.html
+msgid "bots blocked (7d)"
+msgstr "ບອດທີ່ຖືກບລ็อก (7 ມື້)"
+
+#: templates/dashboard/index.html
+msgid "docs need content"
+msgstr "ເອກະສານທີ່ຕ້ອງການເນື້ອຫາ"
+
+#: templates/dashboard/index.html
+msgid "Active"
+msgstr "ເປີດໃຊ້ງານ"
+
+#: templates/dashboard/index.html
+msgid "Off"
+msgstr "ປິດ"
+
+#: templates/dashboard/index.html
+msgid "Edit"
+msgstr "ແກ້ໄຂ"
+
+#: templates/dashboard/index.html
+msgid "Knowledge Box is empty. Add FAQs so the AI has something to cite."
+msgstr "ກ່ອງຄວາມຮູ້ຫວ່າງເປົ່າ. ເພີ່ມ FAQ ເພື່ອໃຫ້ AI ມີຂໍ້ມູນອ້າງອີງ."
+
+#: apps/assistant/admin.py
+msgid "Knowledge content (AI reads this)"
+msgstr "ເນື້ອຫາຄວາມຮູ້ (AI ອ່ານ)"
+
+#: apps/assistant/admin.py
+msgid "Optional file"
+msgstr "ໄຟລ໌ແນບ (ທາງເລືອກ)"
+
+#: apps/assistant/admin.py
+msgid "Extracted file text (what the AI indexes)"
+msgstr "ຂໍ້ຄວາມທີ່ສະກັດຈາກໄຟລ໌ (ສິ່ງທີ່ AI ດັດສະນີ)"
+
+#: apps/assistant/admin.py
+msgid "No file attached — the AI uses the text above."
+msgstr "ບໍ່ມີໄຟລ໌ແນບ — AI ໃຊ້ຂໍ້ຄວາມດ້ານເທິງ."
+
+#: apps/assistant/admin.py
+msgid "No text extracted yet. Save again or run: python manage.py reindex_knowledge"
+msgstr "ຍັງບໍ່ມີຂໍ້ຄວາມທີ່ສະກັດໄດ້. ບັນທຶກອີກຄັ້ງ ຫຼື ຮັນ: python manage.py reindex_knowledge"
+
+#: apps/assistant/admin.py
+msgid "Indexed characters"
+msgstr "ຈຳນວນຕົວອັກສອນທີ່ດັດສະນີແລ້ວ"
+
+#: apps/assistant/admin.py
+msgid "Re-extract text from attached files"
+msgstr "ສະກັດຂໍ້ຄວາມຈາກໄຟລ໌ແນບໃໝ່"
+
+#: apps/assistant/admin.py
+msgid "Re-indexed %(done)d document(s), skipped %(skipped)d."
+msgstr "ຈັດດັດສະນີໃໝ່ %(done)d ເອກະສານ, ຂ້າມ %(skipped)d."
+
+#: apps/assistant/admin.py
+msgid "file"
+msgstr "ໄຟລ໌"
+
+#: apps/assistant/models.py
+msgid "knowledge document"
+msgstr "ເອກະສານຄວາມຮູ້"
+
+#: apps/assistant/models.py
+msgid "knowledge documents (AI Knowledge Box)"
+msgstr "ເອກະສານຄວາມຮູ້ (AI Knowledge Box)"
+
+#: apps/assistant/models.py
+msgid "title"
+msgstr "ຫົວຂໍ້"
+
+#: apps/assistant/models.py
+msgid "summary"
+msgstr "ສະຫຼຸບຫຍໍ້"
+
+#: apps/assistant/models.py
+msgid "knowledge text"
+msgstr "ຂໍ້ຄວາມຄວາມຮູ້"
+
+#: apps/assistant/models.py
+msgid "supporting file (txt/md/pdf)"
+msgstr "ໄຟລ໌ປະກອບ (txt/md/pdf)"
+
+#: apps/assistant/models.py
+msgid "Optional. .txt/.md/.pdf text is auto-indexed for the AI."
+msgstr "ຂໍ້ຄວາມ .txt/.md/.pdf ຈະຖືກດັດສະນີອັດຕະໂນມັດເພື່ອ AI."
+
+#: apps/assistant/models.py
+msgid "extracted file text"
+msgstr "ຂໍ້ຄວາມທີ່ສະກັດຈາກໄຟລ໌"
+
+#: apps/assistant/models.py
+msgid "tags"
+msgstr "ປ້າຍກຳກັບ"
+
+#: apps/assistant/models.py
+msgid "Comma-separated tags"
+msgstr "ປ້າຍກຳກັບ ຂັ້ນດ້ວຍຈຸດ (,)"
+
+#: apps/assistant/models.py
+msgid "language"
+msgstr "ພາສາ"
+
+#: apps/assistant/models.py
+msgid "source link"
+msgstr "ລິ້ງແຫຼ່ງຂໍ້ມູນ"
+
+#: apps/assistant/models.py
+msgid "active (visible to AI)"
+msgstr "ເປີດໃຊ້ງານ (AI ເຫັນໄດ້)"

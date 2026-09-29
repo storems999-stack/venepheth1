@@ -2,6 +2,7 @@
 
 import logging
 
+from django.db.models import Q
 from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_GET
@@ -19,13 +20,14 @@ logger = logging.getLogger("apps.search")
 @ratelimit(key="ip", rate="10/m", method="GET", block=True)
 @require_GET
 def search_results(request):
-    """Full-text search across all content types."""
+    """Full-text search across all content types (incl. AI Knowledge Box)."""
     q = request.GET.get("q", "").strip()[:200]
     results = {
         "courses": [],
         "articles": [],
         "research": [],
         "publications": [],
+        "knowledge": [],
     }
 
     if q and len(q) >= 2:
@@ -46,6 +48,17 @@ def search_results(request):
             status="published",
             title__icontains=q,
         ).prefetch_related("topics")[:5]
+        # Curated Knowledge Box — same pool the AI cites, so visitors can
+        # verify AI answers through the regular search page.
+        from apps.assistant.models import KnowledgeDocument
+
+        results["knowledge"] = KnowledgeDocument.objects.filter(
+            Q(title__icontains=q)
+            | Q(summary__icontains=q)
+            | Q(content__icontains=q)
+            | Q(tags__icontains=q),
+            is_active=True,
+        )[:5]
 
         total = sum(len(v) for v in results.values())
     else:

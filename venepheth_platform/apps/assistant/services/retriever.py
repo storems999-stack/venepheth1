@@ -48,6 +48,9 @@ class AcademicRetriever:
             return cls._get_default_overview()
 
         results: list[dict[str, Any]] = []
+        # Knowledge Box first — highest priority curated answers.
+        results.extend(cls._knowledge_documents(terms))
+        results.extend(cls._library_resources(terms))
         results.extend(cls._office_hours(terms))
         results.extend(cls._courses(terms))
         results.extend(cls._publications(terms))
@@ -62,6 +65,57 @@ class AcademicRetriever:
         return results[:limit]
 
     # ─── Branch helpers (each fail-safe on its own) ──────────────────────────
+
+    @classmethod
+    def _knowledge_documents(cls, terms: list[str]) -> list[dict[str, Any]]:
+        """Curated Knowledge Box entries (admin-managed). Highest score."""
+        try:
+            from apps.assistant.models import KnowledgeDocument
+
+            items: list[dict[str, Any]] = []
+            q = _or_icontains(["title", "summary", "content", "file_text", "tags"], terms)
+            qs = KnowledgeDocument.objects.filter(is_active=True).filter(q)[:4]
+            for doc in qs:
+                body = doc.content or doc.file_text or doc.summary or ""
+                items.append(
+                    {
+                        "type": "Knowledge Base",
+                        "title": doc.title,
+                        "summary": body[:400],
+                        "url": doc.source_url if doc.source_url.startswith("/") or doc.source_url.startswith("http") else "/assistant/",
+                        "extra": f"Tags: {doc.tags}" if doc.tags else "",
+                        "score": 6,
+                    }
+                )
+            return items
+        except Exception:
+            logger.exception("Assistant retriever: knowledge-box branch failed")
+            return []
+
+    @classmethod
+    def _library_resources(cls, terms: list[str]) -> list[dict[str, Any]]:
+        """Public digital-library resources (existing Resource model)."""
+        try:
+            from apps.resources.models import Resource
+
+            items: list[dict[str, Any]] = []
+            q = _or_icontains(["title", "description", "tags", "author"], terms)
+            qs = Resource.objects.filter(visibility=Resource.Visibility.PUBLIC).filter(q)[:4]
+            for res in qs:
+                items.append(
+                    {
+                        "type": "Library Resource",
+                        "title": res.title,
+                        "summary": (res.description or "")[:250],
+                        "url": res.get_absolute_url(),
+                        "extra": f"Type: {res.get_resource_type_display()}",
+                        "score": 5,
+                    }
+                )
+            return items
+        except Exception:
+            logger.exception("Assistant retriever: library-resources branch failed")
+            return []
 
     @classmethod
     def _office_hours(cls, terms: list[str]) -> list[dict[str, Any]]:
