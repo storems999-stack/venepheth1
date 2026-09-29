@@ -53,10 +53,7 @@ def search_results(request):
         from apps.assistant.models import KnowledgeDocument
 
         results["knowledge"] = KnowledgeDocument.objects.filter(
-            Q(title__icontains=q)
-            | Q(summary__icontains=q)
-            | Q(content__icontains=q)
-            | Q(tags__icontains=q),
+            Q(title__icontains=q) | Q(summary__icontains=q) | Q(content__icontains=q) | Q(tags__icontains=q),
             is_active=True,
         )[:5]
 

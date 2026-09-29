@@ -220,7 +220,7 @@
             <span class="cv-entry-title">{{ proj.title }}</span>
             <span class="cv-entry-date">{{ proj.start_date|date:"Y" }}{% if proj.end_date %} – {{ proj.end_date|date:"Y" }}{% endif %}</span>
         </div>
-        {% if proj.funding_agency %}<div class="cv-entry-subtitle">Funded by: {{ proj.funding_agency }}</div>{% endif %}
+        {% if proj.funding_source %}<div class="cv-entry-subtitle">Funded by: {{ proj.funding_source }}</div>{% endif %}
         {% if proj.abstract %}<div class="cv-entry-body">{{ proj.abstract|truncatewords:40 }}</div>{% endif %}
     </div>
     {% endfor %}
@@ -236,8 +236,7 @@
         <div class="cv-entry-title">{{ pub.title }}</div>
         {% if pub.authors %}<div class="pub-authors">{{ pub.authors }}</div>{% endif %}
         <div class="pub-venue">
-            {% if pub.journal %}{{ pub.journal }}{% endif %}
-            {% if pub.conference %}{{ pub.conference }}{% endif %}
+            {% if pub.journal_name %}{{ pub.journal_name }}{% endif %}
             {% if pub.year %} ({{ pub.year }}){% endif %}
             {% if pub.volume %}, Vol. {{ pub.volume }}{% endif %}
             {% if pub.pages %}, pp. {{ pub.pages }}{% endif %}

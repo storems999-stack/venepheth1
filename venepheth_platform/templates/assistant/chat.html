@@ -24,19 +24,15 @@
             </p>
         </div>
 
-        <!-- Chat Container -->
-        <div id="chat-container"
-             x-data="academicAssistant()"
-             class="glass rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+        <!-- Chat Container (vanilla JS — no Alpine; see static/js/assistant.js) -->
+        <div id="chat-container" class="glass rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
 
             <!-- Messages Area -->
-            <div id="messages-area"
-                 class="h-[450px] overflow-y-auto p-6 space-y-4 scroll-smooth"
-                 x-ref="messagesContainer">
+            <div id="messages-area" class="h-[450px] overflow-y-auto p-6 space-y-4 scroll-smooth" data-chat-messages>
 
                 <!-- Welcome message -->
                 <div class="flex items-start space-x-3">
-                    <div class="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ring-1 ring-gold-500/40">
+                    <div data-assistant-avatar class="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ring-1 ring-gold-500/40">
                         <img src="{% static 'icons/favicon-32x32.png' %}" alt="VS" class="w-full h-full object-cover">
                     </div>
                     <div class="bg-navy-800/60 border border-white/5 rounded-xl rounded-tl-none px-4 py-3 max-w-[80%]">
@@ -50,104 +46,50 @@
                     </div>
                 </div>
 
-                <!-- Dynamic messages -->
-                <template x-for="msg in messages" :key="msg.id">
-                    <div>
-                        <!-- User message -->
-                        <div x-show="msg.role === 'user'" class="flex items-start justify-end space-x-3 mb-3">
-                            <div class="bg-gold-500/20 border border-gold-500/30 rounded-xl rounded-tr-none px-4 py-3 max-w-[80%]">
-                                <p class="text-white text-sm" x-text="msg.content"></p>
-                            </div>
-                            <div class="w-8 h-8 bg-white/10 rounded-lg flex-shrink-0 flex items-center justify-center">
-                                <i data-lucide="user" class="w-4 h-4 text-gray-300"></i>
-                            </div>
-                        </div>
-                        <!-- Assistant message -->
-                        <div x-show="msg.role === 'assistant'" class="flex items-start space-x-3">
-                            <div class="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ring-1 ring-gold-500/40">
-                                <img src="{% static 'icons/favicon-32x32.png' %}" alt="VS" class="w-full h-full object-cover">
-                            </div>
-                            <div class="bg-navy-800/60 border border-white/5 rounded-xl rounded-tl-none px-4 py-3 max-w-[80%] prose prose-sm prose-invert max-w-none">
-                                <div x-html="msg.html"></div>
-                                <template x-if="msg.sources && msg.sources.length > 0">
-                                    <div class="mt-3 pt-3 border-t border-white/10">
-                                        <p class="text-gray-500 text-xs mb-2 font-medium uppercase tracking-wider">Sources</p>
-                                        <div class="flex flex-wrap gap-2">
-                                            <template x-for="src in msg.sources" :key="src.url">
-                                                <a :href="src.url"
-                                                   class="inline-flex items-center space-x-1 text-xs px-2 py-1 rounded-md bg-white/5 hover:bg-white/10 text-gold-400 hover:text-gold-300 border border-white/10 transition-colors"
-                                                   target="_blank">
-                                                    <i data-lucide="external-link" class="w-3 h-3"></i>
-                                                    <span x-text="src.title.substring(0, 30) + (src.title.length > 30 ? '...' : '')"></span>
-                                                </a>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </template>
-                                <p x-if="msg.provider" class="text-gray-600 text-xs mt-2 italic" x-text="'Powered by: ' + (msg.provider || '')"></p>
-                            </div>
-                        </div>
-                        <!-- Typing indicator -->
-                        <div x-show="msg.role === 'typing'" class="flex items-start space-x-3">
-                            <div class="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center ring-1 ring-gold-500/40">
-                                <img src="{% static 'icons/favicon-32x32.png' %}" alt="VS" class="w-full h-full object-cover">
-                            </div>
-                            <div class="bg-navy-800/60 border border-white/5 rounded-xl rounded-tl-none px-4 py-3">
-                                <div class="flex space-x-1 items-center h-4">
-                                    <span class="w-2 h-2 bg-gold-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                                    <span class="w-2 h-2 bg-gold-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                                    <span class="w-2 h-2 bg-gold-400 rounded-full animate-bounce"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
+                <!-- Dynamic messages are injected here by static/js/assistant.js -->
             </div>
 
             <!-- Suggested prompts -->
-            <div x-show="messages.length === 0" class="px-6 pb-4">
+            <div id="suggested-prompts" class="px-6 pb-4">
                 <p class="text-gray-500 text-xs mb-3 uppercase tracking-wider">Suggested Questions</p>
                 <div class="flex flex-wrap gap-2">
                     {% for prompt in suggested_prompts %}
-                    <button
-                        @click="sendMessage('{{ prompt.en }}')"
-                        type="button"
-                        class="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 hover:border-gold-500/40 transition-all">
+                    <button type="button"
+                            data-assistant-suggest="{{ prompt.en }}"
+                            class="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 hover:border-gold-500/40 transition-all">
                         {{ prompt.en }}
                     </button>
                     {% endfor %}
                 </div>
             </div>
 
-            <!-- Divider -->
             <div class="border-t border-white/5"></div>
 
             <!-- Input Area -->
             <div class="p-4">
-                <form @submit.prevent="sendMessage(inputQuery)" class="flex items-center space-x-3">
+                {% csrf_token %}
+                <form data-assistant-form class="flex items-center space-x-3">
                     <!-- Anti-bot honeypot: real users never see/fill this -->
-                    <input type="text" name="website_url_hp" x-model="honeypot" tabindex="-1" autocomplete="off"
-                           aria-hidden="true" style="display:none !important; position:absolute !important; left:-9999px !important;">
+                    <input type="text" name="website_url_hp" tabindex="-1" autocomplete="off"
+                           aria-hidden="true"
+                           style="display:none !important; position:absolute !important; left:-9999px !important;">
                     <input
-                        x-model="inputQuery"
                         type="text"
+                        data-assistant-input
                         maxlength="500"
                         placeholder="Ask about courses, research, office hours..."
                         class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gold-500 transition-colors"
-                        :disabled="isLoading"
                     >
                     <button
                         type="submit"
-                        :disabled="isLoading || !inputQuery.trim()"
+                        data-assistant-send
                         class="bg-gold-500 hover:bg-gold-400 disabled:opacity-40 disabled:cursor-not-allowed text-navy-950 font-semibold px-4 py-2.5 rounded-xl text-sm transition-all flex items-center space-x-2 shadow-lg shadow-gold-500/20">
                         <i data-lucide="send" class="w-4 h-4"></i>
-                        <span x-show="!isLoading">Send</span>
-                        <span x-show="isLoading" class="flex items-center">
-                            <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                            </svg>
-                        </span>
+                        <span data-assistant-send-label>Send</span>
+                        <svg data-assistant-spinner class="animate-spin h-4 w-4 hidden" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
                     </button>
                 </form>
                 <p class="text-gray-600 text-xs mt-2 text-center">
@@ -161,124 +103,4 @@
         </div>
     </div>
 </div>
-
-<script nonce="{{ request.csp_nonce }}">
-function academicAssistant() {
-    return {
-        messages: [],
-        inputQuery: '',
-        honeypot: '',
-        pageLoadedAt: Date.now(),
-        isLoading: false,
-        msgCounter: 0,
-
-        async sendMessage(query) {
-            query = (query || this.inputQuery || '').trim();
-            if (!query || this.isLoading) return;
-
-            this.inputQuery = '';
-            this.isLoading = true;
-
-            // Add user message
-            this.messages.push({ id: ++this.msgCounter, role: 'user', content: query });
-
-            // Add typing indicator
-            const typingId = ++this.msgCounter;
-            this.messages.push({ id: typingId, role: 'typing' });
-            this.$nextTick(() => this.scrollToBottom());
-
-            try {
-                const lang = document.documentElement.lang || 'en';
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value
-                    || this.getCookie('csrftoken');
-
-                const resp = await fetch('/assistant/chat/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrfToken,
-                    },
-                    body: JSON.stringify({ query: query, language: lang, website_url_hp: this.honeypot || '', loaded_at: this.pageLoadedAt }),
-                });
-
-                const data = await resp.json();
-
-                // Remove typing indicator
-                this.messages = this.messages.filter(m => m.id !== typingId);
-
-                if (data.answer) {
-                    this.messages.push({
-                        id: ++this.msgCounter,
-                        role: 'assistant',
-                        content: data.answer,
-                        html: this.markdownToHtml(data.answer),
-                        sources: data.sources || [],
-                        provider: data.provider || '',
-                    });
-                } else {
-                    this.messages.push({
-                        id: ++this.msgCounter,
-                        role: 'assistant',
-                        content: data.error || 'An error occurred. Please try again.',
-                        html: `<p class="text-red-400">${data.error || 'An error occurred. Please try again.'}</p>`,
-                        sources: [],
-                    });
-                }
-            } catch (err) {
-                this.messages = this.messages.filter(m => m.id !== typingId);
-                this.messages.push({
-                    id: ++this.msgCounter,
-                    role: 'assistant',
-                    content: 'Network error. Please check your connection.',
-                    html: '<p class="text-red-400">Network error. Please check your connection.</p>',
-                    sources: [],
-                });
-            } finally {
-                this.isLoading = false;
-                this.$nextTick(() => { this.scrollToBottom(); lucide.createIcons(); });
-            }
-        },
-
-        scrollToBottom() {
-            const el = this.$refs.messagesContainer;
-            if (el) el.scrollTop = el.scrollHeight;
-        },
-
-        markdownToHtml(md) {
-            // Minimal safe Markdown → HTML conversion.
-            // Escape raw HTML first (answers may echo user input), then allow
-            // only http(s)/relative link targets.
-            // Double quotes MUST be escaped too: link URLs are interpolated into
-            // href="…", so an unescaped " closes the attribute and injects a
-            // live event handler (e.g. [a](https://x/" onmouseover=alert`1`)).
-            const escaped = md
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-            return escaped
-                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, url) => {
-                    const safe = /^(https?:\/\/|\/)/.test(url) ? url : '#';
-                    return `<a href="${safe}" target="_blank" class="text-gold-400 underline hover:text-gold-300">${text}</a>`;
-                })
-                .replace(/^### (.+)$/gm, '<h3 class="text-white font-semibold text-sm mt-3 mb-1">$1</h3>')
-                .replace(/^## (.+)$/gm, '<h2 class="text-white font-semibold text-base mt-3 mb-1">$1</h2>')
-                .replace(/^- (.+)$/gm, '<li class="text-gray-300 text-sm">$1</li>')
-                .replace(/(<li.*<\/li>)/gs, '<ul class="list-disc ml-4 space-y-1 mb-2">$1</ul>')
-                .replace(/📌/g, '<span>📌</span>')
-                .replace(/\n\n/g, '</p><p class="text-gray-200 text-sm leading-relaxed mb-2">')
-                .replace(/\n/g, '<br>');
-        },
-
-        getCookie(name) {
-            const match = document.cookie.match(new RegExp('(^|;\\s*)' + name + '=([^;]*)'));
-            return match ? decodeURIComponent(match[2]) : '';
-        },
-    };
-}
-</script>
-{% csrf_token %}
 {% endblock %}

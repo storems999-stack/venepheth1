@@ -21,30 +21,36 @@
 
 <section class="bg-navy-950 py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <!-- Filters -->
-        <div class="flex flex-wrap gap-3 mb-10 p-4 glass rounded-2xl">
+        <!-- Filters (real GET form — inline onchange is blocked by CSP) -->
+        <form method="get" data-auto-submit-form
+              class="flex flex-wrap gap-3 mb-10 p-4 glass rounded-2xl">
+            {% if selected_topic %}
+            <input type="hidden" name="topic" value="{{ selected_topic }}">
+            {% endif %}
             <!-- Type filter -->
-            <select 
-                onchange="location.href='?type='+this.value+'{% if selected_year %}&year={{ selected_year }}{% endif %}{% if selected_topic %}&topic={{ selected_topic }}{% endif %}'"
-                class="bg-white/5 border border-white/10 text-gray-300 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-500"
+            <select name="type" data-auto-submit
+                    class="bg-white/5 border border-white/10 text-gray-300 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-500"
             >
                 <option value="">{% trans "All Types" %}</option>
                 {% for val, label in pub_types %}
                 <option value="{{ val }}" {% if selected_type == val %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
             </select>
-            
+
             <!-- Year filter -->
-            <select 
-                onchange="location.href='?{% if selected_type %}type={{ selected_type }}&{% endif %}year='+this.value+'{% if selected_topic %}&topic={{ selected_topic }}{% endif %}'"
-                class="bg-white/5 border border-white/10 text-gray-300 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-500"
+            <select name="year" data-auto-submit
+                    class="bg-white/5 border border-white/10 text-gray-300 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-gold-500"
             >
                 <option value="">{% trans "All Years" %}</option>
                 {% for yr in years %}
                 <option value="{{ yr }}" {% if selected_year == yr|stringformat:"s" %}selected{% endif %}>{{ yr }}</option>
                 {% endfor %}
             </select>
-        </div>
+
+            <noscript>
+                <button type="submit" class="bg-gold-500 text-navy-950 text-sm font-semibold px-4 py-2 rounded-lg">{% trans "Filter" %}</button>
+            </noscript>
+        </form>
         
         {% if publications %}
         <div class="space-y-4">

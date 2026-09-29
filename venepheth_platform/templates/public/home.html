@@ -49,20 +49,21 @@
                     </a>
                 </div>
 
-                <!-- Quick Stats -->
+                <!-- Quick Stats — counts come from the view; never fabricate
+                     a fallback, `default` fires on 0 and would claim "10+". -->
                 <div class="mt-14 flex flex-wrap justify-center lg:justify-start gap-8">
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-white">{{ stats.courses_count|default:"10" }}+</div>
+                        <div class="text-3xl font-bold text-white">{{ stats.courses_count }}+</div>
                         <div class="text-gray-500 text-sm mt-1">{% trans "Courses" %}</div>
                     </div>
                     <div class="w-px bg-white/10 hidden sm:block"></div>
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-white">{{ stats.publications_count|default:"20" }}+</div>
+                        <div class="text-3xl font-bold text-white">{{ stats.publications_count }}+</div>
                         <div class="text-gray-500 text-sm mt-1">{% trans "Publications" %}</div>
                     </div>
                     <div class="w-px bg-white/10 hidden sm:block"></div>
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-white">{{ stats.research_count|default:"5" }}+</div>
+                        <div class="text-3xl font-bold text-white">{{ stats.research_count }}+</div>
                         <div class="text-gray-500 text-sm mt-1">{% trans "Research Projects" %}</div>
                     </div>
                 </div>
@@ -111,11 +112,11 @@
                         {% endif %}
                         <div class="mt-6 pt-6 border-t border-white/10 flex justify-around">
                             <div>
-                                <div class="text-white font-bold">{{ stats.courses_count|default:"10" }}+</div>
+                                <div class="text-white font-bold">{{ stats.courses_count }}+</div>
                                 <div class="text-gray-500 text-xs">{% trans "Courses" %}</div>
                             </div>
                             <div>
-                                <div class="text-white font-bold">{{ stats.publications_count|default:"20" }}+</div>
+                                <div class="text-white font-bold">{{ stats.publications_count }}+</div>
                                 <div class="text-gray-500 text-xs">{% trans "Papers" %}</div>
                             </div>
                         </div>
@@ -309,7 +310,7 @@
                     <div class="w-12 h-12 bg-gold-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
                         <i data-lucide="library" class="w-6 h-6 text-gold-400"></i>
                     </div>
-                    <div class="text-3xl font-bold text-white mb-1">{{ stats.resources_count|default:"0" }}+</div>
+                    <div class="text-3xl font-bold text-white mb-1">{{ stats.resources_count }}+</div>
                     <div class="text-gray-400 text-sm">{% trans "Digital Resources" %}</div>
                 </div>
                 {% endfor %}

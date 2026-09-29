@@ -58,4 +58,6 @@ class KnowledgeDocumentAdmin(admin.ModelAdmin):
                 done += 1
             except Exception:
                 skipped += 1
-        self.message_user(request, _("Re-indexed %(done)d document(s), skipped %(skipped)d.") % {"done": done, "skipped": skipped})
+        self.message_user(
+            request, _("Re-indexed %(done)d document(s), skipped %(skipped)d.") % {"done": done, "skipped": skipped}
+        )

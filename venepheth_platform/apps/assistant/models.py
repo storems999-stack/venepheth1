@@ -90,9 +90,7 @@ class KnowledgeDocument(models.Model):
     )
     file_text = models.TextField(_("extracted file text"), blank=True, editable=False)
     tags = models.CharField(_("tags"), max_length=500, blank=True, help_text=_("Comma-separated tags"))
-    language = models.CharField(
-        _("language"), max_length=10, default="en", choices=[("en", "English"), ("lo", "ລາວ")]
-    )
+    language = models.CharField(_("language"), max_length=10, default="en", choices=[("en", "English"), ("lo", "ລາວ")])
     source_url = models.URLField(_("source link"), blank=True)
     is_active = models.BooleanField(_("active (visible to AI)"), default=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)

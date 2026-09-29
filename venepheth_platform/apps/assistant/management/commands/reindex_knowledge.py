@@ -41,6 +41,4 @@ class Command(BaseCommand):
             except Exception as exc:
                 skipped += 1
                 self.stderr.write(f"Skipped {doc.slug}: {type(exc).__name__}")
-        self.stdout.write(
-            self.style.SUCCESS(f"Re-indexed {done}/{total} document(s), skipped {skipped}.")
-        )
+        self.stdout.write(self.style.SUCCESS(f"Re-indexed {done}/{total} document(s), skipped {skipped}."))

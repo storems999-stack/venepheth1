@@ -1,18 +1,18 @@
 # ─── Core ──────────────────────────────────────────────────────────────
-Django==5.1.4
+Django==5.2.17
 psycopg2-binary>=2.9.9
 django-environ==0.11.2
 
 # ─── REST API ───────────────────────────────────────────────────────────
-djangorestframework==3.15.2
-djangorestframework-simplejwt==5.3.1
+djangorestframework==3.17.2
+djangorestframework-simplejwt==5.5.1
 django-filter==24.3
 drf-spectacular==0.27.2          # OpenAPI schema generation
 
 # ─── Async / Background Tasks ──────────────────────────────────────────
 celery[redis]==5.4.0
 redis==5.2.0
-django-celery-beat==2.7.0        # Periodic tasks scheduler
+django-celery-beat==2.9.0         # Periodic tasks scheduler (2.9 supports Django 5.2)
 django-celery-results==2.5.1
 
 # ─── Authentication & Security ─────────────────────────────────────────
@@ -26,10 +26,10 @@ django-csp==4.0                  # Content-Security-Policy headers (report-only;
 
 # ─── Content & File Handling ───────────────────────────────────────────
 Pillow>=11.0.0                   # Image processing (Python 3.14 compatible)
-bleach==6.2.0                    # XSS sanitization
+bleach==6.4.0                     # XSS sanitization
 python-magic==0.4.27             # MIME detection for file upload security
 pypdf>=4.0.0                     # PDF text extraction for AI Knowledge Box
-cryptography==44.0.0             # Backup encryption (AES-256)
+cryptography==50.0.0             # Backup encryption (AES-256)
 django-simple-history==3.7.0     # Content version history
 django-storages==1.14.4          # Storage backends (S3/R2 ready)
 # WeasyPrint: install separately via Docker — requires system libs (Pango/Cairo)
@@ -46,7 +46,7 @@ django-meta==2.4.0               # OpenGraph / Twitter / SEO tags
 
 # ─── Utilities ─────────────────────────────────────────────────────────
 django-extensions==3.2.3
-Markdown==3.7
+Markdown==3.10.3
 python-slugify==8.0.4
 django-cleanup==9.0.0            # Auto-delete unused media files
 whitenoise==6.8.2                # Static file serving

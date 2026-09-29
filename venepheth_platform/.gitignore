@@ -16,9 +16,13 @@ media/
 mediafiles/
 
 # ─── Static ───────────────────────────────────────────────────────────────
+# staticfiles/ is the collectstatic BUILD OUTPUT and is ignored.
+# static/ holds SOURCE assets (js/css/icons) that templates serve via
+# {% static %} — it MUST be tracked. Ignoring it previously left site.js,
+# tailwind-config.js and assistant.js out of every fresh clone, which
+# shipped a site with no interactivity and no Tailwind theme.
 staticfiles/
-static/
-!.gitkeep
+!static/.gitkeep
 
 # ─── Python ───────────────────────────────────────────────────────────────
 __pycache__/

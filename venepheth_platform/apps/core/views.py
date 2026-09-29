@@ -122,9 +122,9 @@ def dashboard(request):
     # AI Knowledge Box health (read-only — query contents are never logged)
     kb_total = KnowledgeDocument.objects.count()
     kb_active = KnowledgeDocument.objects.filter(is_active=True).count()
-    kb_needs_attention = KnowledgeDocument.objects.filter(is_active=True).filter(
-        Q(content="") & Q(file_text="") & Q(summary="")
-    ).count()
+    kb_needs_attention = (
+        KnowledgeDocument.objects.filter(is_active=True).filter(Q(content="") & Q(file_text="") & Q(summary="")).count()
+    )
     kb_recent = KnowledgeDocument.objects.order_by("-updated_at")[:5]
     assistant_blocks_7d = SecurityEvent.objects.filter(
         event_type=SecurityEvent.EventType.SUSPICIOUS_ACTIVITY,

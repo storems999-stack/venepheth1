@@ -13,6 +13,21 @@ from apps.assistant.adapters import GroundedFallbackAdapter, get_llm_adapter
 from apps.assistant.adapters.base import BaseLLMAdapter
 
 
+class _FrozenTime:
+    """Minimal stand-in for the `time` module with a pinned clock."""
+
+    def __init__(self, now: float):
+        self._now = now
+
+    def time(self) -> float:
+        return self._now
+
+    def __getattr__(self, name):
+        return getattr(self._real_time, name)
+
+    _real_time = time
+
+
 class TestBaseLLMAdapter(TestCase):
     """Test adapter interface contract."""
 
@@ -122,9 +137,7 @@ class TestAssistantChatAntiBot(TestCase):
         from apps.security.models import SecurityEvent
 
         before = SecurityEvent.objects.count()
-        resp = self._post(
-            {"query": "spam", "website_url_hp": "bot-filled", "loaded_at": self._old_ts()}
-        )
+        resp = self._post({"query": "spam", "website_url_hp": "bot-filled", "loaded_at": self._old_ts()})
         self.assertEqual(resp.status_code, 400)
         self.assertEqual(SecurityEvent.objects.count(), before + 1)
 
@@ -154,6 +167,15 @@ class TestAssistantQuota(TestCase):
         from django.core.cache import cache
 
         cache.clear()
+        # django-ratelimit buckets are wall-clock aligned (_get_window uses
+        # time.time()), so a test whose requests straddle a window boundary
+        # sees a fresh counter and fails intermittently. Pin the clock to the
+        # middle of a window so every request in the test shares one bucket.
+        from django_ratelimit import core as rl_core
+
+        original_time = rl_core.time
+        rl_core.time = _FrozenTime(1_700_000_030.0)
+        self.addCleanup(setattr, rl_core, "time", original_time)
 
     def tearDown(self):
         from django.core.cache import cache
@@ -210,9 +232,7 @@ class TestAssistantDashboard(TestCase):
     def _staff_client(self):
         from django.contrib.auth import get_user_model
 
-        staff = get_user_model().objects.create_user(
-            email="studio@test.com", password="SecurePass123!", is_staff=True
-        )
+        staff = get_user_model().objects.create_user(email="studio@test.com", password="SecurePass123!", is_staff=True)
         self.client.force_login(staff)
 
     def test_staff_sees_knowledge_panel(self):
@@ -298,10 +318,7 @@ class TestPdfExtraction(TestCase):
         pdf += b"0000000000 65535 f \n"
         for off in offsets:
             pdf += b"%010d 00000 n \n" % off
-        pdf += (
-            b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF"
-            % (len(objects) + 1, xref_pos)
-        )
+        pdf += b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF" % (len(objects) + 1, xref_pos)
         return bytes(pdf)
 
     def test_extract_pdf_text(self):
@@ -428,4 +445,3 @@ class TestSeedFaqsMigration(TestCase):
 
         results = AcademicRetriever.retrieve("office hours Teaching page", limit=8)
         self.assertTrue([r for r in results if r["type"] == "Knowledge Base"])
-

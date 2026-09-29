@@ -82,7 +82,9 @@ class AcademicRetriever:
                         "type": "Knowledge Base",
                         "title": doc.title,
                         "summary": body[:400],
-                        "url": doc.source_url if doc.source_url.startswith("/") or doc.source_url.startswith("http") else "/assistant/",
+                        "url": doc.source_url
+                        if doc.source_url.startswith("/") or doc.source_url.startswith("http")
+                        else "/assistant/",
                         "extra": f"Tags: {doc.tags}" if doc.tags else "",
                         "score": 6,
                     }
