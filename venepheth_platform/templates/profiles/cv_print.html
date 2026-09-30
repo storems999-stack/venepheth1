@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -326,12 +327,6 @@
 </div>
 {% endif %}
 
-<script nonce="{{ request.csp_nonce }}">
-    document.addEventListener('click', function (event) {
-        if (event.target.closest('[data-print]')) {
-            window.print();
-        }
-    });
-</script>
+<script src="{% static 'js/site.js' %}" defer></script>
 </body>
 </html>

@@ -133,7 +133,12 @@ ASGI_APPLICATION = "config.asgi.application"
 # ─── Database ─────────────────────────────────────────────────────────────────
 DATABASES = {"default": env.db("DATABASE_URL", default="sqlite:///db.sqlite3")}
 DATABASES["default"]["CONN_MAX_AGE"] = 60
-DATABASES["default"]["OPTIONS"] = {"connect_timeout": 10}
+# connect_timeout is a libpq/psycopg option. Passing it to the sqlite3 backend
+# raises "Connection() got an unexpected keyword argument 'connect_timeout'",
+# which takes down any run configured with a SQLite DATABASE_URL — including
+# base.py's own default when it is exported into the environment.
+if "postgresql" in DATABASES["default"]["ENGINE"]:
+    DATABASES["default"]["OPTIONS"] = {"connect_timeout": 10}
 
 # ─── Cache & Queue ────────────────────────────────────────────────────────────
 # REDIS_URL wins when set. Otherwise compose it from REDIS_PASSWORD: a plain
@@ -281,7 +286,11 @@ CONTENT_SECURITY_POLICY = {
         "base-uri": [_CSP_SELF],
         "object-src": ["'none'"],
     },
-    "EXCLUDE_URL_PREFIXES": ["/api/", "/secure-admin/"],
+    # Derive the admin prefix from ADMIN_URL instead of hardcoding
+    # "/secure-admin/": that value is configurable, and a mismatch would leave
+    # the admin under the enforced policy — its own index page sets
+    # `tailwind.config` in an inline script and would silently stop rendering.
+    "EXCLUDE_URL_PREFIXES": ["/api/", "/" + ADMIN_URL.lstrip("/")],
 }
 
 # ─── Django Allauth ───────────────────────────────────────────────────────────

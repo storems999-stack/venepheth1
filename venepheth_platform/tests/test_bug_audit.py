@@ -145,6 +145,56 @@ class TestStaticAssetsAreShipped(TestCase):
         self.assertEqual(missing, [], "templates reference missing static files")
 
 
+class TestScriptTagsAreWellFormed(TestCase):
+    """An unterminated <script src=...> makes the HTML parser swallow the next
+    script element as text. The site.js tag shipped without a closing tag, so
+    assistant.js was never created and the whole AI widget stayed inert — while
+    every HTML validator-lite check and the full test suite passed."""
+
+    def test_every_script_tag_is_closed(self):
+        """Parse the rendered page the way a browser would and count scripts."""
+        from html.parser import HTMLParser
+
+        class ScriptCounter(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.opened = []
+                self.srcs = []
+                self.inside = False
+
+            def handle_starttag(self, tag, attrs):
+                if tag == "script":
+                    self.opened.append(dict(attrs))
+                    self.inside = True
+
+            def handle_endtag(self, tag):
+                if tag == "script":
+                    self.inside = False
+
+            def handle_data(self, data):
+                # Text found while a script element is open but never closed.
+                if self.inside and "<script" in data:
+                    self.srcs.append(data.strip()[:80])
+
+        for url in ("/", "/assistant/", "/courses/"):
+            html = self.client.get(url).content.decode()
+            parser = ScriptCounter()
+            parser.feed(html)
+            self.assertEqual(parser.srcs, [], f"{url}: a <script> tag is missing its </script>")
+
+    def test_assistant_js_script_element_exists(self):
+        """Regression: the tag was in the source but not in the DOM."""
+        html = self.client.get("/").content.decode()
+        self.assertIn('<script src="/static/js/assistant.js" defer></script>', html)
+        self.assertIn('<script src="/static/js/site.js" defer></script>', html)
+
+    def test_cv_print_has_no_inline_script(self):
+        """The print handler moved to site.js; an inline block is CSP-blocked."""
+        html = self.client.get(reverse("profiles:cv_print")).content.decode()
+        self.assertNotIn("<script nonce", html)
+        self.assertIn('src="/static/js/site.js"', html)
+
+
 class TestAssistantUiIsVanillaJs(TestCase):
     """The chat page and widget were Alpine.js components, but Alpine is not
     loaded anywhere (project banned it for CSP) — the whole AI UI was inert.
