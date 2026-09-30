@@ -129,7 +129,13 @@ class Resource(TimeStampedModel, SlugModel):
                 if not self.file_hash:
                     self.file_hash = compute_file_hash(self.file)
             except Exception:
-                logger.warning("Failed to compute file size/hash for resource %r", self.slug)
+                # exc_info matters: without a traceback there is no way to
+                # diagnose why file_hash is empty and dedup silently degraded.
+                logger.warning(
+                    "Failed to compute file size/hash for resource %r",
+                    self.slug,
+                    exc_info=True,
+                )
         super().save(*args, **kwargs)
 
     def get_tags_list(self):

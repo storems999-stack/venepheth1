@@ -10,6 +10,10 @@
 # ==============================================================================
 set -euo pipefail
 
+# Always run from the project root. Under cron (or any absolute-path
+# invocation) the current directory is $HOME, where manage.py does not exist.
+cd "$(dirname "$0")/.."
+
 ARCHIVE="${1:-}"
 
 if [ -z "$ARCHIVE" ]; then
@@ -43,6 +47,13 @@ echo " Archive: ${ARCHIVE}"
 echo "=================================================="
 
 python manage.py restore_platform --archive "${ARCHIVE}" --confirm
+
+# A crashed restore can leave the decrypted .tar.gz next to the encrypted
+# archive — that file is a full plaintext database dump.
+if [ "${ARCHIVE%.enc}" != "$ARCHIVE" ] && [ -f "${ARCHIVE%.enc}" ]; then
+    rm -f "${ARCHIVE%.enc}"
+    echo "Removed decrypted archive: ${ARCHIVE%.enc}"
+fi
 
 echo "=================================================="
 echo " Platform Restore Complete: $(date)"

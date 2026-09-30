@@ -2,7 +2,11 @@ version: "3.9"
 
 # ─── Shared Configuration ─────────────────────────────────────────────────────
 x-django-common: &django-common
-  image: venepheth_platform:prod
+  # CI pushes to ghcr.io/<repo>:<tag> and the deploy workflow exports
+  # VENEPHETH_IMAGE to that exact tag. The literal below is only the local
+  # fallback for `docker compose build` on the server; without the variable the
+  # server would pull a tag that was never published and keep the old image.
+  image: ${VENEPHETH_IMAGE:-venepheth_platform:prod}
   build:
     context: .
     dockerfile: Dockerfile

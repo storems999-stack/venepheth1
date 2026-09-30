@@ -6,6 +6,10 @@
 # ==============================================================================
 set -euo pipefail
 
+# Always run from the project root. Under cron (or any absolute-path
+# invocation) the current directory is $HOME, where manage.py does not exist.
+cd "$(dirname "$0")/.."
+
 BACKUP_DIR="${BACKUP_DIR:-/app/backups}"
 KEEP_DAYS="${KEEP_DAYS:-14}"
 ENCRYPTION_KEY="${BACKUP_ENCRYPTION_KEY:-}"

@@ -29,7 +29,16 @@ class Command(BaseCommand):
             qs = qs.filter(file_text="")
         total = qs.count()
         done, skipped = 0, 0
-        for doc in qs.iterator():
+        # Materialise the pks first: saving inside .iterator() writes on the
+        # same connection, and on PostgreSQL the server-side cursor that backs
+        # .iterator() is invalidated by the UPDATE (ProgrammingError), which
+        # the per-row handler below would silently swallow — the command would
+        # report "Re-indexed 0/N" forever.
+        for pk in list(qs.values_list("pk", flat=True)):
+            doc = KnowledgeDocument.objects.filter(pk=pk).first()
+            if doc is None:
+                skipped += 1
+                continue
             try:
                 extracted = doc.extract_file_text()
                 if extracted is None:

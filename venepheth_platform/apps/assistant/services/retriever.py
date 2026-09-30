@@ -126,7 +126,18 @@ class AcademicRetriever:
 
             items: list[dict[str, Any]] = []
             q = _or_icontains(["location", "notes", "day"], terms)
-            for oh in OfficeHours.objects.filter(is_active=True).filter(q)[:3]:
+            # weekday_ordering() mirrors the Teaching page (Monday→Saturday).
+            # Without it Meta.ordering=["start_time"] wins and the assistant
+            # answers with the earliest clock times, not the first days.
+            from apps.teaching.models import weekday_ordering
+
+            hours = (
+                OfficeHours.objects.filter(is_active=True)
+                .filter(q)
+                .annotate(_day_order=weekday_ordering())
+                .order_by("_day_order", "start_time")[:3]
+            )
+            for oh in hours:
                 items.append(
                     {
                         "type": "Office Hours",
@@ -253,9 +264,17 @@ class AcademicRetriever:
     def _get_default_overview(cls) -> list[dict[str, Any]]:
         overview: list[dict[str, Any]] = []
         try:
-            from apps.teaching.models import OfficeHours
+            from apps.teaching.models import OfficeHours, weekday_ordering
 
-            for oh in OfficeHours.objects.filter(is_active=True)[:2]:
+            # Monday-first, same as the Teaching page — otherwise the default
+            # overview shows the two earliest clock times instead of the first
+            # two days of the week.
+            overview_hours = (
+                OfficeHours.objects.filter(is_active=True)
+                .annotate(_day_order=weekday_ordering())
+                .order_by("_day_order", "start_time")[:2]
+            )
+            for oh in overview_hours:
                 overview.append(
                     {
                         "type": "Office Hours",

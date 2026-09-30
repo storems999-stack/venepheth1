@@ -135,11 +135,19 @@ DATABASES = {"default": env.db("DATABASE_URL", default="sqlite:///db.sqlite3")}
 DATABASES["default"]["CONN_MAX_AGE"] = 60
 DATABASES["default"]["OPTIONS"] = {"connect_timeout": 10}
 
-# ─── Cache ────────────────────────────────────────────────────────────────────
+# ─── Cache & Queue ────────────────────────────────────────────────────────────
+# REDIS_URL wins when set. Otherwise compose it from REDIS_PASSWORD: a plain
+# `redis://redis:6379/0` against a server started with --requirepass makes every
+# cache write and Celery connection fail, and the worker/scheduler crash-loop.
+REDIS_PASSWORD = env("REDIS_PASSWORD", default="")
+REDIS_URL = env("REDIS_URL", default="") or (
+    f"redis://:{REDIS_PASSWORD}@redis:6379/0" if REDIS_PASSWORD else "redis://redis:6379/0"
+)
+
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": env("REDIS_URL", default="redis://redis:6379/0"),
+        "LOCATION": REDIS_URL,
     }
 }
 
@@ -197,7 +205,8 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@venepheth.edu.la
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # ─── Celery ───────────────────────────────────────────────────────────────────
-CELERY_BROKER_URL = env("REDIS_URL", default="redis://redis:6379/0")
+# Reuse the resolved REDIS_URL above so the broker carries the password too.
+CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = "django-db"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"

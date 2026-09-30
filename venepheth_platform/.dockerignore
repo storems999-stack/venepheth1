@@ -1,0 +1,64 @@
+# Docker build context exclusions.
+# Without this, `COPY . .` bakes secrets and multi-hundred-MB virtualenvs into
+# the image, and deploy.yml pushes those layers to a registry.
+
+# ─── Secrets & keys ────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.prod.example
+*.pem
+*.key
+backup_key.bin
+backup_key.enc
+
+# ─── Local databases & backups ─────────────────────────────────────────────
+*.sqlite3
+*.sqlite3-journal
+backups/
+db.sqlite3
+
+# ─── Virtualenvs (rebuilt inside the image) ────────────────────────────────
+venv/
+.venv/
+env/
+__pycache__/
+*.py[cod]
+
+# ─── VCS & tooling ─────────────────────────────────────────────────────────
+.git/
+.gitignore
+.github/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# ─── Test & dev-only material ──────────────────────────────────────────────
+tests/
+*.md
+!README.md
+DISASTER_RECOVERY.md
+vision.txt
+
+# ─── Local artefacts ───────────────────────────────────────────────────────
+media/
+mediafiles/
+staticfiles/
+logs/
+*.log
+*.bak
+*.tmp
+node_modules/
+my-worker/
+docker-compose*.yml
+Dockerfile
+.venv
+
+# ─── IDE / OS ──────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

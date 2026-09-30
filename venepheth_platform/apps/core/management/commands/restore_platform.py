@@ -141,11 +141,16 @@ class Command(BaseCommand):
                 return
 
         # 2. Decrypt (after integrity verification, before extraction).
+        decrypted_path = None
         if archive_path.name.endswith(".enc"):
             if not HAS_CRYPTOGRAPHY:
                 raise CommandError("Archive is encrypted but cryptography is not installed.")
             self.stdout.write("    -> Decrypting encrypted archive...")
-            archive_path = _decrypt_archive(archive_path)
+            # _decrypt_archive writes the plaintext tar.gz next to the
+            # encrypted original; keep the path so it can be removed after
+            # the restore instead of lingering as a plaintext DB dump.
+            decrypted_path = _decrypt_archive(archive_path)
+            archive_path = decrypted_path
             self.stdout.write(self.style.SUCCESS("    -> Decryption complete."))
 
         staging_dir = backups_dir / f"restore_staging_{archive_path.stem}"
@@ -209,9 +214,15 @@ class Command(BaseCommand):
                 with sqlite3.connect(str(staged_sqlite)) as src, sqlite3.connect(str(dest_sqlite)) as dst:
                     src.backup(dst)
             elif staged_json.exists():
-                self.stdout.write("    -> Flushing database, then loading portable dump (loaddata)...")
-                call_command("flush", "--no-input")
-                call_command("loaddata", str(staged_json))
+                # flush + loaddata MUST be one transaction. Run separately, a
+                # failure midway through loaddata leaves production empty —
+                # the worst possible outcome for a disaster-recovery tool.
+                self.stdout.write("    -> Restoring portable dump (flush + loaddata in one transaction)...")
+                from django.db import transaction
+
+                with transaction.atomic():
+                    call_command("flush", "--no-input")
+                    call_command("loaddata", str(staged_json))
             else:
                 self.stdout.write(self.style.WARNING("    [!] No compatible database dump found in archive."))
 
@@ -220,3 +231,17 @@ class Command(BaseCommand):
         finally:
             if staging_dir.exists():
                 shutil.rmtree(staging_dir, ignore_errors=True)
+            # The decrypted .tar.gz must not outlive the restore — it is a
+            # full plaintext database dump sitting next to the encrypted one.
+            if decrypted_path is not None:
+                try:
+                    if decrypted_path.exists() and decrypted_path != archive_path:
+                        decrypted_path.unlink()
+                        self.stdout.write(f"    -> Removed decrypted archive {decrypted_path.name}")
+                except OSError as exc:
+                    self.stderr.write(
+                        self.style.WARNING(
+                            f"    [!] Could not remove decrypted archive {decrypted_path}: {exc}. "
+                            "Delete it manually — it contains an unencrypted database dump."
+                        )
+                    )

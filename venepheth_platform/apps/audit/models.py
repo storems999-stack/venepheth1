@@ -172,7 +172,15 @@ class AuditLog(models.Model):
                 entry.object_id = str(obj.pk)
                 entry.object_repr = str(obj)[:255]
             except Exception:
-                pass
+                # entry.save() still runs below, so a silent pass would persist
+                # a row pointing at no object. Record why, at minimum.
+                logger.warning(
+                    "Audit entry %s/%s: could not resolve object %r metadata",
+                    action,
+                    result,
+                    obj,
+                    exc_info=True,
+                )
 
         entry.save()
         logger.info("AUDIT %s | %s | %s | %s", who, action, result, entry.ip_address)

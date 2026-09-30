@@ -91,7 +91,10 @@ def dashboard(request):
     # Core Stats
     courses_published = Course.objects.filter(status="published").count()
     courses_draft = Course.objects.filter(status="draft").count()
-    courses_total = courses_published + courses_draft
+    # Total every status (published + draft + scheduled + archived), matching
+    # articles_total/publications_count beside it. Summing only the two counts
+    # above silently dropped scheduled and archived courses from the total.
+    courses_total = Course.objects.count()
 
     research_ongoing = ResearchProject.objects.filter(research_status="ongoing").count()
     research_completed = ResearchProject.objects.filter(research_status__in=["completed", "published"]).count()

@@ -39,7 +39,9 @@ def on_user_logged_in(sender, request, user, **kwargs):
             request=request,
         )
     except Exception:
-        pass
+        # Never block the login, but DO leave a trace: a silently swallowed
+        # failure here means the audit trail under-reports real logins.
+        logger.exception("Failed to write LOGIN audit entry for user=%s ip=%s", user.email, ip)
 
 
 @receiver(user_logged_out)
@@ -58,7 +60,8 @@ def on_user_logged_out(sender, request, user, **kwargs):
                 request=request,
             )
         except Exception:
-            pass
+            # The log-in/log-out pair is what session forensics relies on.
+            logger.exception("Failed to write LOGOUT audit entry for user=%s ip=%s", user.email, ip)
 
 
 @receiver(user_login_failed)
@@ -76,7 +79,9 @@ def on_user_login_failed(sender, credentials, request, **kwargs):
             request=request,
         )
     except Exception:
-        pass
+        # Highest impact of the three: losing this row hides a brute-force
+        # attempt from the security log entirely.
+        logger.exception("Failed to record LOGIN_FAILURE security event email=%s ip=%s", email, ip)
 
 
 @receiver(post_save, sender=CustomUser)

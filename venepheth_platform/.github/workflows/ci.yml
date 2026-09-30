@@ -83,14 +83,20 @@ jobs:
         run: |
           pip install -r requirements/testing.txt
 
-      - name: Run migrations
+      # config/settings/testing.py pins sqlite+DisableMigrations, so running
+      # `migrate` under it validates nothing and never touches the Postgres
+      # service. Use the development settings against real Postgres so schema
+      # errors (and any migration that only breaks on Postgres) fail here.
+      - name: Verify migrations apply on PostgreSQL
         env:
           DATABASE_URL: postgresql://venepheth:testpass@localhost:5432/venepheth_test
           REDIS_URL: redis://localhost:6379/0
           SECRET_KEY: ci-test-secret-key-not-for-production
           ALLOWED_HOSTS: localhost,127.0.0.1
-          DJANGO_SETTINGS_MODULE: config.settings.testing
-        run: python manage.py migrate --noinput
+          DJANGO_SETTINGS_MODULE: config.settings.development
+        run: |
+          python manage.py migrate --noinput
+          python manage.py makemigrations --check --dry-run
 
       - name: Run tests with coverage
         env:
@@ -101,14 +107,16 @@ jobs:
           DJANGO_SETTINGS_MODULE: config.settings.testing
         run: |
           coverage run -m pytest tests/ -v --tb=short
-          coverage report --fail-under=80
+          # Generate the XML BEFORE the gate: under `set -e` a failing
+          # --fail-under would skip xml and leave the upload step with no file.
           coverage xml
+          coverage report --fail-under=80
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v4
         if: matrix.python-version == env.PYTHON_VERSION
         with:
-          file: coverage.xml
+          files: coverage.xml
           fail_ci_if_error: false
 
   # ─── Security Audit ─────────────────────────────────────────────────────────

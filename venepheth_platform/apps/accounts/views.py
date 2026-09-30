@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
@@ -150,9 +151,16 @@ def user_list(request):
         messages.error(request, _("You do not have permission to view this page."))
         return redirect("core:home")
 
-    users = CustomUser.objects.all().order_by("role", "email")
+    # Paginate: the list template iterates every row, so an unfiltered
+    # queryset loads all accounts (plus a second COUNT for the header badge)
+    # on each request and grows without bound.
+    users_qs = CustomUser.objects.all().order_by("role", "email")
+    paginator = Paginator(users_qs, 25)
+    page_obj = paginator.get_page(request.GET.get("page"))
     context = {
-        "users": users,
+        "users": page_obj,
+        "page_obj": page_obj,
+        "total_users": paginator.count,
         "meta_title": _("User Management") + f" — {settings.SITE_NAME}",
     }
     return render(request, "admin_panel/users/list.html", context)
