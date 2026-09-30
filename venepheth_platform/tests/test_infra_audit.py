@@ -408,6 +408,53 @@ class TestBackupCommandIsResilient(TestCase):
         self.assertIn("keep_days=14", tasks)
 
 
+class TestRestoreIsDiagnosticAndVersionTolerant(TestCase):
+    """Disaster recovery was verified against a real archive and a real
+    PostgreSQL 16 server. Two defects showed up: pg_restore's stderr was
+    captured and thrown away, and a single rejected statement made a fully
+    successful restore look like a total failure."""
+
+    def test_pg_restore_stderr_is_surfaced(self):
+        source = read("apps/core/management/commands/restore_platform.py")
+        self.assertIn("check=False", source)
+        self.assertIn("result.stderr", source)
+        self.assertIn("pg_restore failed (exit", source)
+        # A bare check=True would raise with no reason attached.
+        self.assertNotIn("check=True,\n                    capture_output", source)
+
+    def test_benign_exit_classifier_exists(self):
+        source = read("apps/core/management/commands/restore_platform.py")
+        self.assertIn("def _is_benign_pg_restore_exit(", source)
+        self.assertIn("errors ignored on restore", source)
+
+    def test_benign_classifier_behaviour(self):
+        from apps.core.management.commands.restore_platform import (
+            _is_benign_pg_restore_exit,
+        )
+
+        # The exact stderr observed on PostgreSQL 16 with a pg_dump 17 archive.
+        self.assertTrue(
+            _is_benign_pg_restore_exit(
+                "pg_restore: error: could not execute query: ERROR:  unrecognized "
+                'configuration parameter "transaction_timeout"\n'
+                "Command was: SET transaction_timeout = 0;\n"
+                "pg_restore: warning: errors ignored on restore: 1"
+            )
+        )
+        # Never hide a real failure.
+        for fatal in (
+            'pg_restore: error: connection to server at "db" failed: FATAL: password authentication failed',
+            "pg_restore: error: could not connect to server: No such file or directory",
+            "pg_restore: error: could not open file: does not exist",
+        ):
+            self.assertFalse(_is_benign_pg_restore_exit(fatal), fatal)
+        self.assertFalse(_is_benign_pg_restore_exit("some other failure"))
+
+    def test_flush_and_loaddata_stay_atomic(self):
+        source = read("apps/core/management/commands/restore_platform.py")
+        self.assertIn("transaction.atomic()", source)
+
+
 class TestReindexCommandActuallyReindexes(TestCase):
     """An audit claimed saving inside .iterator() broke on PostgreSQL, which
     would make the command report "Re-indexed 0/N" forever. Verified against

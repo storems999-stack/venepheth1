@@ -25,6 +25,28 @@ except ImportError:
     HAS_CRYPTOGRAPHY = False
 
 
+def _is_benign_pg_restore_exit(detail: str) -> bool:
+    """True when pg_restore failed only on ignorable statements.
+
+    The common case is a client/server major mismatch: pg_dump 17 writes
+    `SET transaction_timeout = 0` (PG17-only) into the archive, and a PG16
+    server rejects that one statement. pg_restore still applies every other
+    object and row, but exits 1 with "errors ignored on restore: 1".
+    """
+    lowered = detail.lower()
+    if "errors ignored on restore" not in lowered:
+        return False
+    # Connection/authentication problems are never benign.
+    fatal_markers = (
+        "password authentication failed",
+        "could not connect",
+        "connection to server",
+        "no such file or directory",
+        "does not exist",
+    )
+    return not any(marker in lowered for marker in fatal_markers)
+
+
 def _decrypt_archive(archive_path: Path) -> Path:
     """Decrypt a Fernet-encrypted archive. Returns the decrypted path.
 
@@ -189,7 +211,10 @@ class Command(BaseCommand):
                 env = os.environ.copy()
                 if db_conn.get("PASSWORD"):
                     env["PGPASSWORD"] = db_conn["PASSWORD"]
-                subprocess.run(
+                # capture_output without printing leaves a bare
+                # CalledProcessError with no reason, which makes a failed
+                # disaster recovery impossible to diagnose.
+                result = subprocess.run(
                     [
                         "pg_restore",
                         "--clean",
@@ -205,9 +230,29 @@ class Command(BaseCommand):
                         str(staged_pg),
                     ],
                     env=env,
-                    check=True,
+                    check=False,
                     capture_output=True,
+                    text=True,
                 )
+                if result.returncode != 0:
+                    detail = (result.stderr or result.stdout or "").strip()
+                    # pg_restore exits 1 for "errors ignored" too, which happens
+                    # when the dump carries a GUC the server does not know (a
+                    # client/server major mismatch). The data is still applied,
+                    # so this must not be reported as a failed recovery.
+                    if _is_benign_pg_restore_exit(detail):
+                        self.stdout.write(
+                            self.style.WARNING(
+                                "    [!] pg_restore reported warnings but applied the dump:\n"
+                                f"        {detail}\n"
+                                "        Verify the restored row counts before relying on this archive."
+                            )
+                        )
+                    else:
+                        raise CommandError(
+                            f"pg_restore failed (exit {result.returncode}).\n{detail}\n"
+                            "The database was left unchanged — fix the above and re-run."
+                        )
             elif "sqlite3" in engine and staged_sqlite.exists():
                 self.stdout.write("    -> Restoring SQLite database snapshot...")
                 dest_sqlite = Path(db_conn["NAME"])
