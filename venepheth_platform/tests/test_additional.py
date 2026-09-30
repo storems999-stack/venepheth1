@@ -6,6 +6,7 @@ import shutil
 import tempfile
 from io import StringIO
 from pathlib import Path
+from unittest import mock
 from unittest.mock import MagicMock, patch
 
 from django.conf import settings
@@ -16,7 +17,6 @@ from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from apps.core.management.commands.backup_platform import _get_encryption_key
 
 User = get_user_model()
 
@@ -607,7 +607,6 @@ class AssistantHardeningTests(TestCase):
     def test_gemini_safety_blocked_response_falls_back(self):
         """A finishReason-only response has no "content" key — must not raise."""
         import json
-        from unittest.mock import MagicMock, patch
 
         from apps.assistant.adapters.gemini import GeminiAdapter
 
@@ -869,27 +868,33 @@ class BackupEncryptionTests(TestCase):
         from cryptography.fernet import Fernet
         from django.core.management import call_command
 
-        call_command("backup_platform", output_dir=self.output_dir, no_media=True, encrypt=True)
+        # Provision a key explicitly and keep it in scope for the decrypt step
+        # too. Without this the command falls back to <BASE_DIR>/backup_key.bin,
+        # which is git-ignored, so the test passed on a developer machine and
+        # failed on every fresh clone and in CI.
+        key = Fernet.generate_key().decode()
+        with mock.patch.dict(os.environ, {"BACKUP_ENCRYPTION_KEY": key}, clear=False):
+            call_command("backup_platform", output_dir=self.output_dir, no_media=True, encrypt=True)
 
-        encrypted = list(Path(self.output_dir).glob("*.enc"))
-        self.assertEqual(len(encrypted), 1, "expected exactly one .enc archive")
-        self.assertEqual(
-            list(Path(self.output_dir).glob("backup_venepheth_platform_*.tar.gz")),
-            [],
-            "unencrypted archive must not remain on disk",
-        )
+            encrypted = list(Path(self.output_dir).glob("*.enc"))
+            self.assertEqual(len(encrypted), 1, "expected exactly one .enc archive")
+            self.assertEqual(
+                list(Path(self.output_dir).glob("backup_venepheth_platform_*.tar.gz")),
+                [],
+                "unencrypted archive must not remain on disk",
+            )
 
-        archive = encrypted[0]
-        checksum = Path(self.output_dir) / f"{archive.name}.sha256"
-        self.assertTrue(checksum.exists(), "checksum sidecar must exist")
+            archive = encrypted[0]
+            checksum = Path(self.output_dir) / f"{archive.name}.sha256"
+            self.assertTrue(checksum.exists(), "checksum sidecar must exist")
 
-        # Checksum must match the encrypted bytes, not the plaintext tarball.
-        expected = checksum.read_text().split()[0]
-        self.assertEqual(hashlib.sha256(archive.read_bytes()).hexdigest(), expected)
+            # Checksum must match the encrypted bytes, not the plaintext tarball.
+            expected = checksum.read_text().split()[0]
+            self.assertEqual(hashlib.sha256(archive.read_bytes()).hexdigest(), expected)
 
-        # And the payload must decrypt back to a real gzip tarball.
-        plaintext = Fernet(_get_encryption_key()).decrypt(archive.read_bytes())
-        self.assertEqual(plaintext[:2], b"\x1f\x8b")
+            # And the payload must decrypt back to a real gzip tarball.
+            plaintext = Fernet(key.encode()).decrypt(archive.read_bytes())
+            self.assertEqual(plaintext[:2], b"\x1f\x8b")
 
     def test_encrypt_refuses_without_key(self):
         """No key anywhere must raise, never silently mint one."""

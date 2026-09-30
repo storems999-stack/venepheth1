@@ -17,7 +17,8 @@ django-celery-results==2.5.1
 
 # ─── Authentication & Security ─────────────────────────────────────────
 django-allauth==65.19.2          # Auth flows (email login, MFA) — pinned to tested version
-fido2<2.0.0                      # Required by allauth.mfa webauthn
+fido2>=2.0.0,<3.0.0              # allauth.mfa WebAuthn; 1.x pins cryptography<45,
+                                  # which blocks the patched cryptography build below
 django-otp==1.5.3                # TOTP-based 2FA
 qrcode[pil]==8.0                 # QR code for 2FA setup
 django-axes==7.0.1               # Brute-force login protection
