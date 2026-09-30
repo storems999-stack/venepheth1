@@ -374,6 +374,40 @@ class TestSqliteDatabaseUrlWorks(TestCase):
         self.assertNotIn("connect_timeout", settings.DATABASES["default"].get("OPTIONS", {}))
 
 
+class TestBackupCommandIsResilient(TestCase):
+    """The nightly `apps.core.tasks.daily_backup` failed every run in Docker:
+    backup_platform called os.chmod(output_dir, 0o700) and Windows bind mounts
+    reject chmod with EPERM, aborting the whole backup. Verified by dispatching
+    the task to the real worker: it raised, then succeeded after the fix."""
+
+    def test_chmod_failure_does_not_abort_the_backup(self):
+        source = read("apps/core/management/commands/backup_platform.py")
+        self.assertIn("try:", source)
+        chmod_block = source[source.index("os.chmod(output_dir, 0o700)") :][:200]
+        self.assertIn("except OSError", chmod_block)
+
+    def test_manifest_reports_the_real_django_version(self):
+        """It hardcoded `getattr(settings, "DJANGO_VERSION", "5.1")`, so a
+        5.2.17 install wrote "5.1" into the disaster-recovery manifest."""
+        source = read("apps/core/management/commands/backup_platform.py")
+        self.assertIn("django.get_version()", source)
+        self.assertNotIn('"DJANGO_VERSION", "5.1"', source)
+
+    def test_daily_backup_task_is_scheduled(self):
+        """apps/core/migrations/0001_create_backup_schedule.py registers it via
+        an IntervalSchedule; verify the wiring still points at the task."""
+        migration = read("apps/core/migrations/0001_create_backup_schedule.py")
+        self.assertIn("apps.core.tasks.daily_backup", migration)
+        self.assertIn("every=1", migration)
+        self.assertIn('period="days"', migration)
+
+    def test_task_source_is_consistent(self):
+        tasks = read("apps/core/tasks.py")
+        self.assertIn("def daily_backup", tasks)
+        self.assertIn("backup_platform", tasks)
+        self.assertIn("keep_days=14", tasks)
+
+
 class TestReindexCommandActuallyReindexes(TestCase):
     """An audit claimed saving inside .iterator() broke on PostgreSQL, which
     would make the command report "Re-indexed 0/N" forever. Verified against

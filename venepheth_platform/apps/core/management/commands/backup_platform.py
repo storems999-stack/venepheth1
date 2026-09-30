@@ -7,6 +7,7 @@ and platform metadata.
 import hashlib
 import json
 import os
+import platform
 import shutil
 import sqlite3
 import subprocess
@@ -14,6 +15,7 @@ import tarfile
 import time
 from pathlib import Path
 
+import django
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
@@ -100,7 +102,17 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         output_dir = Path(options["output_dir"])
         output_dir.mkdir(parents=True, exist_ok=True)
-        os.chmod(output_dir, 0o700)
+        # Locking the directory down is best-effort hardening, not a hard
+        # requirement. Windows bind mounts (Docker Desktop), some network
+        # filesystems and certain volume drivers reject chmod with EPERM, and
+        # raising here aborted the entire backup — the nightly
+        # `apps.core.tasks.daily_backup` failed every run.
+        try:
+            os.chmod(output_dir, 0o700)
+        except OSError as exc:
+            self.stderr.write(
+                self.style.WARNING(f"    [!] Could not restrict permissions on {output_dir} ({exc}); continuing.")
+            )
         keep_days = options["keep_days"]
         include_media = not options["no_media"]
         encrypt = options.get("encrypt", False)
@@ -182,7 +194,10 @@ class Command(BaseCommand):
                 "timestamp": timestamp,
                 "created_at": timezone.now().isoformat(),
                 "db_engine": engine,
-                "django_version": getattr(settings, "DJANGO_VERSION", "5.1"),
+                # The real version, not a hardcoded guess: this manifest is what
+                # an operator reads when deciding whether a dump is restorable.
+                "django_version": django.get_version(),
+                "python_version": platform.python_version(),
                 "media_included": include_media,
             }
             with open(staging_dir / "manifest.json", "w", encoding="utf-8") as f:
