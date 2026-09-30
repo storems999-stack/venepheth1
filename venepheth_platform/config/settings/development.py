@@ -5,20 +5,35 @@ Never use in production.
 
 import os
 
+import environ
+
 from .base import *
 
 DEBUG = True
 # 0.0.0.0 is a Host-header allowlist entry (dev runs behind a tunnel/Docker), not a
 # socket bind — bandit B104 is a false positive here. Dev-only; production uses env.
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "0.0.0.0", "[::1]", "testserver", ".trycloudflare.com", ".workers.dev"]  # nosec B104
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://localhost:9000",
-    "http://127.0.0.1:9000",
-    "https://*.trycloudflare.com",
-    "https://*.workers.dev",
-]
+# Django's origin check compares scheme+host+PORT, so the port must be present.
+# 8000 = runserver, 9000 = tunnel, 8080 = nginx in docker compose, 9080 = web
+# published directly by compose. Missing any of these made every POST (contact
+# form, login, AI chat, language switch) fail with "Origin checking failed".
+_dev_env = environ.Env()
+_dev_env.read_env(BASE_DIR / ".env")
+CSRF_TRUSTED_ORIGINS = _dev_env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
+        "http://localhost:9000",
+        "http://127.0.0.1:9000",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:9080",
+        "http://127.0.0.1:9080",
+        "https://*.trycloudflare.com",
+        "https://*.workers.dev",
+    ],
+)
 ACCOUNT_EMAIL_VERIFICATION = "none"
 
 # ─── Database (SQLite for local dev without Docker) ───────────────────────────

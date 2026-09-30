@@ -195,22 +195,37 @@ class TestRedisBrokerCarriesPassword(TestCase):
         self.assertIn("CELERY_BROKER_URL = REDIS_URL", source)
 
     def test_fallback_url_carries_the_password(self):
+        """Import base settings in isolation: no .env file, only REDIS_PASSWORD.
+
+        The module calls environ.Env.read_env(BASE_DIR / '.env'), so a developer's
+        .env would otherwise inject its own REDIS_URL and the fallback branch
+        would never be exercised.
+        """
         import importlib
         import os
         import sys
         from unittest import mock
 
-        # Import base settings in isolation with only REDIS_PASSWORD set.
+        saved = {k: os.environ.get(k) for k in ("REDIS_URL", "REDIS_PASSWORD")}
         os.environ.pop("REDIS_URL", None)
-        with mock.patch.dict(os.environ, {"REDIS_PASSWORD": "s3cret"}, clear=False):
-            for name in list(sys.modules):
-                if name.startswith("config.settings"):
-                    del sys.modules[name]
-            settings_mod = importlib.import_module("config.settings.base")
-            self.assertIn(":s3cret@", settings_mod.REDIS_URL)
         for name in list(sys.modules):
             if name.startswith("config.settings"):
                 del sys.modules[name]
+        try:
+            with mock.patch.dict(os.environ, {"REDIS_PASSWORD": "s3cret"}, clear=False):
+                with mock.patch("environ.Env.read_env", lambda self, *a, **k: None):
+                    settings_mod = importlib.import_module("config.settings.base")
+                    self.assertIn(":s3cret@", settings_mod.REDIS_URL)
+                    self.assertEqual(settings_mod.CELERY_BROKER_URL, settings_mod.REDIS_URL)
+        finally:
+            for name in list(sys.modules):
+                if name.startswith("config.settings"):
+                    del sys.modules[name]
+            for key, value in saved.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
 
 
 class TestOfficeHoursWeekdayOrdering(TestCase):
@@ -309,6 +324,54 @@ class TestUserListIsPaginated(TestCase):
         page_obj = resp.context["page_obj"]
         self.assertLessEqual(len(page_obj.object_list), 25)
         self.assertEqual(resp.context["total_users"], CustomUser.objects.count())
+
+
+class TestDockerDevStackPostRequestsWork(TestCase):
+    """Deployed via docker compose, every POST returned 403 "Origin checking
+    failed": development.py overrode .env's CSRF_TRUSTED_ORIGINS with a list that
+    omitted the compose ports, and Django's origin check compares host AND
+    port. Contact form, login, AI chat and the language switch were all broken
+    at http://localhost:8080."""
+
+    def test_dev_settings_include_the_compose_ports(self):
+        source = read("config/settings/development.py")
+        for port in ("8080", "9080"):
+            self.assertIn(f"http://localhost:{port}", source, f"port {port} must be trusted")
+
+    def test_dev_settings_respect_the_env_var(self):
+        """It used to hardcode the list, so CSRF_TRUSTED_ORIGINS in .env was
+        silently ignored."""
+        source = read("config/settings/development.py")
+        self.assertIn("CSRF_TRUSTED_ORIGINS = _dev_env.list(", source)
+
+    def test_nginx_health_location_sends_the_host_header(self):
+        """Without proxy_set_header Host, nginx forwards the upstream name
+        ("django"), which is not in ALLOWED_HOSTS, so /health/ answered 400
+        through the proxy while returning 200 directly."""
+        conf = read("docker/nginx/nginx.dev.conf")
+        health_block = conf[conf.index("location /health/") :]
+        self.assertIn("proxy_set_header Host $host;", health_block)
+
+
+class TestSqliteDatabaseUrlWorks(TestCase):
+    """base.py injected the libpq `connect_timeout` option unconditionally, so
+    any SQLite DATABASE_URL crashed with "Connection() got an unexpected keyword
+    argument 'connect_timeout'" — including base.py's own default."""
+
+    def test_connect_timeout_only_for_postgres(self):
+        source = read("config/settings/base.py")
+        self.assertIn('if "postgresql" in DATABASES["default"]["ENGINE"]:', source)
+        # The option must be inside that guard, not set unconditionally.
+        self.assertNotIn(
+            'DATABASES["default"]["OPTIONS"] = {"connect_timeout": 10}\n',
+            source.replace('    DATABASES["default"]["OPTIONS"] = {"connect_timeout": 10}', "X"),
+        )
+
+    def test_sqlite_settings_load(self):
+        from django.conf import settings
+
+        self.assertIn("sqlite3", settings.DATABASES["default"]["ENGINE"])
+        self.assertNotIn("connect_timeout", settings.DATABASES["default"].get("OPTIONS", {}))
 
 
 class TestReindexCommandActuallyReindexes(TestCase):
