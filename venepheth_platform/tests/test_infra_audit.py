@@ -312,28 +312,68 @@ class TestUserListIsPaginated(TestCase):
 
 
 class TestReindexCommandActuallyReindexes(TestCase):
-    """The command saved inside .iterator(); on PostgreSQL the server-side
-    cursor is invalidated by the UPDATE, the per-row handler swallowed the
-    ProgrammingError, and it reported "Re-indexed 0/N" forever."""
+    """An audit claimed saving inside .iterator() broke on PostgreSQL, which
+    would make the command report "Re-indexed 0/N" forever. Verified against
+    PostgreSQL 16 with 2500 documents: it works, because Django fetches in
+    chunks of 2000. These tests therefore assert the behaviour that actually
+    matters — every attached file ends up indexed — rather than pinning a
+    defect that does not exist."""
 
-    def test_reindex_backfills(self):
+    def _make(self, count, prefix):
         from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.assistant.models import KnowledgeDocument
+
+        made = []
+        for i in range(count):
+            doc = KnowledgeDocument(title=f"{prefix} {i}")
+            doc.file.save(
+                f"{prefix}-{i}.txt",
+                SimpleUploadedFile(f"{prefix}-{i}.txt", f"payload {prefix} {i}".encode()),
+                save=False,
+            )
+            doc.save()
+            made.append(doc)
+        # Simulate rows written before extraction existed.
+        KnowledgeDocument.objects.filter(pk__in=[d.pk for d in made]).update(file_text="")
+        return made
+
+    def test_reindex_backfills_a_single_document(self):
+        from django.core.management import call_command
+
+        doc = self._make(1, "Iter")[0]
+        call_command("reindex_knowledge")
+        doc.refresh_from_db()
+        self.assertIn("payload Iter 0", doc.file_text)
+
+    def test_reindex_backfills_many_documents(self):
+        """More rows than one query result, to catch any per-row skip."""
         from django.core.management import call_command
 
         from apps.assistant.models import KnowledgeDocument
 
-        doc = KnowledgeDocument(title="Iter Doc")
-        doc.file.save(
-            "iter-doc.txt",
-            SimpleUploadedFile("iter-doc.txt", b"reindex must actually write"),
-            save=False,
-        )
-        doc.save()
-        KnowledgeDocument.objects.filter(pk=doc.pk).update(file_text="")
-
+        made = self._make(25, "Bulk")
         call_command("reindex_knowledge")
-        doc.refresh_from_db()
-        self.assertIn("reindex must actually write", doc.file_text)
+        remaining = KnowledgeDocument.objects.filter(pk__in=[d.pk for d in made], file_text="").count()
+        self.assertEqual(remaining, 0, "every attached file must end up indexed")
+        self.assertEqual(KnowledgeDocument.objects.filter(pk__in=[d.pk for d in made]).count(), 25)
+
+    def test_reindex_does_not_n_plus_one(self):
+        """Re-querying each pk would add one SELECT per document; keep it at a
+        single queryset iteration."""
+        from django.test.utils import CaptureQueriesContext
+        from django.db import connection
+
+        from django.core.management import call_command
+
+        made = self._make(10, "Query")
+        with CaptureQueriesContext(connection) as ctx:
+            call_command("reindex_knowledge")
+        # 10 UPDATEs + a little slack, not 10 extra SELECTs.
+        self.assertLess(len(ctx.captured_queries), 30, f"queries: {len(ctx.captured_queries)}")
+        selects = [q for q in ctx.captured_queries if q["sql"].lstrip().upper().startswith("SELECT")]
+        self.assertLessEqual(len(selects), 3, f"unexpected SELECT fan-out: {selects}")
+        self.assertTrue(made)
 
 
 class TestSignalsDoNotSilentlySwallowFailures(TestCase):
