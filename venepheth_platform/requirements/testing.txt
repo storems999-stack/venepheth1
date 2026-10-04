@@ -3,6 +3,7 @@
 # ─── Test runner & coverage (CI: .github/workflows/ci.yml) ─────────────────
 pytest==9.1.1
 pytest-django==4.14.0
+pytest-cov==6.2.1
 coverage==7.6.10
 coverage-enable-subprocess==1.0.0
 factory-boy==3.3.1
