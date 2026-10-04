@@ -135,4 +135,10 @@ class Article(PublishableModel, SlugModel, SEOModel):
         # Estimate reading time (200 words/min average)
         word_count = len(bleach.clean(self.content, tags=[], strip=True).split())
         self.reading_time = max(1, word_count // 200)
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None:
+            update_fields = set(update_fields)
+            kwargs["update_fields"] = update_fields
+        if update_fields is not None and "content_raw" in update_fields:
+            kwargs["update_fields"] = update_fields | {"content", "reading_time", "updated_at"}
         super().save(*args, **kwargs)

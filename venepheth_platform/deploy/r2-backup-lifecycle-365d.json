@@ -1,0 +1,17 @@
+{
+  "rules": [
+    {
+      "id": "expire-production-backups-after-365-days",
+      "enabled": true,
+      "conditions": {
+        "prefix": "venepheth/production/"
+      },
+      "deleteObjectsTransition": {
+        "condition": {
+          "type": "Age",
+          "maxAge": 31536000
+        }
+      }
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from apps.core.admin_actions import save_queryset_with_history
+
 from .models import Publication, ResearchProject, ResearchTopic
 
 
@@ -14,13 +16,13 @@ class ResearchTopicAdmin(admin.ModelAdmin):
 def make_published(modeladmin, request, queryset):
     from django.utils import timezone
 
-    count = queryset.update(status="published", published_at=timezone.now())
+    count = save_queryset_with_history(queryset, request, status="published", published_at=timezone.now())
     modeladmin.message_user(request, f"{count} item(s) successfully marked as published.")
 
 
 @admin.action(description="Archive selected items")
 def make_archived(modeladmin, request, queryset):
-    count = queryset.update(status="archived")
+    count = save_queryset_with_history(queryset, request, status="archived")
     modeladmin.message_user(request, f"{count} item(s) successfully archived.")
 
 

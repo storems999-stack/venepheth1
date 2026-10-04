@@ -10,6 +10,24 @@ class PageViewMiddlewareTests(TestCase):
         self.client.get("/")
         self.assertEqual(PageView.objects.filter(path="/").count(), 1)
 
+    def test_referer_tracking_does_not_store_query_or_fragment(self):
+        self.client.get(
+            "/",
+            HTTP_REFERER="https://user:password@example.com/reset/secret?token=secret#private",
+        )
+
+        page_view = PageView.objects.get(path="/")
+        self.assertEqual(page_view.referer, "https://example.com")
+        self.assertNotIn("secret", page_view.referer)
+        self.assertNotIn("password", page_view.referer)
+
+    def test_auth_routes_are_not_recorded_in_page_view_analytics(self):
+        token_path = "/accounts/password/reset/key/uid-secret-token/"
+
+        self.client.get(token_path)
+
+        self.assertFalse(PageView.objects.filter(path=token_path).exists())
+
     def test_infra_paths_skipped(self):
         for path in ["/metrics/", "/sitemap.xml", "/robots.txt", "/health/", "/health"]:
             self.client.get(path)

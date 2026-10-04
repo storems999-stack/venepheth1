@@ -56,17 +56,21 @@ def course_list(request):
 def course_detail(request, slug):
     """Course detail page (public courses only)."""
     course = get_object_or_404(Course, slug=slug, status="published", visibility=Course.Visibility.PUBLIC)
+    resource_visibilities = [CourseResource.Visibility.PUBLIC]
+    if getattr(request.user, "is_student", False):
+        resource_visibilities.append(CourseResource.Visibility.STUDENTS)
     modules = course.modules.filter(is_visible=True).prefetch_related(
-        Prefetch("resources", queryset=CourseResource.objects.filter(visibility=CourseResource.Visibility.PUBLIC))
+        Prefetch(
+            "resources",
+            queryset=CourseResource.objects.filter(visibility__in=resource_visibilities).filter(
+                course_id=F("module__course_id")
+            ),
+        )
     )
     outcomes = course.outcomes.all()
-    # Sidebar resources must be module-less only. That fixes two bugs at once:
-    #  - resources attached to a hidden module were listed here (leaking their
-    #    title/external_url) even though the download view 404s on
-    #    module.is_visible=False;
-    #  - module-owned resources were ALSO rendered by the `modules` prefetch
-    #    above, so every module file appeared twice with two download buttons.
-    resources = course.resources.filter(visibility=CourseResource.Visibility.PUBLIC, module__isnull=True)
+    # Keep hidden-module resources out of the sidebar and module-owned resources
+    # out of the duplicate sidebar listing.
+    resources = course.resources.filter(visibility__in=resource_visibilities, module__isnull=True)
     announcements = course.announcements.filter(status="published").order_by("-is_pinned", "-published_at")[:5]
 
     return render(
@@ -98,8 +102,13 @@ def course_resource_download(request, pk):
     )
     if resource.visibility == CourseResource.Visibility.PRIVATE:
         raise Http404()
-    if resource.visibility == CourseResource.Visibility.STUDENTS and not request.user.is_authenticated:
-        return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+    if resource.module_id and resource.module.course_id != resource.course_id:
+        raise Http404()
+    if resource.visibility == CourseResource.Visibility.STUDENTS:
+        if not request.user.is_authenticated:
+            return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+        if not getattr(request.user, "is_student", False):
+            raise Http404()
     if resource.module is not None and not resource.module.is_visible:
         raise Http404()
     if not getattr(resource.file, "name", None):

@@ -289,7 +289,47 @@ msgstr "ຈັດດັດສະນີໃໝ່ %(done)d ເອກະສານ, 
 
 #: apps/assistant/apps.py:8
 msgid "AI Academic Assistant"
-msgstr ""
+msgstr "ຜູ້ຊ່ວຍວິຊາການ AI"
+
+#: templates/assistant/chat.html
+msgid "Ask about courses, office hours, research, and publications by Venepheth SAYAVONG."
+msgstr "ສອບຖາມກ່ຽວກັບວິຊາຮຽນ, ເວລາຮັບນັກສຶກສາ, ການຄົ້ນຄ້ວາ ແລະ ສິ່ງຕີພິມຂອງ Venepheth SAYAVONG."
+
+#: templates/assistant/chat.html
+msgid "Academic AI Assistant · Active"
+msgstr "ຜູ້ຊ່ວຍ AI ດ້ານວິຊາການ · ພ້ອມໃຊ້ງານ"
+
+#: templates/assistant/chat.html
+msgid "Ask"
+msgstr "ຖາມ"
+
+#: templates/assistant/chat.html
+msgid "Anything"
+msgstr "ໄດ້ທຸກເລື່ອງ"
+
+#: templates/assistant/chat.html
+msgid "Explore courses, research, publications, office hours, and more — powered by academic knowledge."
+msgstr "ຄົ້ນຫາຂໍ້ມູນວິຊາຮຽນ, ການຄົ້ນຄ້ວາ, ສິ່ງຕີພິມ, ເວລາຮັບນັກສຶກສາ ແລະ ອື່ນໆ ໂດຍອີງໃສ່ຂໍ້ມູນວິຊາການ."
+
+#: templates/assistant/chat.html
+msgid "👋 Hello! I'm the AI Academic Assistant for <strong>Venepheth SAYAVONG</strong>. I can help you with courses, office hours, research projects, publications, and more."
+msgstr "👋 ສະບາຍດີ! ຂ້ອຍແມ່ນ AI Academic Assistant ຂອງ <strong>Venepheth SAYAVONG</strong>. ຂ້ອຍຊ່ວຍຕອບຄຳຖາມກ່ຽວກັບວິຊາຮຽນ, ເວລາຮັບນັກສຶກສາ, ໂຄງການຄົ້ນຄ້ວາ ແລະ ສິ່ງຕີພິມ."
+
+#: templates/assistant/chat.html
+msgid "Suggested Questions"
+msgstr "ຄຳຖາມແນະນຳ"
+
+#: templates/assistant/chat.html
+msgid "Ask about courses, research, office hours..."
+msgstr "ຖາມກ່ຽວກັບວິຊາຮຽນ, ການຄົ້ນຄ້ວາ ຫຼື ເວລາຮັບນັກສຶກສາ..."
+
+#: templates/assistant/chat.html
+msgid "Send"
+msgstr "ສົ່ງ"
+
+#: templates/assistant/chat.html
+msgid "Responses are grounded in academic records. Max 500 characters per query."
+msgstr "ຄຳຕອບອີງໃສ່ຂໍ້ມູນວິຊາການ. ຄຳຖາມມີຄວາມຍາວສູງສຸດ 500 ຕົວອັກສອນ."
 
 #: apps/assistant/models.py:75 apps/blog/models.py:80
 #: apps/courses/models.py:106 apps/courses/models.py:144
@@ -3086,6 +3126,18 @@ msgstr "ເບິ່ງການຄົ້ນຄ້ວາ"
 #: templates/public/home.html:328 templates/research/list.html:17
 msgid "Research Projects"
 msgstr "ໂຄງການຄົ້ນຄ້ວາ"
+
+#: templates/public/home.html:79
+msgid "Academic Researcher"
+msgstr "ນັກຄົ້ນຄວ້າວິຊາການ"
+
+#: templates/public/home.html:234
+msgid "Lecturer & Academic Researcher"
+msgstr "ອາຈານ ແລະ ນັກຄົ້ນຄວ້າວິຊາການ"
+
+#: templates/public/home.html:145
+msgid "Courses taught in the BBA programme, as listed in the CV."
+msgstr "ລາຍວິຊາທີ່ສອນໃນຫຼັກສູດ BBA ຕາມທີ່ລະບຸໃນປະຫວັດຫຍໍ້."
 
 #: templates/public/home.html:79
 msgid "Active Researcher"

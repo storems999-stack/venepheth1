@@ -33,7 +33,7 @@
                 </h1>
                 
                 <p class="text-gray-400 text-lg lg:text-xl max-w-lg mx-auto lg:mx-0 mb-10 leading-relaxed">
-                    {{ profile.short_bio|default:"Lecturer and Researcher dedicated to fostering the next generation of business leaders through rigorous academic training and impactful research." }}
+                    {{ profile.short_bio|default:"Lecturer and Academic Researcher at the Faculty of Economics and Business Management, National University of Laos." }}
                 </p>
                 
                 <div class="flex flex-wrap justify-center lg:justify-start gap-4">
@@ -53,17 +53,17 @@
                      a fallback, `default` fires on 0 and would claim "10+". -->
                 <div class="mt-14 flex flex-wrap justify-center lg:justify-start gap-8">
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-white">{{ stats.courses_count }}+</div>
+                        <div class="text-3xl font-bold text-white">{{ stats.courses_count }}</div>
                         <div class="text-gray-500 text-sm mt-1">{% trans "Courses" %}</div>
                     </div>
                     <div class="w-px bg-white/10 hidden sm:block"></div>
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-white">{{ stats.publications_count }}+</div>
+                        <div class="text-3xl font-bold text-white">{{ stats.publications_count }}</div>
                         <div class="text-gray-500 text-sm mt-1">{% trans "Publications" %}</div>
                     </div>
                     <div class="w-px bg-white/10 hidden sm:block"></div>
                     <div class="text-center">
-                        <div class="text-3xl font-bold text-white">{{ stats.research_count }}+</div>
+                        <div class="text-3xl font-bold text-white">{{ stats.research_count }}</div>
                         <div class="text-gray-500 text-sm mt-1">{% trans "Research Projects" %}</div>
                     </div>
                 </div>
@@ -72,19 +72,19 @@
             <!-- Right Visual Card -->
             <div class="relative hidden lg:flex justify-center">
                 <div class="relative">
-                    <!-- Floating badge - Active Researcher (Top Right, z-20) -->
+                    <!-- Floating badge - Academic Researcher (Top Right, z-20) -->
                     <div class="absolute -top-5 -right-6 z-20 glass-dark border border-gold-500/30 rounded-xl px-4 py-2.5 text-xs shadow-xl animate-float">
                         <div class="flex items-center space-x-2">
                             <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                            <span class="text-white font-medium">{% trans "Active Researcher" %}</span>
+                            <span class="text-white font-medium">{% trans "Academic Researcher" %}</span>
                         </div>
                     </div>
 
-                    <!-- Floating badge - Expert Lecturer (Bottom Left, z-20) -->
+                    <!-- Floating badge - Lecturer (Bottom Left, z-20) -->
                     <div class="absolute -bottom-5 -left-6 z-20 glass-dark border border-gold-500/30 rounded-xl px-4 py-2.5 text-xs shadow-xl" style="animation: float 3s ease-in-out 1.5s infinite;">
                         <div class="flex items-center space-x-2">
                             <i data-lucide="award" class="w-4 h-4 text-gold-400"></i>
-                            <span class="text-white font-medium">{% trans "Expert Lecturer" %}</span>
+                            <span class="text-white font-medium">{% trans "Lecturer" %}</span>
                         </div>
                     </div>
 
@@ -102,7 +102,7 @@
                             {{ profile.full_name|default:"Venepheth Sayavong" }}
                         </h2>
                         <p class="text-gold-400 text-sm mb-4 font-medium">
-                            {{ profile.title|default:"Academic Lecturer & Researcher" }}
+                            {{ profile.title|default:"Lecturer & Academic Researcher" }}
                         </p>
                         {% if profile.office %}
                         <p class="text-gray-400 text-xs flex items-center justify-center space-x-1">
@@ -112,11 +112,11 @@
                         {% endif %}
                         <div class="mt-6 pt-6 border-t border-white/10 flex justify-around">
                             <div>
-                                <div class="text-white font-bold">{{ stats.courses_count }}+</div>
+                                <div class="text-white font-bold">{{ stats.courses_count }}</div>
                                 <div class="text-gray-500 text-xs">{% trans "Courses" %}</div>
                             </div>
                             <div>
-                                <div class="text-white font-bold">{{ stats.publications_count }}+</div>
+                                <div class="text-white font-bold">{{ stats.publications_count }}</div>
                                 <div class="text-gray-500 text-xs">{% trans "Papers" %}</div>
                             </div>
                         </div>
@@ -142,7 +142,7 @@
                 <span class="text-gold-500 text-sm font-bold uppercase tracking-widest">{% trans "Teaching" %}</span>
                 <div class="section-divider"></div>
                 <h2 class="text-4xl font-serif font-bold text-navy-900 mt-3">{% trans "Featured Courses" %}</h2>
-                <p class="text-gray-500 mt-2 max-w-lg">{% trans "Comprehensive academic offerings spanning business, management and research methodologies." %}</p>
+                <p class="text-gray-500 mt-2 max-w-lg">{% trans "Courses taught in the BBA programme, as listed in the CV." %}</p>
             </div>
             <a href="{% url 'courses:list' %}" class="inline-flex items-center space-x-2 text-gold-500 font-semibold hover:text-gold-600 mt-6 sm:mt-0 transition-colors">
                 <span>{% trans "All Courses" %}</span>
@@ -181,10 +181,12 @@
                         <span class="text-gold-500 text-xs font-bold uppercase tracking-wider">
                             {{ course.category.name|default:"General" }}
                         </span>
+                        {% if course.credits %}
                         <span class="text-gray-400 text-xs flex items-center space-x-1">
                             <i data-lucide="layers" class="w-3 h-3"></i>
                             <span>{{ course.credits }} {% trans "credits" %}</span>
                         </span>
+                        {% endif %}
                     </div>
                     <h3 class="text-lg font-bold text-navy-900 mb-2 line-clamp-2 group-hover:text-navy-700 transition-colors">
                         <a href="{{ course.get_absolute_url }}">{{ course.name }}</a>
@@ -193,10 +195,12 @@
                         {{ course.short_description|default:course.description }}
                     </p>
                     <div class="flex items-center justify-between">
+                        {% if course.semester %}
                         <span class="text-gray-400 text-sm flex items-center space-x-1">
                             <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
                             <span>{{ course.semester }}</span>
                         </span>
+                        {% endif %}
                         <a href="{{ course.get_absolute_url }}" 
                            class="text-sm font-semibold text-navy-700 hover:text-gold-500 flex items-center space-x-1 transition-colors">
                             <span>{% trans "View" %}</span>
@@ -227,11 +231,10 @@
                 <span class="text-gold-500 text-sm font-bold uppercase tracking-widest">{% trans "About" %}</span>
                 <div class="section-divider"></div>
                 <h2 class="text-4xl font-serif font-bold text-white mt-3 mb-6">
-                    {% trans "Lecturer, Researcher &" %}<br>
-                    <span class="gradient-text">{% trans "Academic Leader" %}</span>
+                    {% trans "Lecturer & Academic Researcher" %}
                 </h2>
                 <p class="text-gray-400 text-lg leading-relaxed mb-6">
-                    {{ profile.bio|default:"Dedicated to the highest standards of academic excellence, combining rigorous research methodology with innovative teaching approaches to shape future business leaders in Laos and beyond." }}
+                    {{ profile.bio|default:"Lecturer and Academic Researcher at the Faculty of Economics and Business Management, National University of Laos. Ph.D. student in Resources Management and Development at Maejo University, Thailand." }}
                 </p>
                 <div class="space-y-4 mb-8">
                     {% if profile.office %}
@@ -283,35 +286,6 @@
                     </div>
                     <div class="text-3xl font-bold text-white mb-1">{{ item.value }}</div>
                     <div class="text-gray-400 text-sm">{{ item.label }}</div>
-                </div>
-                {% empty %}
-                <div class="glass rounded-2xl p-6 text-center card-hover">
-                    <div class="w-12 h-12 bg-gold-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <i data-lucide="book-open" class="w-6 h-6 text-gold-400"></i>
-                    </div>
-                    <div class="text-3xl font-bold text-white mb-1">10+</div>
-                    <div class="text-gray-400 text-sm">{% trans "Courses Taught" %}</div>
-                </div>
-                <div class="glass rounded-2xl p-6 text-center card-hover">
-                    <div class="w-12 h-12 bg-gold-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <i data-lucide="file-text" class="w-6 h-6 text-gold-400"></i>
-                    </div>
-                    <div class="text-3xl font-bold text-white mb-1">20+</div>
-                    <div class="text-gray-400 text-sm">{% trans "Publications" %}</div>
-                </div>
-                <div class="glass rounded-2xl p-6 text-center card-hover">
-                    <div class="w-12 h-12 bg-gold-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <i data-lucide="flask-conical" class="w-6 h-6 text-gold-400"></i>
-                    </div>
-                    <div class="text-3xl font-bold text-white mb-1">5+</div>
-                    <div class="text-gray-400 text-sm">{% trans "Research Projects" %}</div>
-                </div>
-                <div class="glass rounded-2xl p-6 text-center card-hover">
-                    <div class="w-12 h-12 bg-gold-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                        <i data-lucide="library" class="w-6 h-6 text-gold-400"></i>
-                    </div>
-                    <div class="text-3xl font-bold text-white mb-1">{{ stats.resources_count }}+</div>
-                    <div class="text-gray-400 text-sm">{% trans "Digital Resources" %}</div>
                 </div>
                 {% endfor %}
             </div>

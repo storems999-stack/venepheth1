@@ -37,8 +37,7 @@ class KnowledgeDocumentAdmin(admin.ModelAdmin):
             )
         preview = escape(text[:800]) + ("…" if len(text) > 800 else "")
         return format_html(
-            "<p>{}: <strong>{}</strong></p><pre style='white-space:pre-wrap;max-height:220px;overflow:auto;'>"
-            "{}</pre>",
+            "<p>{}: <strong>{}</strong></p><pre style='white-space:pre-wrap;max-height:220px;overflow:auto;'>{}</pre>",
             _("Indexed characters"),
             len(text),
             preview,

@@ -91,6 +91,27 @@ class TestGetLLMAdapter(TestCase):
 class TestAcademicRetriever(TestCase):
     """Test the RAG AcademicRetriever service."""
 
+    def test_question_words_do_not_match_unrelated_knowledge_documents(self):
+        from apps.assistant.models import KnowledgeDocument
+        from apps.assistant.services.retriever import AcademicRetriever
+
+        KnowledgeDocument.objects.create(
+            title="How do I contact the professor?",
+            slug="contact-professor-faq-test",
+            content="Use the Contact page for collaboration requests.",
+        )
+        KnowledgeDocument.objects.create(
+            title="What courses are offered?",
+            slug="available-courses-faq-test",
+            content="Browse the Courses page for available classes.",
+        )
+
+        results = AcademicRetriever.retrieve("What courses are offered?")
+        titles = [result["title"] for result in results]
+
+        self.assertIn("What courses are offered?", titles)
+        self.assertNotIn("How do I contact the professor?", titles)
+
     def test_retrieve_returns_list(self):
         """AcademicRetriever.retrieve() should return a list even with empty DB."""
         from apps.assistant.services.retriever import AcademicRetriever
@@ -120,6 +141,23 @@ class TestAssistantChatAntiBot(TestCase):
         resp = self.client.get("/assistant/")
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "AI Academic Assistant")
+
+    def test_page_renders_suggested_prompts_in_selected_language(self):
+        self.client.cookies.load({"django_language": "lo"})
+
+        response = self.client.get("/assistant/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "ຖາມ")
+        self.assertContains(response, "ໄດ້ທຸກເລື່ອງ")
+        self.assertContains(response, "ຄຳຖາມແນະນຳ")
+        self.assertContains(response, "ຖາມກ່ຽວກັບວິຊາຮຽນ")
+        self.assertContains(response, "ຄຳຕອບອີງໃສ່ຂໍ້ມູນວິຊາການ")
+        self.assertContains(response, "ມີວິຊາຮຽນຫຍັງແດ່?")
+        self.assertContains(
+            response,
+            'data-assistant-suggest="ເວລາຮັບນັກສຶກສາແມ່ນເວລາໃດ?"',
+        )
 
     def test_widget_included_on_homepage(self):
         resp = self.client.get("/")
@@ -268,6 +306,29 @@ class TestKnowledgeBox(TestCase):
         self.assertEqual(results[0]["type"], "Knowledge Base")
         self.assertIn("Zxq Office FAQ", results[0]["title"])
 
+    def test_retrieved_knowledge_includes_matching_attachment_text(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.assistant.models import KnowledgeDocument
+        from apps.assistant.services.retriever import AcademicRetriever
+
+        doc = KnowledgeDocument(
+            title="Combined knowledge source",
+            content="Manual text about unrelated history.",
+        )
+        doc.file.save(
+            "combined-knowledge.txt",
+            SimpleUploadedFile("combined-knowledge.txt", b"Zirconium process notes from the attached document."),
+            save=False,
+        )
+        doc.save()
+        self.addCleanup(doc.file.delete, save=False)
+
+        results = AcademicRetriever.retrieve("Zirconium process")
+
+        self.assertTrue(results)
+        self.assertIn("Zirconium process", results[0]["summary"])
+
     def test_inactive_doc_ignored(self):
         from apps.assistant.models import KnowledgeDocument
         from apps.assistant.services.retriever import AcademicRetriever
@@ -297,14 +358,36 @@ class TestKnowledgeBox(TestCase):
 class TestPdfExtraction(TestCase):
     """PDF uploads are auto-indexed via pypdf (graceful without it)."""
 
+    def test_clearing_attachment_clears_extracted_file_text(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.assistant.models import KnowledgeDocument
+
+        doc = KnowledgeDocument(title="Removed attachment")
+        doc.file.save(
+            "removed-attachment.txt",
+            SimpleUploadedFile("removed-attachment.txt", b"Extracted attachment content"),
+            save=False,
+        )
+        doc.save()
+        self.assertEqual(doc.file_text, "Extracted attachment content")
+
+        doc.file.delete(save=False)
+        doc.save(update_fields=["title"])
+        doc.refresh_from_db()
+
+        self.assertEqual(doc.file_text, "")
+
     def _make_pdf_bytes(self, text="Hello PDF knowledge"):
         """Build a minimal valid one-page PDF (offsets computed dynamically)."""
         content = f"BT /F1 12 Tf 10 10 Td ({text}) Tj ET".encode("latin-1")
         objects = [
             b"<< /Type /Catalog /Pages 2 0 R >>",
             b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] "
-            b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+            (
+                b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] "
+                b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>"
+            ),
             b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
             b"<< /Length %d >>\nstream\n" % len(content) + content + b"\nendstream",
         ]

@@ -2,6 +2,8 @@
 Unit tests for Prometheus metrics endpoint.
 """
 
+from unittest.mock import Mock
+
 from django.test import TestCase, override_settings
 
 
@@ -54,3 +56,11 @@ class TestPrometheusMetrics(TestCase):
         resp = self.client.get("/metrics/", HTTP_X_METRICS_TOKEN="x")
         # Wrong token with no METRICS_TOKEN configured is still closed.
         self.assertEqual(resp.status_code, 403)
+
+    def test_database_metric_failures_are_logged(self):
+        from apps.core.metrics import _safe_count
+
+        queryset = Mock()
+        queryset.count.side_effect = RuntimeError("database unavailable")
+        with self.assertLogs("apps.core", level="ERROR"):
+            self.assertEqual(_safe_count(queryset), -1)

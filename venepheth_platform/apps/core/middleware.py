@@ -25,6 +25,22 @@ def peer_is_trusted(peer_ip: str) -> bool:
     return False
 
 
+def client_ip_from_forwarded(peer_ip: str, forwarded: str | None) -> str:
+    """Resolve the nearest untrusted hop in a trusted proxy's XFF chain."""
+    if not peer_ip or not peer_is_trusted(peer_ip) or not forwarded:
+        return peer_ip
+
+    for candidate in reversed(forwarded.split(",")):
+        candidate = candidate.strip()
+        try:
+            ipaddress.ip_address(candidate)
+        except ValueError:
+            continue
+        if not peer_is_trusted(candidate):
+            return candidate
+    return peer_ip
+
+
 # Backwards-compatible private alias.
 _peer_is_trusted = peer_is_trusted
 
@@ -43,10 +59,7 @@ class TrustedProxyMiddleware:
 
     def __call__(self, request):
         peer_ip = request.META.get("REMOTE_ADDR")
-        if peer_ip and peer_is_trusted(peer_ip):
-            forwarded = request.META.get("HTTP_X_FORWARDED_FOR")
-            if forwarded:
-                real_ip = forwarded.split(",")[0].strip()
-                if real_ip:
-                    request.META["REMOTE_ADDR"] = real_ip
+        real_ip = client_ip_from_forwarded(peer_ip, request.META.get("HTTP_X_FORWARDED_FOR"))
+        if real_ip and real_ip != peer_ip:
+            request.META["REMOTE_ADDR"] = real_ip
         return self.get_response(request)

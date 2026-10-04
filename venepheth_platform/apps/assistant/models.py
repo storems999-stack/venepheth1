@@ -52,6 +52,7 @@ def extract_pdf_text(file_obj, max_pages: int = MAX_PDF_PAGES, max_chars: int = 
             try:
                 text = page.extract_text() or ""
             except Exception:
+                logger.warning("KnowledgeDocument: failed to extract text from a PDF page", exc_info=True)
                 continue
             if text:
                 chunks.append(text)
@@ -109,7 +110,7 @@ class KnowledgeDocument(models.Model):
         from django.urls import reverse
 
         url = (self.source_url or "").strip()
-        if url.startswith("/") or url.startswith("https://") or url.startswith("http://"):
+        if url.startswith(("/", "https://", "http://")):
             return url
         return reverse("assistant:chat")
 
@@ -130,6 +131,11 @@ class KnowledgeDocument(models.Model):
                 # None = unsupported type: keep existing file_text.
             except Exception:
                 logger.warning("KnowledgeDocument: failed to extract text for %r", self.title)
+        else:
+            self.file_text = ""
+        update_fields = kwargs.get("update_fields")
+        if update_fields:
+            kwargs["update_fields"] = set(update_fields) | {"file_text"}
         super().save(*args, **kwargs)
 
     def extract_file_text(self) -> str | None:

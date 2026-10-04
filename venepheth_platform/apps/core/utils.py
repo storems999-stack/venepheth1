@@ -1,6 +1,6 @@
 """Shared core utilities."""
 
-from apps.core.middleware import peer_is_trusted
+from apps.core.middleware import client_ip_from_forwarded
 
 
 def get_client_ip(request):
@@ -22,10 +22,4 @@ def get_client_ip(request):
         return None
     meta = getattr(request, "META", None) or {}
     peer = meta.get("REMOTE_ADDR")
-    if peer and peer_is_trusted(peer):
-        forwarded = meta.get("HTTP_X_FORWARDED_FOR")
-        if forwarded:
-            real_ip = forwarded.split(",")[0].strip()
-            if real_ip:
-                return real_ip
-    return peer
+    return client_ip_from_forwarded(peer, meta.get("HTTP_X_FORWARDED_FOR"))

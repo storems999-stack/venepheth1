@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from apps.blog.models import Article
 from apps.courses.models import Course
-from apps.research.models import ResearchProject, Publication
+from apps.research.models import Publication, ResearchProject
 from apps.resources.models import Resource
 
 

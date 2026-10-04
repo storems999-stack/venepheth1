@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from apps.core.admin_actions import save_queryset_with_history
+
 from .models import Article, ArticleTag
 
 
@@ -13,19 +15,24 @@ class ArticleTagAdmin(admin.ModelAdmin):
 def make_published(modeladmin, request, queryset):
     from django.utils import timezone
 
-    count = queryset.update(status=Article.Status.PUBLISHED, published_at=timezone.now())
+    count = save_queryset_with_history(
+        queryset,
+        request,
+        status=Article.Status.PUBLISHED,
+        published_at=timezone.now(),
+    )
     modeladmin.message_user(request, f"{count} article(s) successfully marked as published.")
 
 
 @admin.action(description="Archive selected articles")
 def make_archived(modeladmin, request, queryset):
-    count = queryset.update(status=Article.Status.ARCHIVED)
+    count = save_queryset_with_history(queryset, request, status=Article.Status.ARCHIVED)
     modeladmin.message_user(request, f"{count} article(s) successfully archived.")
 
 
 @admin.action(description="Revert selected articles to draft")
 def make_draft(modeladmin, request, queryset):
-    count = queryset.update(status=Article.Status.DRAFT)
+    count = save_queryset_with_history(queryset, request, status=Article.Status.DRAFT)
     modeladmin.message_user(request, f"{count} article(s) reverted to draft.")
 
 
@@ -43,7 +50,10 @@ class ArticleAdmin(admin.ModelAdmin):
             "Article Content",
             {"fields": ("title", "slug", "subtitle", "category", "excerpt", "content_raw", "content", "thumbnail")},
         ),
-        ("Publication", {"fields": ("status", "published_at", "is_featured", "tags", "allow_comments")}),
+        (
+            "Publication",
+            {"fields": ("status", "scheduled_at", "published_at", "is_featured", "tags", "allow_comments")},
+        ),
         ("Stats (Auto)", {"fields": ("reading_time", "view_count")}),
         ("SEO", {"fields": ("seo_title", "seo_description", "og_image"), "classes": ("collapse",)}),
     )

@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% load static i18n %}
 
-{% block title %}AI Academic Assistant{% endblock %}
-{% block meta_description %}Ask anything about courses, office hours, research, and publications by Venepheth SAYAVONG.{% endblock %}
+{% block title %}{% trans "AI Academic Assistant" %}{% endblock %}
+{% block meta_description %}{% trans "Ask about courses, office hours, research, and publications by Venepheth SAYAVONG." %}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-navy-950 py-12">
@@ -14,13 +14,13 @@
                     <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold-400 opacity-75"></span>
                     <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-gold-500"></span>
                 </span>
-                <span class="text-gold-400 text-sm font-medium">Academic AI Assistant · Active</span>
+                <span class="text-gold-400 text-sm font-medium">{% trans "Academic AI Assistant · Active" %}</span>
             </div>
             <h1 class="text-3xl lg:text-4xl font-serif font-bold text-white mb-3">
-                Ask <span class="gradient-text">Anything</span>
+                {% trans "Ask" %} <span class="gradient-text">{% trans "Anything" %}</span>
             </h1>
             <p class="text-gray-400 max-w-lg mx-auto">
-                Explore courses, research, publications, office hours, and more — powered by academic knowledge.
+                {% trans "Explore courses, research, publications, office hours, and more — powered by academic knowledge." %}
             </p>
         </div>
 
@@ -37,11 +37,12 @@
                     </div>
                     <div class="bg-navy-800/60 border border-white/5 rounded-xl rounded-tl-none px-4 py-3 max-w-[80%]">
                         <p class="text-gray-200 text-sm leading-relaxed">
-                            👋 Hello! I'm the AI Academic Assistant for <strong>Venepheth SAYAVONG</strong>.
-                            I can help you with courses, office hours, research projects, publications, and more.
-                        </p>
-                        <p class="text-gray-400 text-xs mt-2 leading-relaxed">
-                            ສະບາຍດີ! ຂ້ອຍຊ່ວຍຕອບຄຳຖາມກ່ຽວກັບວິຊາ, ເວລາຮັບ, ການຄົ້ນຄ້ວາ, ສິ່ງຕີພິມ ແລະ ອື່ນໆ.
+                            {% if LANGUAGE_CODE == "lo" %}
+                                👋 ສະບາຍດີ! ຂ້ອຍແມ່ນ AI Academic Assistant ຂອງ <strong>Venepheth SAYAVONG</strong>.
+                                ຂ້ອຍຊ່ວຍຕອບຄຳຖາມກ່ຽວກັບວິຊາຮຽນ, ເວລາຮັບນັກສຶກສາ, ໂຄງການຄົ້ນຄ້ວາ ແລະ ສິ່ງຕີພິມ.
+                            {% else %}
+                                {% blocktrans %}👋 Hello! I'm the AI Academic Assistant for <strong>Venepheth SAYAVONG</strong>. I can help you with courses, office hours, research projects, publications, and more.{% endblocktrans %}
+                            {% endif %}
                         </p>
                     </div>
                 </div>
@@ -51,13 +52,13 @@
 
             <!-- Suggested prompts -->
             <div id="suggested-prompts" class="px-6 pb-4">
-                <p class="text-gray-500 text-xs mb-3 uppercase tracking-wider">Suggested Questions</p>
+                <p class="text-gray-500 text-xs mb-3 uppercase tracking-wider">{% trans "Suggested Questions" %}</p>
                 <div class="flex flex-wrap gap-2">
                     {% for prompt in suggested_prompts %}
                     <button type="button"
-                            data-assistant-suggest="{{ prompt.en }}"
+                            data-assistant-suggest="{{ prompt }}"
                             class="text-xs px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:text-white hover:bg-white/10 hover:border-gold-500/40 transition-all">
-                        {{ prompt.en }}
+                        {{ prompt }}
                     </button>
                     {% endfor %}
                 </div>
@@ -77,7 +78,7 @@
                         type="text"
                         data-assistant-input
                         maxlength="500"
-                        placeholder="Ask about courses, research, office hours..."
+                        placeholder="{% trans 'Ask about courses, research, office hours...' %}"
                         class="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gold-500 transition-colors"
                     >
                     <button
@@ -85,7 +86,7 @@
                         data-assistant-send
                         class="bg-gold-500 hover:bg-gold-400 disabled:opacity-40 disabled:cursor-not-allowed text-navy-950 font-semibold px-4 py-2.5 rounded-xl text-sm transition-all flex items-center space-x-2 shadow-lg shadow-gold-500/20">
                         <i data-lucide="send" class="w-4 h-4"></i>
-                        <span data-assistant-send-label>Send</span>
+                        <span data-assistant-send-label>{% trans "Send" %}</span>
                         <svg data-assistant-spinner class="animate-spin h-4 w-4 hidden" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
@@ -93,7 +94,7 @@
                     </button>
                 </form>
                 <p class="text-gray-600 text-xs mt-2 text-center">
-                    Responses are grounded in academic records. Max 500 characters per query.
+                    {% trans "Responses are grounded in academic records. Max 500 characters per query." %}
                     {% blocktrans %}Quota: {{ quota_note }}.{% endblocktrans %}
                     {% if not user.is_authenticated %}
                     <a href="{% url 'account_login' %}?next={% url 'assistant:chat' %}" class="text-gold-400 hover:text-gold-300 underline">{% trans "Log in for 3× quota." %}</a>

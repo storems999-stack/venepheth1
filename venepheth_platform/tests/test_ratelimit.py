@@ -1,8 +1,21 @@
 """Rate limiting tests (Vision §14, §21)."""
 
+import time
+
 from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
+
+
+class _FrozenTime:
+    def __init__(self, now):
+        self._now = now
+
+    def time(self):
+        return self._now
+
+    def __getattr__(self, name):
+        return getattr(time, name)
 
 
 class RateLimitTests(TestCase):
@@ -11,6 +24,11 @@ class RateLimitTests(TestCase):
     def setUp(self):
         self.client = Client()
         cache.clear()
+        from django_ratelimit import core as rl_core
+
+        original_time = rl_core.time
+        rl_core.time = _FrozenTime(1_700_000_030.0)
+        self.addCleanup(setattr, rl_core, "time", original_time)
 
     def tearDown(self):
         cache.clear()
@@ -59,3 +77,15 @@ class RateLimitTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 429)
         self.assertEqual(response.json(), {"error": "Too many requests. Please try again later."})
+
+    def test_profile_api_list_has_stable_order(self):
+        from apps.profiles.models import Profile
+
+        Profile.objects.create(full_name="First inserted")
+        Profile.objects.create(full_name="Second inserted")
+        response = self.client.get(reverse("api:profile-list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [profile["full_name"] for profile in response.data["results"]],
+            ["First inserted", "Second inserted"],
+        )

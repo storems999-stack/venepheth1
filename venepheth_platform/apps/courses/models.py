@@ -2,6 +2,7 @@
 Course management models.
 """
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -165,6 +166,11 @@ class CourseResource(TimeStampedModel):
             models.Index(fields=["course", "visibility"]),
             models.Index(fields=["module", "visibility"]),
         ]
+
+    def clean(self):
+        super().clean()
+        if self.module_id and self.course_id and self.module.course_id != self.course_id:
+            raise ValidationError({"module": _("The module must belong to the selected course.")})
 
     def __str__(self):
         return self.title

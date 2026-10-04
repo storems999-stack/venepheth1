@@ -4,7 +4,6 @@ File security validation utilities.
 
 import hashlib
 import logging
-import mimetypes
 from pathlib import Path
 
 from django.conf import settings
@@ -13,38 +12,37 @@ from django.utils.translation import gettext_lazy as _
 
 logger = logging.getLogger("apps.security")
 
-# Try to use python-magic for MIME detection
+# MIME detection is required for upload safety; never trust the filename when it
+# is unavailable.
 try:
     import magic
 
     HAS_MAGIC = True
 except ImportError:
     HAS_MAGIC = False
-    logger.warning("python-magic not available; falling back to mimetypes for MIME detection")
+    logger.error("python-magic is unavailable; file uploads will fail MIME validation")
 
 
-ALLOWED_MIME_TYPES = {
-    # Documents
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.ms-powerpoint",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "text/plain",
-    "text/markdown",
-    # Images (no SVG — served inline from /media/, executes JavaScript)
-    "image/jpeg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-    # Video
-    "video/mp4",
-    "video/webm",
-    "video/quicktime",
-    # Archive
-    "application/zip",
+EXPECTED_MIME_TYPES = {
+    ".pdf": {"application/pdf"},
+    ".doc": {"application/msword"},
+    ".docx": {"application/vnd.openxmlformats-officedocument.wordprocessingml.document"},
+    ".ppt": {"application/vnd.ms-powerpoint"},
+    ".pptx": {"application/vnd.openxmlformats-officedocument.presentationml.presentation"},
+    ".xls": {"application/vnd.ms-excel"},
+    ".xlsx": {"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+    ".txt": {"text/plain"},
+    ".md": {"text/markdown", "text/plain"},
+    # SVG is deliberately excluded because media files are served inline.
+    ".jpg": {"image/jpeg"},
+    ".jpeg": {"image/jpeg"},
+    ".png": {"image/png"},
+    ".gif": {"image/gif"},
+    ".webp": {"image/webp"},
+    ".mp4": {"video/mp4"},
+    ".webm": {"video/webm"},
+    ".mov": {"video/quicktime"},
+    ".zip": {"application/zip"},
 }
 
 
@@ -79,19 +77,23 @@ def validate_file_size(value):
 
 def validate_file_mime(value):
     """Validate MIME type matches allowed list using python-magic."""
+    if not HAS_MAGIC:
+        raise ValidationError(_("File type detection is unavailable; uploads are temporarily disabled."))
+
     value.seek(0)
     header = value.read(1024)
     value.seek(0)
 
-    if HAS_MAGIC:
-        mime = magic.from_buffer(header, mime=True)
-    else:
-        mime, _encoding = mimetypes.guess_type(value.name)
-        mime = mime or "application/octet-stream"
+    mime = magic.from_buffer(header, mime=True)
 
-    if mime not in ALLOWED_MIME_TYPES:
+    extension = Path(value.name).suffix.lower()
+    expected_mimes = EXPECTED_MIME_TYPES.get(extension, set())
+    if mime not in expected_mimes:
         logger.warning("Blocked upload with MIME type: %s, filename: %s", mime, value.name)
-        raise ValidationError(_("File type '%(mime)s' is not permitted.") % {"mime": mime})
+        raise ValidationError(
+            _("File type '%(mime)s' is not permitted for '%(extension)s' files.")
+            % {"mime": mime, "extension": extension}
+        )
 
 
 def normalize_filename(filename: str) -> str:

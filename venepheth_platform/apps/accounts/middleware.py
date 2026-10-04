@@ -7,20 +7,30 @@ non-compliant sessions before any view runs.
 """
 
 import logging
+from contextlib import ExitStack
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils import timezone, translation
+from django.utils.cache import patch_vary_headers
 from django.utils.deprecation import MiddlewareMixin
 
 logger = logging.getLogger("apps.accounts")
 
 # URL prefixes that must stay reachable while under enforcement
-# (auth flows, logout, password/MFA setup) — otherwise users get redirect loops.
-# Prefix (not substring) matching: /blog/password-tips/ must NOT bypass.
+# (login/logout, password recovery, password change, and MFA setup).
 _ALWAYS_ALLOWED_PREFIXES = (
-    "/accounts/",
+    "/accounts/login/",
+    "/accounts/logout/",
+    "/accounts/password/change/",
+    "/accounts/password/set/",
+    "/accounts/password/reset/",
+    "/accounts/confirm-email/",
+    "/accounts/login/code/",
+    "/accounts/2fa/",
     "/my/logout/",
     "/my/password/",
     "/i18n/",
@@ -31,6 +41,47 @@ _ALWAYS_ALLOWED_PREFIXES = (
 )
 
 _API_PREFIX = "/api/"
+
+
+class UserPreferenceMiddleware:
+    """Apply authenticated users' saved language and timezone preferences."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, "user", None)
+        if user is None or not user.is_authenticated:
+            return self.get_response(request)
+
+        language = None
+        if settings.LANGUAGE_COOKIE_NAME not in request.COOKIES:
+            preferred_language = getattr(user, "language", "")
+            if preferred_language in dict(settings.LANGUAGES):
+                language = preferred_language
+                request.LANGUAGE_CODE = preferred_language
+            elif preferred_language:
+                logger.warning("Ignoring unsupported language preference for user pk=%s", user.pk)
+
+        preferred_timezone = getattr(user, "timezone", "")
+        try:
+            user_timezone = ZoneInfo(preferred_timezone) if preferred_timezone else None
+        except (TypeError, ValueError, ZoneInfoNotFoundError):
+            logger.warning("Ignoring unsupported timezone preference for user pk=%s", user.pk)
+            user_timezone = None
+
+        with ExitStack() as stack:
+            if language:
+                stack.enter_context(translation.override(language))
+            if user_timezone:
+                stack.enter_context(timezone.override(user_timezone))
+            response = self.get_response(request)
+
+        if language:
+            response.headers.setdefault("Content-Language", language)
+        if language or user_timezone:
+            patch_vary_headers(response, ("Cookie",))
+        return response
 
 
 def user_has_mfa(user) -> bool:
@@ -60,9 +111,12 @@ class SecurityEnforcementMiddleware(MiddlewareMixin):
             return None
 
         path = request.path
-        if path.startswith(_ALWAYS_ALLOWED_PREFIXES):
+        if any(path == prefix.rstrip("/") or path.startswith(prefix) for prefix in _ALWAYS_ALLOWED_PREFIXES):
             return None
-        if path.startswith((settings.STATIC_URL, settings.MEDIA_URL)):
+        if any(
+            path == prefix.rstrip("/") or path.startswith(prefix)
+            for prefix in (settings.STATIC_URL, settings.MEDIA_URL)
+        ):
             return None
 
         must_change = getattr(user, "must_change_password", False)

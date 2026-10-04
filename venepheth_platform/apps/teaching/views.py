@@ -3,7 +3,6 @@
 import logging
 
 from django.shortcuts import render
-from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_GET
 
 from apps.courses.models import Course
@@ -14,7 +13,6 @@ logger = logging.getLogger("apps.teaching")
 
 
 @require_GET
-@cache_page(60 * 30)  # 30-minute cache — office hours don't change frequently
 def teaching_overview(request):
     """Teaching overview: office hours, philosophy, recent announcements."""
     office_hours = (

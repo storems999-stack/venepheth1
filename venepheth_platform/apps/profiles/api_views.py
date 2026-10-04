@@ -14,8 +14,10 @@ class ProfileViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, viewsets.
     List returns all active profiles.
     """
 
-    queryset = Profile.objects.filter(is_active=True).prefetch_related(
-        "educations", "experiences", "languages", "interests"
+    queryset = (
+        Profile.objects.filter(is_active=True)
+        .order_by("pk")
+        .prefetch_related("educations", "experiences", "languages", "interests")
     )
     serializer_class = ProfileSerializer
     permission_classes = [AllowAny]

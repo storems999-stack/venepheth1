@@ -6,7 +6,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.sitemaps.views import sitemap
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.views.generic import RedirectView, TemplateView
 from drf_spectacular.views import (
     SpectacularAPIView,
@@ -17,11 +17,12 @@ from drf_spectacular.views import (
 from apps.core.sitemaps import (
     ArticleSitemap,
     CourseSitemap,
-    ResearchProjectSitemap,
-    StaticViewSitemap,
     PublicationSitemap,
+    ResearchProjectSitemap,
     ResourceSitemap,
+    StaticViewSitemap,
 )
+from apps.core.views import protected_media_not_found
 
 # ─── Admin URL & Branding ────────────────────────────────────────────────────────
 ADMIN_URL = getattr(settings, "ADMIN_URL", "admin/")
@@ -40,6 +41,12 @@ sitemaps = {
 }
 
 urlpatterns = [
+    # Permission-gated uploads must not bypass their download views through
+    # Django's DEBUG media route.
+    re_path(
+        r"^media/(?:resources|publications|courses/resources|assistant/knowledge)/(?P<private_path>.*)$",
+        protected_media_not_found,
+    ),
     # ── Admin ──────────────────────────────────────────────────────────────────
     path(ADMIN_URL, admin.site.urls),
     # ── SEO ────────────────────────────────────────────────────────────────────

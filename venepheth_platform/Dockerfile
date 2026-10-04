@@ -41,14 +41,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# NOTE: pg_dump/pg_restore should match the server major version. The distro
-# package currently resolves to 17 while compose pins postgres:16, so archives
-# carry `SET transaction_timeout = 0` (a PG17 GUC) that a PG16 server rejects.
-# restore_platform classifies that specific "errors ignored on restore" exit as
-# a warning because the dump is still fully applied — see
-# _is_benign_pg_restore_exit(). Pinning postgresql-client-16 (PGDG repo) would
-# remove the mismatch at the source; that is left as an operator decision
-# because it adds an external apt repository.
+# pg_dump/pg_restore may be newer than the PostgreSQL server. restore_platform
+# removes only the PG17-only default transaction_timeout setting when restoring
+# to an older server, then applies the generated SQL in one rollback-safe
+# transaction.
 
 # Create non-root user for security
 RUN groupadd --system venepheth && \

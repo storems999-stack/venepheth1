@@ -121,21 +121,35 @@ class Resource(TimeStampedModel, SlugModel):
 
     def save(self, *args, **kwargs):
         """Auto-compute file size and hash on save."""
-        if self.file:
-            try:
-                from apps.core.file_security import compute_file_hash
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None:
+            update_fields = set(update_fields)
+            kwargs["update_fields"] = update_fields
+        if update_fields is None or "file" in update_fields:
+            metadata_fields = set()
+            if self.file:
+                try:
+                    from apps.core.file_security import compute_file_hash
 
-                self.file_size = self.file.size
-                if not self.file_hash:
-                    self.file_hash = compute_file_hash(self.file)
-            except Exception:
-                # exc_info matters: without a traceback there is no way to
-                # diagnose why file_hash is empty and dedup silently degraded.
-                logger.warning(
-                    "Failed to compute file size/hash for resource %r",
-                    self.slug,
-                    exc_info=True,
-                )
+                    self.file_size = self.file.size
+                    metadata_fields.add("file_size")
+                    if not getattr(self.file, "_committed", True) or not self.file_hash:
+                        self.file_hash = compute_file_hash(self.file)
+                        metadata_fields.add("file_hash")
+                except Exception:
+                    # exc_info matters: without a traceback there is no way to
+                    # diagnose why file_hash is empty and dedup silently degraded.
+                    logger.warning(
+                        "Failed to compute file size/hash for resource %r",
+                        self.slug,
+                        exc_info=True,
+                    )
+            else:
+                self.file_size = None
+                self.file_hash = ""
+                metadata_fields.update(("file_size", "file_hash"))
+            if update_fields is not None and metadata_fields:
+                kwargs["update_fields"] = set(update_fields) | metadata_fields
         super().save(*args, **kwargs)
 
     def get_tags_list(self):

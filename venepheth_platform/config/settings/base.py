@@ -94,6 +94,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.accounts.middleware.UserPreferenceMiddleware",
     "django_otp.middleware.OTPMiddleware",
     "apps.accounts.middleware.SecurityEnforcementMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",

@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
@@ -132,11 +133,11 @@ def logout_view(request):
 def dashboard_redirect(request):
     """
     Smart redirect after login:
-    - Staff/superuser/lecturer → Academic Dashboard
+    - Staff/superuser         → Academic Dashboard
     - Others                  → Homepage
     """
     user = request.user
-    if user.is_staff or user.is_superuser or user.is_editor_or_above:
+    if user.is_staff or user.is_superuser:
         return redirect("core:dashboard")
     return redirect("core:home")
 
@@ -210,14 +211,23 @@ def toggle_user_active(request, pk):
         CustomUser.Role.SUPERADMIN: 5,
     }
     is_super = request.user.role == CustomUser.Role.SUPERADMIN
+    target_is_super = user.role == CustomUser.Role.SUPERADMIN or user.is_superuser
+    if target_is_super and not is_super:
+        messages.error(request, _("You cannot change a superadmin account."))
+        return redirect("accounts:user_list")
     if not is_super and _role_rank.get(user.role, 0) >= _role_rank.get(request.user.role, 0):
         messages.error(request, _("You cannot change an account at or above your role."))
         return redirect("accounts:user_list")
 
     # Last-superadmin guard: never deactivate the final active superadmin.
-    if user.role == CustomUser.Role.SUPERADMIN and user.is_active:
+    if target_is_super and user.is_active:
         remaining = (
-            CustomUser.objects.filter(role=CustomUser.Role.SUPERADMIN, is_active=True).exclude(pk=user.pk).count()
+            CustomUser.objects.filter(
+                Q(role=CustomUser.Role.SUPERADMIN) | Q(is_superuser=True),
+                is_active=True,
+            )
+            .exclude(pk=user.pk)
+            .count()
         )
         if remaining == 0:
             messages.error(request, _("Cannot deactivate the last active superadmin."))

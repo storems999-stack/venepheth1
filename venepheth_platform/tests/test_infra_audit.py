@@ -87,6 +87,28 @@ class TestNginxCspAllowsFrontendCdn(TestCase):
             self.assertIn(cdn, nginx_sources, f"nginx CSP must allow {cdn}")
 
 
+class TestKnowledgeUploadsAreNotPublicMedia(TestCase):
+    """Admin-only knowledge attachments must not be directly reachable from /media/."""
+
+    def test_django_never_serves_knowledge_attachment_urls(self):
+        response = self.client.get("/media/assistant/knowledge/private.pdf")
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_nginx_denies_direct_access_to_knowledge_attachments(self):
+        for config_path in ("docker/nginx/nginx.prod.conf", "docker/nginx/nginx.dev.conf"):
+            with self.subTest(config=config_path):
+                config = read(config_path)
+                match = re.search(r"location ~ \^/media/\(([^)]*)\)", config)
+
+                self.assertIsNotNone(match, f"{config_path} must deny protected media paths")
+                self.assertIn(
+                    "assistant/knowledge/",
+                    match.group(1),
+                    f"{config_path} must deny direct knowledge-attachment URLs",
+                )
+
+
 class TestLetsencryptDomainIsWired(TestCase):
     """init-letsencrypt.sh wrote certs for $DOMAIN while nginx.prod.conf
     hardcoded YOUR_DOMAIN, so nginx never found its certificate."""
@@ -127,12 +149,36 @@ class TestDeployWorkflowIsSound(TestCase):
         self.assertLess(script_start, deploy.index("certbot renew"))
 
     def test_health_check_can_actually_fail(self):
-        """Port 80 answers 301 for every non-ACME path and curl -f does not
-        treat 3xx as an error, so the old check could never fail a bad deploy."""
+        """Use the container's Compose health status; web has no host port."""
         deploy = read(".github/workflows/deploy.yml")
         self.assertNotIn("curl -f http://localhost/health/", deploy)
-        self.assertIn("curl -fsS http://localhost:8000/health/", deploy)
+        self.assertIn("docker inspect --format", deploy)
+        self.assertIn("compose ps -q web", deploy)
+        self.assertIn('health" = "healthy', deploy)
         self.assertIn("healthy=0", deploy, "health result must gate the deploy")
+
+    def test_deploy_uses_immutable_image_and_matching_source_commit(self):
+        deploy = read(".github/workflows/deploy.yml")
+        self.assertIn("steps.build.outputs.digest", deploy)
+        self.assertIn("DEPLOY_SHA: ${{ github.sha }}", deploy)
+        self.assertIn("docker compose --env-file .env.prod -f docker-compose.prod.yml", deploy)
+        self.assertIn('git checkout --detach "$DEPLOY_SHA"', deploy)
+        self.assertNotIn("needs.build.outputs.image-tag", deploy)
+
+    def test_compose_worker_healthchecks_match_service_roles(self):
+        development = read("docker-compose.yml")
+        production = read("docker-compose.prod.yml")
+        self.assertIn("celery -A config.celery inspect ping", development)
+        self.assertIn("celery -A config inspect ping", production)
+        self.assertIn('test: ["NONE"]', development)
+        self.assertIn('test: ["NONE"]', production)
+        self.assertNotIn("--maxmemory-policy allkeys-lru", production)
+        self.assertIn("--maxmemory-policy noeviction", production)
+
+    def test_compose_configuration_matches_single_host_rollout(self):
+        compose = read("docker-compose.prod.yml")
+        self.assertNotIn("replicas:", compose)
+        self.assertIn("may briefly interrupt requests", compose)
 
     def test_wait_for_ci_actually_checks_ci(self):
         deploy = read(".github/workflows/deploy.yml")
@@ -173,10 +219,19 @@ class TestRestoreIsAtomicAndCleansUp(TestCase):
         self.assertIn("decrypted_path", source)
         self.assertIn("unlink()", source)
 
-    def test_restore_script_cleans_up_and_cds(self):
+    def test_restore_script_uses_production_compose_and_cds(self):
         script = read("scripts/restore.sh")
         self.assertIn('cd "$(dirname "$0")', script)
-        self.assertIn('rm -f "${ARCHIVE%.enc}"', script)
+        self.assertIn('docker compose --env-file .env.prod -f "$COMPOSE_FILE"', script)
+        self.assertIn("run --rm --build web", script)
+        self.assertIn("ARCHIVE_ARGS=()", script)
+        self.assertIn('python manage.py restore_platform "${ARCHIVE_ARGS[@]}" --confirm', script)
+
+    def test_manual_deploy_uses_compose_environment_and_network(self):
+        script = read("scripts/deploy.sh")
+        self.assertIn("docker compose --env-file .env.prod", script)
+        self.assertIn("compose run --rm --no-deps web python manage.py migrate", script)
+        self.assertNotIn("docker stack deploy", script)
 
     def test_backup_script_cds_to_project_root(self):
         self.assertIn('cd "$(dirname "$0")', read("scripts/backup.sh"))
@@ -212,11 +267,13 @@ class TestRedisBrokerCarriesPassword(TestCase):
             if name.startswith("config.settings"):
                 del sys.modules[name]
         try:
-            with mock.patch.dict(os.environ, {"REDIS_PASSWORD": "s3cret"}, clear=False):
-                with mock.patch("environ.Env.read_env", lambda self, *a, **k: None):
-                    settings_mod = importlib.import_module("config.settings.base")
-                    self.assertIn(":s3cret@", settings_mod.REDIS_URL)
-                    self.assertEqual(settings_mod.CELERY_BROKER_URL, settings_mod.REDIS_URL)
+            with (
+                mock.patch.dict(os.environ, {"REDIS_PASSWORD": "s3cret"}, clear=False),
+                mock.patch("environ.Env.read_env", lambda self, *a, **k: None),
+            ):
+                settings_mod = importlib.import_module("config.settings.base")
+                self.assertIn(":s3cret@", settings_mod.REDIS_URL)
+                self.assertEqual(settings_mod.CELERY_BROKER_URL, settings_mod.REDIS_URL)
         finally:
             for name in list(sys.modules):
                 if name.startswith("config.settings"):
@@ -408,47 +465,29 @@ class TestBackupCommandIsResilient(TestCase):
         self.assertIn("keep_days=14", tasks)
 
 
-class TestRestoreIsDiagnosticAndVersionTolerant(TestCase):
-    """Disaster recovery was verified against a real archive and a real
-    PostgreSQL 16 server. Two defects showed up: pg_restore's stderr was
-    captured and thrown away, and a single rejected statement made a fully
-    successful restore look like a total failure."""
+class TestRestoreIsTransactionalAndDiagnostic(TestCase):
+    """PostgreSQL restore must roll back on errors and retain useful diagnostics."""
 
-    def test_pg_restore_stderr_is_surfaced(self):
+    def test_restore_script_uses_single_transaction_and_surfaces_errors(self):
         source = read("apps/core/management/commands/restore_platform.py")
         self.assertIn("check=False", source)
         self.assertIn("result.stderr", source)
-        self.assertIn("pg_restore failed (exit", source)
-        # A bare check=True would raise with no reason attached.
-        self.assertNotIn("check=True,\n                    capture_output", source)
+        self.assertIn('"--single-transaction"', source)
+        self.assertIn('"ON_ERROR_STOP=1"', source)
+        self.assertIn("The transaction was rolled back", source)
 
-    def test_benign_exit_classifier_exists(self):
-        source = read("apps/core/management/commands/restore_platform.py")
-        self.assertIn("def _is_benign_pg_restore_exit(", source)
-        self.assertIn("errors ignored on restore", source)
+    def test_pg17_timeout_setting_is_removed_only_for_older_servers(self):
+        from apps.core.management.commands.restore_platform import _remove_unsupported_pg17_settings
 
-    def test_benign_classifier_behaviour(self):
-        from apps.core.management.commands.restore_platform import (
-            _is_benign_pg_restore_exit,
-        )
+        sql = "SET transaction_timeout = 0;\nSELECT 1;\n"
+        compatible_sql, removed = _remove_unsupported_pg17_settings(sql, 160015)
+        self.assertEqual(removed, 1)
+        self.assertNotIn("SET transaction_timeout", compatible_sql)
+        self.assertIn("SELECT 1", compatible_sql)
 
-        # The exact stderr observed on PostgreSQL 16 with a pg_dump 17 archive.
-        self.assertTrue(
-            _is_benign_pg_restore_exit(
-                "pg_restore: error: could not execute query: ERROR:  unrecognized "
-                'configuration parameter "transaction_timeout"\n'
-                "Command was: SET transaction_timeout = 0;\n"
-                "pg_restore: warning: errors ignored on restore: 1"
-            )
-        )
-        # Never hide a real failure.
-        for fatal in (
-            'pg_restore: error: connection to server at "db" failed: FATAL: password authentication failed',
-            "pg_restore: error: could not connect to server: No such file or directory",
-            "pg_restore: error: could not open file: does not exist",
-        ):
-            self.assertFalse(_is_benign_pg_restore_exit(fatal), fatal)
-        self.assertFalse(_is_benign_pg_restore_exit("some other failure"))
+        unchanged_sql, removed = _remove_unsupported_pg17_settings(sql, 170000)
+        self.assertEqual(removed, 0)
+        self.assertEqual(unchanged_sql, sql)
 
     def test_flush_and_loaddata_stay_atomic(self):
         source = read("apps/core/management/commands/restore_platform.py")
@@ -505,10 +544,9 @@ class TestReindexCommandActuallyReindexes(TestCase):
     def test_reindex_does_not_n_plus_one(self):
         """Re-querying each pk would add one SELECT per document; keep it at a
         single queryset iteration."""
-        from django.test.utils import CaptureQueriesContext
-        from django.db import connection
-
         from django.core.management import call_command
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
 
         made = self._make(10, "Query")
         with CaptureQueriesContext(connection) as ctx:

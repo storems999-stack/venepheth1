@@ -30,10 +30,12 @@
                     <span class="text-gold-400 text-xs font-bold uppercase tracking-wider">
                         {{ course.category.name|default:"General" }}
                     </span>
+                    {% if course.credits %}
                     <span class="text-gray-500 text-xs flex items-center space-x-1">
                         <i data-lucide="layers" class="w-3 h-3"></i>
                         <span>{{ course.credits }} {% trans "cr" %}</span>
                     </span>
+                    {% endif %}
                 </div>
                 <h2 class="text-lg font-bold text-white mb-2 line-clamp-2 group-hover:text-gold-400 transition-colors">
                     <a href="{{ course.get_absolute_url }}">{{ course.name }}</a>

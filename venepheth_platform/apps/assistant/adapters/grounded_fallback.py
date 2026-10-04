@@ -25,7 +25,7 @@ def _safe_title(value: Any) -> str:
 def _safe_url(value: Any) -> str:
     """Allow relative links + http(s) (e.g. Knowledge Box source_url); else '#'."""
     url = str(value or "#")
-    if url.startswith("/") or url.startswith("https://") or url.startswith("http://"):
+    if url.startswith(("/", "https://", "http://")):
         return url
     return "#"
 

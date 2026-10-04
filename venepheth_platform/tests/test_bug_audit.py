@@ -56,7 +56,7 @@ class TestHomepageStatsAreNotFabricated(TestCase):
     def test_real_counts_render(self):
         CourseFactory.create()
         resp = self.client.get(reverse("core:home"))
-        self.assertContains(resp, ">1+<")
+        self.assertContains(resp, ">1<")
 
 
 class TestCspSafeFilters(TestCase):
@@ -96,7 +96,7 @@ class TestTemplateCommentsDoNotLeak(TestCase):
         offenders = []
         for path in Path("templates").rglob("*.html"):
             text = path.read_text(encoding="utf-8", errors="ignore")
-            for match in re.finditer(r"\{#.*?#\}", text, re.S):
+            for match in re.finditer(r"\{#.*?#\}", text, re.DOTALL):
                 if "\n" in match.group(0):
                     offenders.append(str(path))
                     break

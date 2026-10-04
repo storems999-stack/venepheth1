@@ -31,33 +31,81 @@ def search_results(request):
     }
 
     if q and len(q) >= 2:
-        results["courses"] = Course.objects.filter(
-            status="published",
-            visibility=Course.Visibility.PUBLIC,
-            name__icontains=q,
-        ).select_related("category")[:5]
-        results["articles"] = Article.objects.filter(
-            status=Article.Status.PUBLISHED,
-            title__icontains=q,
-        ).prefetch_related("tags")[:5]
-        results["research"] = ResearchProject.objects.filter(
-            status="published",
-            title__icontains=q,
-        ).prefetch_related("topics")[:5]
-        results["publications"] = Publication.objects.filter(
-            status="published",
-            title__icontains=q,
-        ).prefetch_related("topics")[:5]
+        querysets = {
+            "courses": (
+                Course.objects.filter(
+                    status="published",
+                    visibility=Course.Visibility.PUBLIC,
+                )
+                .filter(
+                    Q(name__icontains=q)
+                    | Q(code__icontains=q)
+                    | Q(description__icontains=q)
+                    | Q(short_description__icontains=q)
+                    | Q(category__name__icontains=q)
+                )
+                .select_related("category")
+            ),
+            "articles": (
+                Article.objects.filter(
+                    status=Article.Status.PUBLISHED,
+                )
+                .filter(
+                    Q(title__icontains=q)
+                    | Q(subtitle__icontains=q)
+                    | Q(excerpt__icontains=q)
+                    | Q(content__icontains=q)
+                    | Q(tags__name__icontains=q)
+                )
+                .distinct()
+                .prefetch_related("tags")
+            ),
+            "research": (
+                ResearchProject.objects.filter(
+                    status="published",
+                )
+                .filter(
+                    Q(title__icontains=q)
+                    | Q(short_title__icontains=q)
+                    | Q(abstract__icontains=q)
+                    | Q(collaborators__icontains=q)
+                    | Q(topics__name__icontains=q)
+                )
+                .distinct()
+                .prefetch_related("topics")
+            ),
+            "publications": (
+                Publication.objects.filter(
+                    status="published",
+                )
+                .filter(
+                    Q(title__icontains=q)
+                    | Q(abstract__icontains=q)
+                    | Q(authors__icontains=q)
+                    | Q(journal_name__icontains=q)
+                    | Q(doi__icontains=q)
+                    | Q(keywords__icontains=q)
+                    | Q(topics__name__icontains=q)
+                )
+                .distinct()
+                .prefetch_related("topics")
+            ),
+        }
         # Curated Knowledge Box — same pool the AI cites, so visitors can
         # verify AI answers through the regular search page.
         from apps.assistant.models import KnowledgeDocument
 
-        results["knowledge"] = KnowledgeDocument.objects.filter(
-            Q(title__icontains=q) | Q(summary__icontains=q) | Q(content__icontains=q) | Q(tags__icontains=q),
+        querysets["knowledge"] = KnowledgeDocument.objects.filter(
+            Q(title__icontains=q)
+            | Q(summary__icontains=q)
+            | Q(content__icontains=q)
+            | Q(file_text__icontains=q)
+            | Q(tags__icontains=q),
             is_active=True,
-        )[:5]
+        )
 
-        total = sum(len(v) for v in results.values())
+        total = sum(queryset.count() for queryset in querysets.values())
+        results = {name: list(queryset[:5]) for name, queryset in querysets.items()}
     else:
         total = 0
 

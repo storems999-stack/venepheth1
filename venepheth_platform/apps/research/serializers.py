@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework import serializers
 
 from .models import Publication, ResearchProject, ResearchTopic
@@ -34,6 +35,14 @@ class ResearchProjectSerializer(serializers.ModelSerializer):
 class PublicationSerializer(serializers.ModelSerializer):
     topics = ResearchTopicSerializer(many=True, read_only=True)
     type_display = serializers.CharField(source="get_publication_type_display", read_only=True)
+    pdf_file = serializers.SerializerMethodField()
+
+    def get_pdf_file(self, obj: Publication) -> str | None:
+        if not obj.pdf_file:
+            return None
+        path = reverse("publications:download", kwargs={"slug": obj.slug})
+        request = self.context.get("request")
+        return request.build_absolute_uri(path) if request else path
 
     class Meta:
         model = Publication

@@ -2,6 +2,7 @@
 Core abstract base models used across all apps.
 """
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from simple_history.models import HistoricalRecords
@@ -47,6 +48,24 @@ class PublishableModel(TimeStampedModel):
 
     class Meta:
         abstract = True
+
+    def clean(self):
+        super().clean()
+        if self.status == self.Status.SCHEDULED and not self.scheduled_at:
+            raise ValidationError({"scheduled_at": _("Scheduled content requires a publication date and time.")})
+
+    def save(self, *args, **kwargs):
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None:
+            update_fields = set(update_fields)
+            kwargs["update_fields"] = update_fields
+        if self.status == self.Status.PUBLISHED and not self.published_at:
+            from django.utils import timezone
+
+            self.published_at = timezone.now()
+            if update_fields is not None and "published_at" not in update_fields:
+                kwargs["update_fields"] = update_fields | {"published_at"}
+        super().save(*args, **kwargs)
 
     @property
     def is_published(self):

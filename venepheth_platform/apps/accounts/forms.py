@@ -33,6 +33,9 @@ class ProfileUpdateForm(forms.ModelForm):
     preferred language, and timezone.
     """
 
+    language = forms.ChoiceField(choices=LANGUAGE_CHOICES)
+    timezone = forms.ChoiceField(choices=TIMEZONE_CHOICES)
+
     class Meta:
         model = User
         fields = ["first_name", "last_name", "language", "timezone"]

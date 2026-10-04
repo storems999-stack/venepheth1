@@ -84,8 +84,11 @@ def _check_resource_access(request, resource):
     """Shared visibility gate for detail + download. Returns redirect/404 or None."""
     if resource.visibility == Resource.Visibility.PRIVATE:
         raise Http404()
-    if resource.visibility == Resource.Visibility.STUDENTS and not request.user.is_authenticated:
-        return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+    if resource.visibility == Resource.Visibility.STUDENTS:
+        if not request.user.is_authenticated:
+            return redirect(f"{settings.LOGIN_URL}?next={request.path}")
+        if not getattr(request.user, "is_student", False):
+            raise Http404()
     return None
 
 

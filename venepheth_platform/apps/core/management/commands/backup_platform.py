@@ -14,6 +14,7 @@ import subprocess
 import tarfile
 import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 import django
 from django.conf import settings
@@ -73,6 +74,37 @@ def _encrypt_file(filepath: Path, key: bytes):
     filepath.write_bytes(Fernet(key).encrypt(filepath.read_bytes()))
 
 
+def _upload_to_s3(archive_path: Path, checksum_path: Path):
+    """Upload an encrypted archive and its checksum to configured S3 storage."""
+    bucket = os.environ.get("S3_BACKUP_BUCKET", "").strip()
+    if not bucket:
+        raise CommandError("S3_BACKUP_BUCKET must be set when --upload is requested.")
+
+    try:
+        import boto3
+        from boto3.s3.transfer import S3UploadFailedError
+        from botocore.exceptions import BotoCoreError, ClientError
+    except ImportError as exc:
+        raise CommandError("boto3 is required for S3 backup uploads; install requirements/base.txt.") from exc
+
+    endpoint_url = os.environ.get("S3_ENDPOINT_URL", "").strip() or None
+    if endpoint_url and urlparse(endpoint_url).scheme != "https":
+        raise CommandError("S3_ENDPOINT_URL must use HTTPS for off-site backup uploads.")
+    region_name = os.environ.get("AWS_DEFAULT_REGION") or os.environ.get("AWS_REGION") or "us-east-1"
+    prefix = os.environ.get("S3_BACKUP_PREFIX", "").strip("/")
+    uploaded = []
+
+    try:
+        client = boto3.client("s3", endpoint_url=endpoint_url, region_name=region_name)
+        for path in (archive_path, checksum_path):
+            key = "/".join(part for part in (prefix, path.name) if part)
+            client.upload_file(str(path), bucket, key)
+            uploaded.append(f"s3://{bucket}/{key}")
+    except (BotoCoreError, ClientError, S3UploadFailedError) as exc:
+        raise CommandError(f"Off-site backup upload failed for bucket {bucket}: {exc}") from exc
+    return uploaded
+
+
 class Command(BaseCommand):
     help = "Creates an automated, verified backup of the database, media files, and manifest."
 
@@ -96,7 +128,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "--encrypt",
             action="store_true",
-            help="Encrypt the backup archive with AES-256",
+            help="Encrypt the backup archive with Fernet authenticated encryption",
+        )
+        parser.add_argument(
+            "--upload",
+            action="store_true",
+            help="Upload the archive and checksum to configured S3-compatible storage",
         )
 
     def handle(self, *args, **options):
@@ -116,6 +153,11 @@ class Command(BaseCommand):
         keep_days = options["keep_days"]
         include_media = not options["no_media"]
         encrypt = options.get("encrypt", False)
+        upload = options.get("upload", False)
+        if upload and not encrypt:
+            raise CommandError("Refusing to upload an unencrypted archive; combine --upload with --encrypt.")
+        if upload and not os.environ.get("S3_BACKUP_BUCKET", "").strip():
+            raise CommandError("S3_BACKUP_BUCKET must be set when --upload is requested.")
         # Never auto-generate here — a key minted as a side effect of a backup
         # run can vanish with the container and orphan every archive. Operators
         # provision one explicitly: `manage.py generate_backup_key`.
@@ -233,6 +275,11 @@ class Command(BaseCommand):
             # 7. Restrict permissions: archives hold a full DB dump (owner-only).
             os.chmod(archive_path, 0o600)
             os.chmod(checksum_path, 0o600)
+
+            if upload:
+                self.stdout.write("    -> Uploading encrypted archive and checksum to off-site storage...")
+                for object_url in _upload_to_s3(archive_path, checksum_path):
+                    self.stdout.write(f"    -> Uploaded {object_url}")
 
             archive_size_mb = archive_path.stat().st_size / (1024 * 1024)
             self.stdout.write(

@@ -6,7 +6,7 @@ import logging
 
 from django.conf import settings
 from django.db import connection
-from django.http import JsonResponse
+from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
@@ -45,10 +45,10 @@ def homepage(request):
             "resources_count": resources_count,
         },
         "about_highlights": [
-            {"icon": "book-open", "value": f"{courses_count}+", "label": "Courses Taught"},
-            {"icon": "file-text", "value": f"{publications_count}+", "label": "Publications"},
-            {"icon": "flask-conical", "value": f"{research_count}+", "label": "Research Projects"},
-            {"icon": "library", "value": f"{resources_count}+", "label": "Digital Resources"},
+            {"icon": "book-open", "value": courses_count, "label": "Courses"},
+            {"icon": "file-text", "value": publications_count, "label": "Publications"},
+            {"icon": "flask-conical", "value": research_count, "label": "Research Projects"},
+            {"icon": "library", "value": resources_count, "label": "Digital Resources"},
         ],
         "meta_title": settings.SITE_NAME,
         "meta_description": f"{settings.SITE_TAGLINE} — {settings.SITE_NAME}",
@@ -243,6 +243,11 @@ def error_403(request, exception=None):
 
 def error_404(request, exception=None):
     return render(request, "errors/404.html", status=404)
+
+
+def protected_media_not_found(request, **kwargs):
+    """Keep permission-gated uploads out of Django's debug media server."""
+    return HttpResponseNotFound()
 
 
 def error_429(request, exception=None):

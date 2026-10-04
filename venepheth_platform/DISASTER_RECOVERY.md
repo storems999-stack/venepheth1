@@ -25,9 +25,13 @@ This document defines the recovery procedures for the Venepheth Academic Platfor
 
 | Copy | Location | Frequency | Retention |
 |------|----------|-----------|-----------|
-| 1st  | Local server volume | Continuous (PostgreSQL WAL) | 7 days |
-| 2nd  | Secondary server / external drive | Daily (pg_dump + media) | 30 days |
-| 3rd  | Off-site (cloud / remote location) | Weekly archive (see ⚠️ below) | 90 days |
+| 1st  | Production PostgreSQL volume | Continuous | Server lifecycle |
+| 2nd  | Local Docker backup volume | Daily encrypted archive | 14 days |
+| 3rd  | Private Cloudflare R2 bucket, off-site (requires account/bucket credentials) | Daily encrypted archive + checksum | 365 days |
+
+> The database and local backup volume are on the same host/storage failure
+> domain. For strict 3-2-1 compliance, add a second local copy on a separate
+> device or host; the off-site bucket alone does not provide two local media.
 
 > ✅ **Encryption (implemented):** `backup_platform --encrypt` produces a Fernet
 > (AES-128-CBC + HMAC-SHA256) `.tar.gz.enc` archive, and the `.sha256` sidecar
@@ -46,8 +50,21 @@ This document defines the recovery procedures for the Venepheth Academic Platfor
 > copy **offline and separate from the backups**. Without it, encrypted archives
 > are unrecoverable.
 >
-> ⚠️ **TODO (pre-launch):** the 2nd/3rd copies above do not exist yet — set up
-> the transfer job before going live, otherwise the RPO/RTO targets are unmet.
+> ⚠️ **Not provisioned by this repository:** create the private R2 bucket and a
+> bucket-scoped API token, then populate `S3_BACKUP_BUCKET`,
+> `S3_BACKUP_PREFIX=venepheth/production`,
+> `S3_ENDPOINT_URL=https://<account_id>.r2.cloudflarestorage.com`,
+> `AWS_DEFAULT_REGION=auto`, `AWS_ACCESS_KEY_ID`, and `AWS_SECRET_ACCESS_KEY`
+> in `.env.prod`. Apply the repository policy
+> [`deploy/r2-backup-lifecycle-365d.json`](./deploy/r2-backup-lifecycle-365d.json)
+> to that dedicated bucket; it expires objects under the production prefix
+> after 365 days. Applying this file replaces the bucket's lifecycle rules, so
+> do not use it on a shared bucket without merging its existing rules first.
+> Cloudflare documents lifecycle setup via Dashboard, Wrangler, and S3 API in
+> [R2 object lifecycles](https://developers.cloudflare.com/r2/buckets/object-lifecycles/).
+> The repository cannot create the bucket/token or confirm live bucket policy.
+> Monitor the daily Celery backup task and verify archive and checksum objects
+> appear remotely.
 
 ### What is Backed Up
 
@@ -61,18 +78,42 @@ This document defines the recovery procedures for the Venepheth Academic Platfor
 ### Backup Scripts
 
 ```bash
-# Daily backup (run via cron at 02:00). Requires BACKUP_ENCRYPTION_KEY in the env.
-0 2 * * * /app/scripts/backup.sh >> /var/log/backup.log 2>&1
+# Daily backup (run on the Docker Compose host at 02:00).
+0 2 * * * cd /srv/venepheth && ./scripts/backup.sh >> /var/log/backup.log 2>&1
 
-# Verify latest backup monthly (checksum + archive integrity, no destructive restore).
-# Works against both plain and .enc archives; omit --archive to pick the newest.
-0 9 1 * * python /app/manage.py restore_platform --verify-only >> /var/log/restore-test.log 2>&1
+# Monthly verification should use an archive downloaded from the remote bucket
+# and run in a non-production restore environment.
 ```
+
+`scripts/backup.sh` runs the encrypted backup command in the production web image.
+The scheduled Celery backup uses the same encryption and upload path. Configure
+For Cloudflare R2, set `S3_BACKUP_BUCKET`, `S3_BACKUP_PREFIX`,
+`S3_ENDPOINT_URL`, `AWS_DEFAULT_REGION=auto`, and the R2
+`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` in `.env.prod`. The backup command
+fails explicitly if the bucket is missing or either upload fails; check Celery
+logs and the bucket after setup. The local archive retention is 14 days; the
+R2 lifecycle rule independently retains remote archives and checksums for 365
+days.
+
+For a restore drill, download both the archive and its matching `.sha256` object
+from the bucket, then run `restore_platform --verify-only --archive <path>` in
+a disposable restore environment. To restore data, follow the procedures below
+only after validating the archive, key, target database, and media destination.
+
+`scripts/restore.sh` runs the restore in the production web container, so it
+uses the Compose database network, `.env.prod` encryption key, and `backups_vol`.
+Place any off-site archive and its `.sha256` file in that volume under
+`/app/backups/`, then run with no argument to select the latest archive or pass
+its container path:
 
 ```bash
-# Restore (auto-detects and decrypts .enc archives)
+./scripts/restore.sh
 ./scripts/restore.sh /app/backups/backup_venepheth_platform_<ts>.tar.gz.enc
 ```
+
+The PostgreSQL dump is restored as a single transaction; a failed SQL statement
+rolls back the restore rather than leaving a partially replaced database. Media
+files are restored from the same archive.
 
 > ⚠️ **CRITICAL**: Test restore at least once per month. A backup that has never been tested is not a backup.
 
@@ -128,10 +169,10 @@ BACKUP_ENCRYPTION_KEY=... ./scripts/restore.sh /app/backups/backup_venepheth_pla
 Step 1: Provision new server (Linux, same or equivalent specs)
 Step 2: Install Docker + Docker Compose
 Step 3: Clone repository from GitHub
-Step 4: Restore .env file from encrypted backup
-Step 5: Restore PostgreSQL from latest backup
-Step 6: Restore media files
-Step 7: docker compose -f docker-compose.prod.yml up -d
+Step 4: Restore .env.prod and BACKUP_ENCRYPTION_KEY from the offline secret store
+Step 5: Place the verified archive and .sha256 sidecar in the Compose backups volume
+Step 6: Run ./scripts/restore.sh (restores PostgreSQL and media from the archive)
+Step 7: docker compose --env-file .env.prod -f docker-compose.prod.yml up -d
 Step 8: Verify health check: curl https://yourdomain.com/health/
 Step 9: Update DNS if server IP changed
 Step 10: Verify SSL certificate (Let's Encrypt or Cloudflare)
@@ -139,12 +180,9 @@ Step 10: Verify SSL certificate (Let's Encrypt or Cloudflare)
 
 Detailed restore command:
 ```bash
-# Restore PostgreSQL
-docker compose -f docker-compose.prod.yml run --rm db \
-  psql -U venepheth_app venepheth_db < backup_YYYYMMDD.sql
-
-# Restore media
-rsync -avz /backup/media/ /app/media/
+docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm --build web \
+  python manage.py restore_platform \
+  --archive /app/backups/backup_venepheth_platform_<ts>.tar.gz.enc --confirm
 ```
 
 ---

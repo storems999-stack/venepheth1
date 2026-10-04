@@ -6,7 +6,7 @@ from django.urls import reverse
 from apps.blog.models import Article, ArticleTag
 from apps.courses.models import Course, CourseCategory
 from apps.profiles.models import Profile
-from apps.research.models import ResearchProject, ResearchTopic
+from apps.research.models import Publication, ResearchProject, ResearchTopic
 
 
 class ViewTests(TestCase):
@@ -111,6 +111,17 @@ class ViewTests(TestCase):
         self.article.refresh_from_db()
         self.assertEqual(self.article.view_count, initial_views + 1)
 
+    def test_partial_content_raw_update_refreshes_sanitized_content(self):
+        self.article.title = "Generator content update"
+        self.article.content_raw = f"<p>{'word ' * 401}<script>alert(1)</script></p>"
+        self.article.save(update_fields=(field for field in ("title", "content_raw")))
+
+        self.article.refresh_from_db()
+        self.assertEqual(self.article.title, "Generator content update")
+        self.assertIn("word", self.article.content)
+        self.assertNotIn("<script>", self.article.content)
+        self.assertEqual(self.article.reading_time, 2)
+
     def test_blog_detail_draft_404(self):
         """Draft articles return 404 for unauthenticated visitors."""
         url = reverse("blog:detail", kwargs={"slug": self.draft_article.slug})
@@ -187,6 +198,72 @@ class ViewTests(TestCase):
         url = reverse("search:results")
         response = self.client.get(url, {"q": "Economics"})
         self.assertEqual(response.status_code, 200)
+
+    def test_search_matches_published_content_beyond_titles(self):
+        """Search includes public descriptions, abstracts, keywords and article text."""
+        publication = Publication.objects.create(
+            title="Community Finance Study",
+            slug="community-finance-study",
+            publication_type=Publication.PublicationType.JOURNAL,
+            authors="Test Author",
+            abstract="Distinctive resilience framework in rural finance.",
+            keywords="inclusive lending",
+            status="published",
+        )
+        queries = [
+            ("economic theory", self.article.title),
+            ("business management", self.course.name),
+            ("development indicators", self.project.title),
+            ("inclusive lending", publication.title),
+        ]
+
+        for query, expected_title in queries:
+            with self.subTest(query=query):
+                response = self.client.get(reverse("search:results"), {"q": query})
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, expected_title)
+
+    def test_search_result_total_counts_matches_beyond_display_limit(self):
+        """The total reports every match even though each section displays at most five."""
+        for index in range(6):
+            Article.objects.create(
+                title=f"Catalog entry {index}",
+                slug=f"catalog-entry-{index}",
+                content_raw="<p>catalogneedle</p>",
+                status=Article.Status.PUBLISHED,
+            )
+
+        response = self.client.get(reverse("search:results"), {"q": "catalogneedle"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '6 results for "catalogneedle"')
+        self.assertContains(response, "Catalog entry", count=5)
+
+    def test_search_matches_extracted_knowledge_file_text(self):
+        """Search finds text indexed from Knowledge Box uploads."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from apps.assistant.models import KnowledgeDocument
+
+        document = KnowledgeDocument(
+            title="Uploaded Handbook",
+            slug="uploaded-handbook",
+        )
+        document.file.save(
+            "uploaded-handbook.txt",
+            SimpleUploadedFile(
+                "uploaded-handbook.txt",
+                b"Distinctive archival keyword from imported document",
+            ),
+            save=False,
+        )
+        document.save()
+        self.addCleanup(document.file.delete, save=False)
+
+        response = self.client.get(reverse("search:results"), {"q": "archival keyword"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Uploaded Handbook")
 
     def test_contact_form_get(self):
         """Contact form GET returns 200."""

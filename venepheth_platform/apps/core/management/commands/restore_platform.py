@@ -7,6 +7,7 @@ checksum integrity verification.
 import hashlib
 import json
 import os
+import re
 import shutil
 import sqlite3
 import subprocess
@@ -16,6 +17,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.management import call_command
 from django.core.management.base import BaseCommand, CommandError
+from django.db import connection
 
 try:
     from cryptography.fernet import Fernet, InvalidToken
@@ -25,26 +27,15 @@ except ImportError:
     HAS_CRYPTOGRAPHY = False
 
 
-def _is_benign_pg_restore_exit(detail: str) -> bool:
-    """True when pg_restore failed only on ignorable statements.
-
-    The common case is a client/server major mismatch: pg_dump 17 writes
-    `SET transaction_timeout = 0` (PG17-only) into the archive, and a PG16
-    server rejects that one statement. pg_restore still applies every other
-    object and row, but exits 1 with "errors ignored on restore: 1".
-    """
-    lowered = detail.lower()
-    if "errors ignored on restore" not in lowered:
-        return False
-    # Connection/authentication problems are never benign.
-    fatal_markers = (
-        "password authentication failed",
-        "could not connect",
-        "connection to server",
-        "no such file or directory",
-        "does not exist",
+def _remove_unsupported_pg17_settings(sql: str, server_version_num: int) -> tuple[str, int]:
+    """Remove the PG17-only default timeout setting when restoring to older servers."""
+    if server_version_num >= 170000:
+        return sql, 0
+    return re.subn(
+        r"(?im)^[ \t]*SET[ \t]+transaction_timeout[ \t]*=[ \t]*0[ \t]*;[ \t]*$",
+        "-- transaction_timeout is not supported before PostgreSQL 17",
+        sql,
     )
-    return not any(marker in lowered for marker in fatal_markers)
 
 
 def _decrypt_archive(archive_path: Path) -> Path:
@@ -135,8 +126,14 @@ class Command(BaseCommand):
         checksum_path = archive_path.with_name(f"{archive_path.name}.sha256")
         if checksum_path.exists() and not skip_checksum:
             self.stdout.write("    -> Verifying SHA256 integrity checksum...")
-            with open(checksum_path, "r", encoding="utf-8") as f:
-                expected_sha = f.read().split()[0].strip().lower()
+            try:
+                with open(checksum_path, "r", encoding="utf-8") as f:
+                    checksum_parts = f.read().split()
+            except (OSError, UnicodeError) as exc:
+                raise CommandError(f"Could not read checksum sidecar {checksum_path}: {exc}") from exc
+            if not checksum_parts:
+                raise CommandError(f"Integrity Check Failed: checksum sidecar is empty ({checksum_path}).")
+            expected_sha = checksum_parts[0].strip().lower()
 
             sha256 = hashlib.sha256()
             with open(archive_path, "rb") as f:
@@ -150,13 +147,8 @@ class Command(BaseCommand):
         elif not skip_checksum:
             self.stdout.write(self.style.WARNING("    [!] No checksum sidecar found — archive integrity NOT verified."))
 
-        if options.get("verify_only"):
-            self.stdout.write(
-                self.style.SUCCESS("[+] Integrity verification passed! (Verify-only mode, no changes made)")
-            )
-            return
-
-        if not confirm:
+        verify_only = options.get("verify_only", False)
+        if not confirm and not verify_only:
             prompt = input("⚠️  WARNING: Restoring will overwrite existing data. Type 'yes' to proceed: ")
             if prompt.strip().lower() != "yes":
                 self.stdout.write(self.style.WARNING("Restore cancelled by user."))
@@ -177,19 +169,78 @@ class Command(BaseCommand):
 
         staging_dir = backups_dir / f"restore_staging_{archive_path.stem}"
         staging_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            os.chmod(staging_dir, 0o700)
+        except OSError as exc:
+            self.stderr.write(self.style.WARNING(f"    [!] Could not restrict restore staging permissions ({exc})."))
 
         try:
             # 2. Extract Archive
             self.stdout.write("    -> Extracting archive...")
-            with tarfile.open(archive_path, "r:gz") as tar:
-                # Reject path traversal / unsafe members (Bandit B202, PEP 706).
-                tar.extractall(path=staging_dir, filter="data")
+            try:
+                with tarfile.open(archive_path, "r:gz") as tar:
+                    # Reject path traversal / unsafe members (Bandit B202, PEP 706).
+                    tar.extractall(path=staging_dir, filter="data")
+            except (OSError, tarfile.TarError) as exc:
+                raise CommandError(f"Backup archive contents could not be read: {exc}") from exc
 
+            manifest = None
             manifest_file = staging_dir / "manifest.json"
             if manifest_file.exists():
-                with open(manifest_file, "r", encoding="utf-8") as f:
-                    manifest = json.load(f)
+                try:
+                    with open(manifest_file, "r", encoding="utf-8") as f:
+                        manifest = json.load(f)
+                except (OSError, json.JSONDecodeError) as exc:
+                    raise CommandError(f"Backup manifest is unreadable: {exc}") from exc
+                if not isinstance(manifest, dict):
+                    raise CommandError("Backup manifest is invalid: expected a JSON object.")
                 self.stdout.write(f"    -> Manifest: Created at {manifest.get('created_at', 'unknown')}")
+
+            if verify_only:
+                if manifest is None:
+                    raise CommandError("Backup contents are invalid: a readable manifest.json is required.")
+                database_dumps = (
+                    staging_dir / "db.sqlite3",
+                    staging_dir / "postgres.dump",
+                    staging_dir / "data_dump.json",
+                )
+                if not any(path.is_file() and path.stat().st_size > 0 for path in database_dumps):
+                    raise CommandError("Backup contents are invalid: no non-empty database dump was found.")
+                sqlite_dump = staging_dir / "db.sqlite3"
+                if sqlite_dump.exists():
+                    try:
+                        sqlite_uri = f"file:{sqlite_dump.resolve().as_posix()}?mode=ro"
+                        with sqlite3.connect(sqlite_uri, uri=True) as sqlite_db:
+                            check_result = sqlite_db.execute("PRAGMA quick_check").fetchone()
+                    except sqlite3.Error as exc:
+                        raise CommandError(f"SQLite database dump is unreadable: {exc}") from exc
+                    if not check_result or check_result[0] != "ok":
+                        raise CommandError("SQLite database dump failed its integrity check.")
+                postgres_dump = staging_dir / "postgres.dump"
+                if postgres_dump.exists():
+                    try:
+                        result = subprocess.run(
+                            ["pg_restore", "--list", str(postgres_dump)],
+                            check=False,
+                            capture_output=True,
+                            text=True,
+                        )
+                    except OSError as exc:
+                        raise CommandError(f"Could not inspect PostgreSQL dump: {exc}") from exc
+                    if result.returncode != 0:
+                        detail = (result.stderr or result.stdout or "").strip()
+                        raise CommandError(f"PostgreSQL database dump is unreadable: {detail}")
+                data_dump = staging_dir / "data_dump.json"
+                if data_dump.exists():
+                    try:
+                        with data_dump.open(encoding="utf-8") as dump_file:
+                            data = json.load(dump_file)
+                    except (OSError, json.JSONDecodeError) as exc:
+                        raise CommandError(f"Portable database dump is unreadable: {exc}") from exc
+                    if not isinstance(data, list):
+                        raise CommandError("Portable database dump is invalid: expected a JSON array.")
+                self.stdout.write(self.style.SUCCESS("[+] Integrity and archive contents verified! (No changes made)"))
+                return
 
             # 3. Restore Media files
             staged_media = staging_dir / "media"
@@ -207,18 +258,54 @@ class Command(BaseCommand):
             staged_pg = staging_dir / "postgres.dump"
 
             if "postgresql" in engine and staged_pg.exists():
-                self.stdout.write("    -> Restoring PostgreSQL dump via pg_restore...")
+                self.stdout.write("    -> Preparing a transactional PostgreSQL restore...")
                 env = os.environ.copy()
                 if db_conn.get("PASSWORD"):
                     env["PGPASSWORD"] = db_conn["PASSWORD"]
-                # capture_output without printing leaves a bare
-                # CalledProcessError with no reason, which makes a failed
-                # disaster recovery impossible to diagnose.
-                result = subprocess.run(
+                restore_sql = staging_dir / "postgres_restore.sql"
+                fd = os.open(restore_sql, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+                os.close(fd)
+                generated = subprocess.run(
                     [
                         "pg_restore",
                         "--clean",
                         "--if-exists",
+                        "--file",
+                        str(restore_sql),
+                        str(staged_pg),
+                    ],
+                    env=env,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+                if generated.returncode != 0:
+                    detail = (generated.stderr or generated.stdout or "").strip()
+                    raise CommandError(f"pg_restore could not generate a restore script.\n{detail}")
+
+                with connection.cursor() as cursor:
+                    cursor.execute("SHOW server_version_num")
+                    server_version_num = int(cursor.fetchone()[0])
+                restore_text = restore_sql.read_text(encoding="utf-8")
+                restore_text, removed_settings = _remove_unsupported_pg17_settings(
+                    restore_text,
+                    server_version_num,
+                )
+                if removed_settings:
+                    restore_sql.write_text(restore_text, encoding="utf-8")
+                    self.stdout.write(
+                        self.style.NOTICE(
+                            f"    -> Removed {removed_settings} PG17-only timeout setting(s) for this server."
+                        )
+                    )
+
+                result = subprocess.run(
+                    [
+                        "psql",
+                        "--no-psqlrc",
+                        "--single-transaction",
+                        "--set",
+                        "ON_ERROR_STOP=1",
                         "-h",
                         db_conn.get("HOST", "localhost"),
                         "-p",
@@ -227,7 +314,8 @@ class Command(BaseCommand):
                         db_conn.get("USER", "postgres"),
                         "-d",
                         db_conn["NAME"],
-                        str(staged_pg),
+                        "--file",
+                        str(restore_sql),
                     ],
                     env=env,
                     check=False,
@@ -236,23 +324,10 @@ class Command(BaseCommand):
                 )
                 if result.returncode != 0:
                     detail = (result.stderr or result.stdout or "").strip()
-                    # pg_restore exits 1 for "errors ignored" too, which happens
-                    # when the dump carries a GUC the server does not know (a
-                    # client/server major mismatch). The data is still applied,
-                    # so this must not be reported as a failed recovery.
-                    if _is_benign_pg_restore_exit(detail):
-                        self.stdout.write(
-                            self.style.WARNING(
-                                "    [!] pg_restore reported warnings but applied the dump:\n"
-                                f"        {detail}\n"
-                                "        Verify the restored row counts before relying on this archive."
-                            )
-                        )
-                    else:
-                        raise CommandError(
-                            f"pg_restore failed (exit {result.returncode}).\n{detail}\n"
-                            "The database was left unchanged — fix the above and re-run."
-                        )
+                    raise CommandError(
+                        f"Transactional PostgreSQL restore failed (exit {result.returncode}).\n"
+                        f"{detail}\nThe transaction was rolled back; the database was not partially restored."
+                    )
             elif "sqlite3" in engine and staged_sqlite.exists():
                 self.stdout.write("    -> Restoring SQLite database snapshot...")
                 dest_sqlite = Path(db_conn["NAME"])

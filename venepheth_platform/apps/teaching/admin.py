@@ -1,6 +1,9 @@
 """Teaching app admin."""
 
 from django.contrib import admin
+from django.utils import timezone
+
+from apps.core.admin_actions import save_queryset_with_history
 
 from .models import OfficeHours, StudentAnnouncement, TeachingPhilosophy
 
@@ -22,13 +25,18 @@ class TeachingPhilosophyAdmin(admin.ModelAdmin):
 class StudentAnnouncementAdmin(admin.ModelAdmin):
     list_display = ("title", "status", "is_urgent", "created_at")
     list_filter = ("status", "is_urgent")
-    list_editable = ("status",)
+    list_editable = ("is_urgent",)
     actions = ["mark_published", "mark_archived"]
 
     @admin.action(description="✅ Mark selected as Published")
     def mark_published(self, request, queryset):
-        queryset.update(status="published")
+        save_queryset_with_history(
+            queryset,
+            request,
+            status=StudentAnnouncement.Status.PUBLISHED,
+            published_at=timezone.now(),
+        )
 
     @admin.action(description="📦 Mark selected as Archived")
     def mark_archived(self, request, queryset):
-        queryset.update(status="archived")
+        save_queryset_with_history(queryset, request, status="archived")

@@ -17,7 +17,6 @@ from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-
 User = get_user_model()
 
 
@@ -134,6 +133,15 @@ class MiddlewareTests(TestCase):
             TrustedProxyMiddleware(lambda r: None)(request)
         self.assertEqual(request.META["REMOTE_ADDR"], "203.0.113.1")
 
+    def test_trusted_proxy_ignores_untrusted_leftmost_forwarded_values(self):
+        from apps.core.middleware import TrustedProxyMiddleware
+
+        with override_settings(TRUSTED_PROXY_IPS=["10.0.0.0/8"]):
+            request = self._request("10.0.0.1", "198.51.100.88, 203.0.113.7")
+            TrustedProxyMiddleware(lambda r: None)(request)
+
+        self.assertEqual(request.META["REMOTE_ADDR"], "203.0.113.7")
+
     def test_untrusted_peer_cannot_spoof_remote_addr(self):
         from apps.core.middleware import TrustedProxyMiddleware
 
@@ -156,6 +164,14 @@ class MiddlewareTests(TestCase):
         with override_settings(TRUSTED_PROXY_IPS=["10.0.0.0/8"]):
             request = self._request("10.0.0.1", "1.2.3.4, 10.0.0.1")
             self.assertEqual(get_client_ip(request), "1.2.3.4")
+
+    def test_get_client_ip_ignores_untrusted_leftmost_forwarded_values(self):
+        from apps.core.utils import get_client_ip
+
+        with override_settings(TRUSTED_PROXY_IPS=["10.0.0.0/8"]):
+            request = self._request("10.0.0.1", "198.51.100.88, 203.0.113.7")
+
+            self.assertEqual(get_client_ip(request), "203.0.113.7")
 
     def test_get_client_ip_matches_exact_trusted_entry(self):
         from apps.core.utils import get_client_ip
@@ -250,6 +266,39 @@ class FileSecurityTests(TestCase):
         file = SimpleUploadedFile("logo.svg", b"<svg/>", content_type="image/svg+xml")
         with self.assertRaises(ValidationError):
             validate_file_extension(file)
+
+    def test_validate_file_mime_fails_closed_when_magic_is_unavailable(self):
+        from unittest.mock import patch
+
+        from apps.core.file_security import validate_file_mime
+
+        disguised_executable = SimpleUploadedFile(
+            "report.pdf",
+            b"MZ executable payload",
+            content_type="application/pdf",
+        )
+        with patch("apps.core.file_security.HAS_MAGIC", False), self.assertRaises(ValidationError):
+            validate_file_mime(disguised_executable)
+
+    def test_validate_file_mime_rejects_allowed_mime_with_wrong_extension(self):
+        from types import SimpleNamespace
+        from unittest.mock import patch
+
+        from apps.core import file_security
+
+        mislabeled_pdf = SimpleUploadedFile(
+            "report.pdf",
+            b"plain text, not a PDF",
+            content_type="text/plain",
+        )
+        with (
+            patch.object(file_security, "HAS_MAGIC", True),
+            patch.object(
+                file_security, "magic", SimpleNamespace(from_buffer=lambda *_args, **_kwargs: "text/plain"), create=True
+            ),
+            self.assertRaises(ValidationError),
+        ):
+            file_security.validate_file_mime(mislabeled_pdf)
 
     def test_validate_file_size_valid(self):
         from apps.core.file_security import validate_file_size

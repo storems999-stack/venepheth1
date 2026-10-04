@@ -8,6 +8,7 @@ the real models (Course.name, TeachingPhilosophy.headline/body, ...).
 """
 
 import logging
+import re
 from typing import Any
 
 from django.db.models import Q
@@ -17,11 +18,42 @@ from django.utils.html import strip_tags
 logger = logging.getLogger("apps.assistant")
 
 _MAX_TOKENS = 10
+_STOP_WORDS = {
+    "a",
+    "about",
+    "an",
+    "are",
+    "can",
+    "do",
+    "does",
+    "find",
+    "how",
+    "is",
+    "latest",
+    "list",
+    "me",
+    "of",
+    "on",
+    "please",
+    "show",
+    "the",
+    "tell",
+    "what",
+    "when",
+    "where",
+    "which",
+    "who",
+    "why",
+}
 
 
 def _search_terms(query: str) -> list[str]:
-    """Token list plus the full raw query (so spaceless Lao phrases still match)."""
-    tokens = [t for t in query.split() if len(t) > 1][:_MAX_TOKENS]
+    """Use the full query plus meaningful words, excluding punctuation and stop words."""
+    tokens = [
+        token
+        for token in re.findall(r"[^\W_]+", query, flags=re.UNICODE)
+        if len(token) > 1 and token.casefold() not in _STOP_WORDS
+    ][:_MAX_TOKENS]
     terms = list(dict.fromkeys([query, *tokens]))
     return [t for t in terms if t]
 
@@ -76,7 +108,7 @@ class AcademicRetriever:
             q = _or_icontains(["title", "summary", "content", "file_text", "tags"], terms)
             qs = KnowledgeDocument.objects.filter(is_active=True).filter(q)[:4]
             for doc in qs:
-                body = doc.content or doc.file_text or doc.summary or ""
+                body = "\n\n".join(part for part in (doc.content, doc.file_text, doc.summary) if part)
                 items.append(
                     {
                         "type": "Knowledge Base",

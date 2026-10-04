@@ -36,7 +36,10 @@ class CourseAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Core Information", {"fields": ("code", "name", "slug", "category", "description", "short_description")}),
         ("Academic Details", {"fields": ("credits", "semester", "academic_year", "level", "language")}),
-        ("Display & Access", {"fields": ("thumbnail", "featured", "visibility", "status", "published_at")}),
+        (
+            "Display & Access",
+            {"fields": ("thumbnail", "featured", "visibility", "status", "scheduled_at", "published_at")},
+        ),
         ("SEO", {"fields": ("seo_title", "seo_description", "og_image"), "classes": ("collapse",)}),
     )
 

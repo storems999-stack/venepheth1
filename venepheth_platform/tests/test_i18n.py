@@ -2,6 +2,7 @@
 Tests for Internationalization (i18n) and Lao Language Support.
 """
 
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 from django.utils.translation import activate, deactivate
@@ -25,7 +26,11 @@ class LaoInternationalizationTests(TestCase):
         self.assertEqual(_("Contact"), "ຕິດຕໍ່")
         self.assertEqual(_("Research"), "ການຄົ້ນຄ້ວາ")
         self.assertEqual(_("Publications"), "ສິ່ງຕີພິມ")
-        self.assertEqual(_("Academic Leader"), "ຜູ້ນໍາທາງວິຊາການ")
+        self.assertEqual(_("Academic Researcher"), "ນັກຄົ້ນຄວ້າວິຊາການ")
+        self.assertEqual(
+            _("Lecturer & Academic Researcher"),
+            "ອາຈານ ແລະ ນັກຄົ້ນຄວ້າວິຊາການ",
+        )
 
     def test_gettext_english_translation(self):
         """Verify that gettext returns English when 'en' locale is active."""
@@ -83,3 +88,16 @@ class LaoInternationalizationTests(TestCase):
         home_resp = self.client.get(reverse("core:home"))
         content = home_resp.content.decode("utf-8")
         self.assertIn("Courses", content)
+
+    def test_cached_teaching_page_respects_language_cookie(self):
+        """A cached teaching page must not leak the first visitor's locale."""
+        cache.clear()
+        response_en = self.client.get(reverse("teaching:overview"), HTTP_COOKIE="django_language=en")
+        self.assertEqual(response_en.status_code, 200)
+        self.assertContains(response_en, "Teaching Philosophy")
+
+        response_lo = self.client.get(reverse("teaching:overview"), HTTP_COOKIE="django_language=lo")
+
+        self.assertEqual(response_lo.status_code, 200)
+        self.assertEqual(response_lo.headers.get("Content-Language"), "lo")
+        self.assertContains(response_lo, "ທັດສະນະດ້ານການສິດສອນ")

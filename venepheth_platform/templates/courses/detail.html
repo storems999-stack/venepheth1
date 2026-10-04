@@ -50,6 +50,7 @@
             <div class="glass rounded-2xl p-6">
                 <h3 class="text-white font-bold mb-5">{% trans "Course Info" %}</h3>
                 <div class="space-y-4">
+                    {% if course.credits %}
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2 text-gray-400 text-sm">
                             <i data-lucide="layers" class="w-4 h-4 text-gold-400"></i>
@@ -57,6 +58,7 @@
                         </div>
                         <span class="text-white font-semibold">{{ course.credits }}</span>
                     </div>
+                    {% endif %}
                     {% if course.semester %}
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2 text-gray-400 text-sm">
@@ -171,7 +173,17 @@
                                     {% for res in module.resources.all %}
                                     <div class="flex items-center space-x-2 text-xs text-gray-500">
                                         <i data-lucide="file" class="w-3 h-3 text-gold-500/50"></i>
+                                        {% if res.file %}
+                                        <a href="{% url 'courses:resource_download' res.pk %}" class="text-gray-300 hover:text-gold-400 transition-colors">
+                                            {{ res.title }}
+                                        </a>
+                                        {% elif res.external_url %}
+                                        <a href="{{ res.external_url }}" target="_blank" rel="noopener noreferrer" class="text-gray-300 hover:text-gold-400 transition-colors">
+                                            {{ res.title }}
+                                        </a>
+                                        {% else %}
                                         <span>{{ res.title }}</span>
+                                        {% endif %}
                                         <span class="bg-navy-700 text-gray-400 px-1.5 py-0.5 rounded">{{ res.get_resource_type_display }}</span>
                                     </div>
                                     {% endfor %}
@@ -245,4 +257,3 @@
     </div>
 </section>
 {% endblock %}
-

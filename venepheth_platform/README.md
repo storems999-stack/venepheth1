@@ -56,6 +56,24 @@ Features a Zero-Cost Enterprise architecture, Modern UI (Tailwind + HTMX), and a
    docker-compose up --build
    ```
 
+## Import Verified CV Data
+
+After confirming the target database and taking a backup, import the profile,
+education, BBA teaching subjects, and publications present in the supplied CV:
+
+```bash
+docker compose exec -T web python manage.py backup_platform --output-dir /app/backups --keep-days 0 --encrypt
+docker compose exec -T web python manage.py import_cv_data --remove-demo-data
+```
+
+Provision `BACKUP_ENCRYPTION_KEY` or the ignored `backup_key.bin` before the
+backup command; it refuses to create an encrypted archive without a persistent
+key.
+The option removes only exact sample records created by the retired
+`seed_data` command; it does not clear user-created courses, articles, research,
+or resources. Imported records intentionally omit details absent from the CV,
+such as course credits, publication abstracts, and language proficiency.
+
 ## 🔒 Security
 
 This platform employs strict security measures:

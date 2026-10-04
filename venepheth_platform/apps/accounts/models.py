@@ -148,6 +148,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.role == self.Role.LECTURER
 
     @property
+    def is_student(self):
+        return self.role == self.Role.STUDENT
+
+    @property
     def is_editor_or_above(self):
         return self.role in (
             self.Role.SUPERADMIN,

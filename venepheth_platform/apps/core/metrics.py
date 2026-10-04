@@ -23,6 +23,7 @@ def _safe_count(queryset) -> int:
     try:
         return queryset.count()
     except Exception:
+        logger.exception("Failed to collect a database-backed platform metric")
         return -1
 
 
@@ -36,6 +37,7 @@ def _safe_import_count(app: str, model: str, **filters) -> int:
             return -1
         return klass.objects.filter(**filters).count()
     except Exception:
+        logger.exception("Failed to collect an imported platform metric: %s.%s", app, model)
         return -1
 
 

@@ -52,15 +52,19 @@ def assistant_page(request):
     """Standalone AI Academic Assistant page."""
     is_member = request.user.is_authenticated
     rates = ASSISTANT_USER_RATES if is_member else ASSISTANT_ANON_RATES
+    language = "lo" if get_language() == "lo" else "en"
     context = {
         "meta_title": "AI Academic Assistant",
         "quota_note": f"{rates[0]} · {rates[1]} ({'member' if is_member else 'guest'})",
         "suggested_prompts": [
-            {"en": "When are office hours?", "lo": "ເວລາຮັບນັກສຶກສາແມ່ນເວລາໃດ?"},
-            {"en": "What courses are offered?", "lo": "ມີວິຊາຮຽນຫຍັງແດ່?"},
-            {"en": "Show me publications on Business Management", "lo": "ສິ່ງຕີພິມດ້ານການຈັດການທຸລະກິດ"},
-            {"en": "Research projects on sustainable development", "lo": "ໂຄງການຄົ້ນຄ້ວາດ້ານການພັດທະນາຍືນຍົງ"},
-            {"en": "Latest blog articles", "lo": "ບົດຄວາມລ່າສຸດ"},
+            prompt[language]
+            for prompt in [
+                {"en": "When are office hours?", "lo": "ເວລາຮັບນັກສຶກສາແມ່ນເວລາໃດ?"},
+                {"en": "What courses are offered?", "lo": "ມີວິຊາຮຽນຫຍັງແດ່?"},
+                {"en": "Show me publications on Business Management", "lo": "ສິ່ງຕີພິມດ້ານການຈັດການທຸລະກິດ"},
+                {"en": "Research projects on sustainable development", "lo": "ໂຄງການຄົ້ນຄ້ວາດ້ານການພັດທະນາຍືນຍົງ"},
+                {"en": "Latest blog articles", "lo": "ບົດຄວາມລ່າສຸດ"},
+            ]
         ],
     }
     return render(request, "assistant/chat.html", context)

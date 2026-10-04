@@ -48,12 +48,18 @@
         <div>
           <label for="{{ form.language.id_for_label }}" class="form-label">{% trans "Preferred Language" %}</label>
           {% render_field form.language class="form-select" %}
+          {% if form.language.errors %}
+            <p class="form-error">{{ form.language.errors|join:", " }}</p>
+          {% endif %}
         </div>
 
         <!-- Timezone -->
         <div>
           <label for="{{ form.timezone.id_for_label }}" class="form-label">{% trans "Timezone" %}</label>
           {% render_field form.timezone class="form-select" %}
+          {% if form.timezone.errors %}
+            <p class="form-error">{{ form.timezone.errors|join:", " }}</p>
+          {% endif %}
         </div>
 
       </div>
