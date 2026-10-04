@@ -5,6 +5,7 @@ Testing settings — fast, in-memory database, no migrations.
 from .base import *
 
 DEBUG = True
+ADMIN_URL = "secure-admin/"
 
 import importlib.util
 
