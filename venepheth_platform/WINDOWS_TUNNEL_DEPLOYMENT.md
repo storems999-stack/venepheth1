@@ -227,7 +227,12 @@ Tunnel path; do not point the Tunnel route back to the Worker.
 
 ## 7. Keep it available and recoverable
 
-- Set Windows power settings to never sleep while plugged in.
+- Keep Windows awake while plugged in (run in PowerShell; `0` means never):
+
+  ```powershell
+  powercfg /change standby-timeout-ac 0
+  ```
+
 - Configure Docker Desktop to start with Windows and keep the production
   containers at `restart: unless-stopped`.
 - Keep the `cloudflared` service set to start automatically.
