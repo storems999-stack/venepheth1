@@ -19,9 +19,13 @@ awake and online.
 
 ## 1. Prepare and protect configuration
 
-Open PowerShell in the repository root (`venepheth_platform`), then check Docker:
+Open PowerShell and change to the project directory first. Compose resolves
+`.env.prod` relative to the current directory, so do not run these commands
+from `C:\Users\a`:
 
 ```powershell
+Set-Location D:\vpblog21.9.26\venepheth_platform
+Test-Path .env.prod
 docker compose version
 docker compose ps
 ```
