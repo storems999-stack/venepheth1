@@ -45,7 +45,12 @@ CSRF_TRUSTED_ORIGINS=https://venepheth.online,https://www.venepheth.online
 SECURE_SSL_REDIRECT=True
 TUNNEL_ORIGIN_PORT=8081
 TRUSTED_PROXY_IPS=172.29.0.2
+CLOUDFLARE_TUNNEL_TOKEN=replace_with_rotated_tunnel_token
 ```
+
+Replace the Cloudflare placeholder locally with the rotated token for the
+existing `venepheth.online` tunnel. Keep `.env.prod` private and do not paste
+the token into chat or a command line.
 
 `REDIS_URL` must use the same password as `REDIS_PASSWORD`; URL-encode reserved
 characters in the URL password. The checked-in sample email username, password,
@@ -184,7 +189,8 @@ docker compose --env-file .env.prod `
 docker compose --env-file .env.prod `
   -f docker-compose.prod.yml -f docker-compose.tunnel.yml ps
 
-Invoke-WebRequest http://127.0.0.1:8081/health/live/
+Invoke-WebRequest http://127.0.0.1:8081/health/live/ `
+  -Headers @{ Host = "venepheth.online" }
 ```
 
 The health endpoint should return HTTP 200 with `{"status":"alive"}`. Also test
@@ -194,23 +200,35 @@ rejected. Do not expose port 8081 to the LAN.
 
 ## 6. Connect the existing Cloudflare Tunnel
 
-In Cloudflare Zero Trust → **Networking → Tunnels**, open the existing
-`venepheth.online` tunnel and edit its published application route:
+The connector is included in the production Compose stack and joins the private
+`venepheth-production` Docker network. In Cloudflare Zero Trust → **Networking
+→ Tunnels**, open the existing tunnel that owns the `venepheth.online` route
+and edit its published application route:
 
 - Hostname: `venepheth.online`
 - Service type: HTTP
-- Service URL: `http://localhost:8081`
+- Service URL: `http://nginx:80`
 
 If using `www.venepheth.online`, add a separate DNS/Tunnel route for `www` and
 keep it in `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`.
 
-Install the connector using the install command shown in the Cloudflare
-Dashboard on this Windows host. Run it from an elevated Command Prompt or
-PowerShell. Keep the tunnel token secret; do not paste it into chat or Git. If
-`cloudflared` is installed as a Windows service, check it with:
+Do not use a standalone `docker run cloudflare/cloudflared ...` container for
+this setup: `localhost:8081` inside that container points back to the connector,
+not to the Windows host. The Compose connector reaches Nginx by its Docker
+service name (`nginx`). The dashboard's published hostname route must use the
+internal service URL above.
+
+The tunnel ID shown by `cloudflared` must match the tunnel selected in the
+Dashboard. If it differs, the connector token belongs to a different tunnel;
+use the token from the tunnel that owns the hostname route.
+
+After saving the route and token in `.env.prod`, start/recreate the stack:
 
 ```powershell
-Get-Service cloudflared
+docker compose --env-file .env.prod `
+  -f docker-compose.prod.yml -f docker-compose.tunnel.yml up -d
+docker compose --env-file .env.prod `
+  -f docker-compose.prod.yml -f docker-compose.tunnel.yml ps
 ```
 
 The Tunnel dashboard should show the connector as healthy with at least one

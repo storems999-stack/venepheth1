@@ -93,6 +93,14 @@ class TestNginxCspAllowsFrontendCdn(TestCase):
 
 
 class TestCloudflareTunnelProductionStack(TestCase):
+    def test_cloudflared_uses_the_internal_nginx_service(self):
+        compose = read("docker-compose.tunnel.yml")
+        self.assertIn("image: cloudflare/cloudflared:latest", compose)
+        self.assertIn("command: tunnel --no-autoupdate run", compose)
+        self.assertIn("TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:", compose)
+        self.assertIn("depends_on:\n      - nginx", compose)
+        self.assertIn("restart: unless-stopped", compose)
+
     def test_tunnel_override_isolates_production_volumes_and_network(self):
         compose = read("docker-compose.tunnel.yml")
         self.assertIn("name: venepheth-production", compose)
@@ -126,6 +134,7 @@ class TestCloudflareTunnelProductionStack(TestCase):
         )
         self.assertIn("TRUSTED_PROXY_IPS=172.29.0.2", env_example)
         self.assertIn("TUNNEL_ORIGIN_PORT=8081", env_example)
+        self.assertIn("CLOUDFLARE_TUNNEL_TOKEN=replace_with_rotated_tunnel_token", env_example)
 
     def test_production_healthcheck_uses_an_allowed_host(self):
         compose = read("docker-compose.prod.yml")

@@ -1,6 +1,17 @@
 name: venepheth-production
 
 services:
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:?Set CLOUDFLARE_TUNNEL_TOKEN in .env.prod}
+    depends_on:
+      - nginx
+    networks:
+      - default
+    restart: unless-stopped
+
   nginx:
     ports: !override
       - "127.0.0.1:${TUNNEL_ORIGIN_PORT:-8081}:80"
