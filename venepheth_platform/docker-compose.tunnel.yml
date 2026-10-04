@@ -1,0 +1,25 @@
+name: venepheth-production
+
+services:
+  nginx:
+    ports: !override
+      - "127.0.0.1:${TUNNEL_ORIGIN_PORT:-8081}:80"
+    volumes: !override
+      - ./docker/nginx/nginx.tunnel.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_vol:/app/staticfiles:ro
+      - media_vol:/app/media:ro
+    networks:
+      default:
+        ipv4_address: 172.29.0.2
+
+  certbot:
+    profiles:
+      - direct-tls
+
+networks:
+  default:
+    name: venepheth-production
+    ipam:
+      config:
+        - subnet: 172.29.0.0/24
+          ip_range: 172.29.0.16/28

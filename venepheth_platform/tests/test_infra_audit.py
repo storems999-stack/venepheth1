@@ -68,6 +68,11 @@ class TestDockerBuildDoesNotLeakSecrets(TestCase):
         dockerfile = read("Dockerfile")
         self.assertIn("postgresql-client", dockerfile)
 
+    def test_dockerfile_prepares_writable_backup_volume_mountpoint(self):
+        dockerfile = read("Dockerfile")
+        self.assertIn("mkdir -p logs media staticfiles backups", dockerfile)
+        self.assertIn("chown -R venepheth:venepheth /app", dockerfile)
+
 
 class TestNginxCspAllowsFrontendCdn(TestCase):
     """Django emits its own CSP; the browser enforces the intersection of both.
@@ -85,6 +90,62 @@ class TestNginxCspAllowsFrontendCdn(TestCase):
         for cdn in ("cdn.tailwindcss.com", "unpkg.com"):
             self.assertIn(cdn, base, f"{cdn} should still be used by base.html")
             self.assertIn(cdn, nginx_sources, f"nginx CSP must allow {cdn}")
+
+
+class TestCloudflareTunnelProductionStack(TestCase):
+    def test_tunnel_override_isolates_production_volumes_and_network(self):
+        compose = read("docker-compose.tunnel.yml")
+        self.assertIn("name: venepheth-production", compose)
+        self.assertIn("subnet: 172.29.0.0/24", compose)
+        self.assertIn("ip_range: 172.29.0.16/28", compose)
+        self.assertIn("ipv4_address: 172.29.0.2", compose)
+
+    def test_tunnel_origin_is_loopback_only(self):
+        compose = read("docker-compose.tunnel.yml")
+        self.assertIn("127.0.0.1:${TUNNEL_ORIGIN_PORT:-8081}:80", compose)
+        self.assertIn("nginx.tunnel.conf:/etc/nginx/conf.d/default.conf:ro", compose)
+        self.assertIn("direct-tls", compose)
+
+    def test_tunnel_nginx_forwards_external_https_to_django(self):
+        conf = read("docker/nginx/nginx.tunnel.conf")
+        self.assertIn("proxy_set_header X-Forwarded-Proto https;", conf)
+        self.assertIn("proxy_set_header X-Forwarded-For $trusted_client_ip;", conf)
+        self.assertIn("server_name venepheth.online www.venepheth.online;", conf)
+        self.assertIn("127.0.0.11", conf)
+        self.assertIn("location /protected-media/", conf)
+        self.assertIn("deny all;", conf)
+        self.assertNotIn("listen 443", conf)
+
+    def test_production_template_has_tunnel_host_and_proxy_settings(self):
+        env_example = read(".env.prod.example")
+        self.assertIn("DOMAIN=venepheth.online", env_example)
+        self.assertIn("ALLOWED_HOSTS=venepheth.online,www.venepheth.online", env_example)
+        self.assertIn(
+            "CSRF_TRUSTED_ORIGINS=https://venepheth.online,https://www.venepheth.online",
+            env_example,
+        )
+        self.assertIn("TRUSTED_PROXY_IPS=172.29.0.2", env_example)
+        self.assertIn("TUNNEL_ORIGIN_PORT=8081", env_example)
+
+    def test_production_healthcheck_uses_an_allowed_host(self):
+        compose = read("docker-compose.prod.yml")
+        self.assertIn('"Host: ${DOMAIN}"', compose)
+        self.assertIn("DOMAIN=venepheth.online", read(".env.prod.example"))
+
+
+class TestProductionRedisConfiguration(TestCase):
+    def test_cache_and_celery_share_the_authenticated_redis_url(self):
+        production = read("config/settings/production.py")
+        base = read("config/settings/base.py")
+        env_example = read(".env.prod.example")
+        self.assertIn('"LOCATION": REDIS_URL', production)
+        self.assertIn("CELERY_BROKER_URL = REDIS_URL", base)
+        self.assertIn("REDIS_URL password must match REDIS_PASSWORD", production)
+        self.assertIn("REDIS_PASSWORD=use_a_strong_redis_password_min_32_chars", env_example)
+        self.assertIn(
+            "REDIS_URL=redis://:use_a_strong_redis_password_min_32_chars@redis:6379/0",
+            env_example,
+        )
 
 
 class TestKnowledgeUploadsAreNotPublicMedia(TestCase):
@@ -139,14 +200,11 @@ class TestDeployWorkflowIsSound(TestCase):
         compose = read("docker-compose.prod.yml")
         self.assertIn("VENEPHETH_IMAGE", compose, "compose must accept the pushed image tag")
 
-    def test_certbot_runs_on_deploy_host(self):
+    def test_deploy_uses_tunnel_origin_instead_of_certbot(self):
         deploy = read(".github/workflows/deploy.yml")
-        # It must be inside the ssh-action script block, not a runner `run:`.
-        script_start = deploy.index("script: |")
-        script_end = deploy.index("Notify on failure")
-        ssh_block = deploy[script_start:script_end]
-        self.assertIn("certbot renew", ssh_block)
-        self.assertLess(script_start, deploy.index("certbot renew"))
+        self.assertIn("-f docker-compose.prod.yml -f docker-compose.tunnel.yml", deploy)
+        self.assertIn("compose up -d --force-recreate nginx", deploy)
+        self.assertNotIn("certbot renew", deploy)
 
     def test_health_check_can_actually_fail(self):
         """Use the container's Compose health status; web has no host port."""
@@ -161,7 +219,8 @@ class TestDeployWorkflowIsSound(TestCase):
         deploy = read(".github/workflows/deploy.yml")
         self.assertIn("steps.build.outputs.digest", deploy)
         self.assertIn("DEPLOY_SHA: ${{ github.sha }}", deploy)
-        self.assertIn("docker compose --env-file .env.prod -f docker-compose.prod.yml", deploy)
+        self.assertIn("docker compose --env-file .env.prod", deploy)
+        self.assertIn("-f docker-compose.prod.yml -f docker-compose.tunnel.yml", deploy)
         self.assertIn('git checkout --detach "$DEPLOY_SHA"', deploy)
         self.assertNotIn("needs.build.outputs.image-tag", deploy)
 
@@ -222,7 +281,8 @@ class TestRestoreIsAtomicAndCleansUp(TestCase):
     def test_restore_script_uses_production_compose_and_cds(self):
         script = read("scripts/restore.sh")
         self.assertIn('cd "$(dirname "$0")', script)
-        self.assertIn('docker compose --env-file .env.prod -f "$COMPOSE_FILE"', script)
+        self.assertIn("COMPOSE_FILES=(-f docker-compose.prod.yml -f docker-compose.tunnel.yml)", script)
+        self.assertIn('docker compose --env-file .env.prod "${COMPOSE_FILES[@]}"', script)
         self.assertIn("run --rm --build web", script)
         self.assertIn("ARCHIVE_ARGS=()", script)
         self.assertIn('python manage.py restore_platform "${ARCHIVE_ARGS[@]}" --confirm', script)
@@ -230,11 +290,14 @@ class TestRestoreIsAtomicAndCleansUp(TestCase):
     def test_manual_deploy_uses_compose_environment_and_network(self):
         script = read("scripts/deploy.sh")
         self.assertIn("docker compose --env-file .env.prod", script)
+        self.assertIn("docker-compose.tunnel.yml", script)
         self.assertIn("compose run --rm --no-deps web python manage.py migrate", script)
         self.assertNotIn("docker stack deploy", script)
 
     def test_backup_script_cds_to_project_root(self):
-        self.assertIn('cd "$(dirname "$0")', read("scripts/backup.sh"))
+        script = read("scripts/backup.sh")
+        self.assertIn('cd "$(dirname "$0")', script)
+        self.assertIn("-f docker-compose.prod.yml -f docker-compose.tunnel.yml", script)
 
 
 class TestRedisBrokerCarriesPassword(TestCase):
@@ -467,6 +530,14 @@ class TestBackupCommandIsResilient(TestCase):
 
 class TestRestoreIsTransactionalAndDiagnostic(TestCase):
     """PostgreSQL restore must roll back on errors and retain useful diagnostics."""
+
+    def test_postgres_restore_does_not_require_the_source_role(self):
+        source = read("apps/core/management/commands/restore_platform.py")
+        restore_command = source[
+            source.index('"pg_restore",', source.index("Preparing a transactional PostgreSQL restore")) :
+        ]
+        self.assertIn('"--no-owner"', restore_command)
+        self.assertIn('"--no-privileges"', restore_command)
 
     def test_restore_script_uses_single_transaction_and_surfaces_errors(self):
         source = read("apps/core/management/commands/restore_platform.py")

@@ -11,7 +11,7 @@ set -euo pipefail
 # Always run from the project root.
 cd "$(dirname "$0")/.."
 
-COMPOSE_FILE="docker-compose.prod.yml"
+COMPOSE_FILES=(-f docker-compose.prod.yml -f docker-compose.tunnel.yml)
 ARCHIVE="${1:-}"
 
 if [ ! -f .env.prod ]; then
@@ -35,7 +35,7 @@ echo " Starting Disaster Recovery Restore: $(date)"
 echo " Archive: ${ARCHIVE:-latest in /app/backups}"
 echo "=================================================="
 
-docker compose --env-file .env.prod -f "$COMPOSE_FILE" run --rm --build web \
+docker compose --env-file .env.prod "${COMPOSE_FILES[@]}" run --rm --build web \
     python manage.py restore_platform "${ARCHIVE_ARGS[@]}" --confirm
 
 echo "=================================================="

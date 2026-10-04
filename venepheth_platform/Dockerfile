@@ -59,7 +59,7 @@ RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p logs media staticfiles && \
+RUN mkdir -p logs media staticfiles backups && \
     chown -R venepheth:venepheth /app
 
 # Switch to non-root user

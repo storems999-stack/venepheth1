@@ -3,7 +3,10 @@ Production settings for Venepheth SAYAVONG Academic Platform.
 Inherits from base.py and overrides with production-specific values.
 """
 
+from urllib.parse import unquote, urlsplit
+
 import environ
+from django.core.exceptions import ImproperlyConfigured
 
 from .base import *
 
@@ -16,6 +19,16 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS")
 
 # ─── Database ────────────────────────────────────────────────────────────────
 DATABASES = {"default": env.db("DATABASE_URL")}
+
+# The Compose Redis service uses REDIS_PASSWORD with requirepass. Fail fast if
+# the application URL would authenticate with a different or missing password.
+if REDIS_PASSWORD:
+    try:
+        redis_url_password = urlsplit(REDIS_URL).password
+    except ValueError as exc:
+        raise ImproperlyConfigured("REDIS_URL is invalid.") from exc
+    if redis_url_password is None or unquote(redis_url_password) != REDIS_PASSWORD:
+        raise ImproperlyConfigured("REDIS_URL password must match REDIS_PASSWORD.")
 DATABASES["default"]["CONN_MAX_AGE"] = 60
 
 # ─── Security ────────────────────────────────────────────────────────────────
@@ -67,7 +80,7 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@example.com")
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": env("REDIS_URL", default="redis://redis:6379/1"),
+        "LOCATION": REDIS_URL,
         "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
     }
 }

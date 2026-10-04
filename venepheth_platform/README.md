@@ -74,6 +74,14 @@ The option removes only exact sample records created by the retired
 or resources. Imported records intentionally omit details absent from the CV,
 such as course credits, publication abstracts, and language proficiency.
 
+## Windows Docker + Cloudflare Tunnel deployment
+
+For a production deployment hosted on Windows, see
+[`WINDOWS_TUNNEL_DEPLOYMENT.md`](./WINDOWS_TUNNEL_DEPLOYMENT.md). It uses an
+isolated production Compose project and exposes the Nginx origin only at
+`127.0.0.1:8081`; it does not replace the development stack or require public
+router ports.
+
 ## 🔒 Security
 
 This platform employs strict security measures:

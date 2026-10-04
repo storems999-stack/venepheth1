@@ -270,6 +270,8 @@ class Command(BaseCommand):
                         "pg_restore",
                         "--clean",
                         "--if-exists",
+                        "--no-owner",
+                        "--no-privileges",
                         "--file",
                         str(restore_sql),
                         str(staged_pg),

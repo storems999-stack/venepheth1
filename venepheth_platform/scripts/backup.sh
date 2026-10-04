@@ -19,7 +19,8 @@ if [ ! -f .env.prod ]; then
     exit 1
 fi
 
-docker compose --env-file .env.prod -f docker-compose.prod.yml run --rm web \
+docker compose --env-file .env.prod \
+    -f docker-compose.prod.yml -f docker-compose.tunnel.yml run --rm web \
     python manage.py backup_platform \
     --output-dir /app/backups \
     --keep-days "${KEEP_DAYS}" \

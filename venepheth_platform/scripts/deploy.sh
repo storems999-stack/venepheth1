@@ -5,7 +5,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-COMPOSE_FILE="docker-compose.prod.yml"
+COMPOSE_FILES=(-f docker-compose.prod.yml -f docker-compose.tunnel.yml)
 
 if [ ! -f .env.prod ]; then
     echo "ERROR: .env.prod is required for production deployment." >&2
@@ -17,7 +17,7 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 
 compose() {
-    docker compose --env-file .env.prod -f "$COMPOSE_FILE" "$@"
+    docker compose --env-file .env.prod "${COMPOSE_FILES[@]}" "$@"
 }
 
 wait_for_healthy_service() {
@@ -64,7 +64,7 @@ echo "==> Recreating application services (single-host Compose rollout)..."
 compose up -d --no-deps --force-recreate web celery celery-beat
 wait_for_healthy_service web
 wait_for_healthy_service celery
-compose up -d nginx certbot
+compose up -d --force-recreate nginx
 
 echo "Deployment complete."
-echo "Check services with: docker compose --env-file .env.prod -f $COMPOSE_FILE ps"
+echo "Check services with: docker compose --env-file .env.prod ${COMPOSE_FILES[*]} ps"

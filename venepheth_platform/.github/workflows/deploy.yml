@@ -150,7 +150,8 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 
             compose() {
-              docker compose --env-file .env.prod -f docker-compose.prod.yml "$@"
+              docker compose --env-file .env.prod \
+                -f docker-compose.prod.yml -f docker-compose.tunnel.yml "$@"
             }
             VENEPHETH_IMAGE="$VENEPHETH_IMAGE" compose pull web celery celery-beat
 
@@ -227,12 +228,9 @@ jobs:
               exit 1
             fi
 
-            # Renew certs ON THE DEPLOY HOST (this must run under ssh-action;
-            # a plain `run:` step executes on the runner, where compose and
-            # .env.prod do not exist).
-            VENEPHETH_IMAGE="$VENEPHETH_IMAGE" compose run --rm \
-              certbot renew --quiet || true
-            compose exec nginx nginx -s reload || true
+            # The Tunnel terminates public TLS; Nginx serves HTTP only on the
+            # host loopback origin and has no Let's Encrypt certificate.
+            compose up -d --force-recreate nginx
 
             echo "✅ Deployment successful!"
 
